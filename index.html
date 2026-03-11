@@ -182,42 +182,71 @@ display:none;
 
 .pinCard{
 width:100%;
-max-width:360px;
+max-width:400px;
 background:white;
-border-radius:18px;
-padding:24px;
-box-shadow:0 20px 60px rgba(0,0,0,0.2);
+border-radius:24px;
+padding:28px;
+box-shadow:0 24px 80px rgba(0,0,0,0.22);
 }
 
 .pinTitle{
-font-size:24px;
+font-size:28px;
 font-weight:700;
 margin-bottom:8px;
 }
 
 .pinText{
-font-size:14px;
+font-size:15px;
 color:#666;
-margin-bottom:14px;
+margin-bottom:18px;
 line-height:1.4;
 }
 
-.pinInput{
-width:100%;
-padding:12px 14px;
-border:1px solid #ddd;
-border-radius:12px;
-font-size:20px;
-letter-spacing:6px;
-text-align:center;
-margin-bottom:12px;
+.pinBoxes{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:12px;
+margin-bottom:14px;
+}
+
+.pinBox{
+height:64px;
+border:2px solid #d7d7dc;
+border-radius:16px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:28px;
+font-weight:700;
+background:#fafafa;
+transition:border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+}
+
+.pinBox.active{
+border-color:#111;
+background:#fff;
+transform:translateY(-1px);
+}
+
+.pinHiddenInput{
+position:absolute;
+opacity:0;
+pointer-events:none;
 }
 
 .pinError{
 font-size:13px;
 color:#c62828;
 min-height:18px;
-margin-bottom:10px;
+margin-bottom:12px;
+}
+
+.pinButton{
+width:100%;
+padding:14px 16px;
+border-radius:14px;
+font-size:16px;
+font-weight:600;
 }
 
 .appContent[hidden]{
@@ -276,9 +305,15 @@ grid-template-columns:1fr;
 <div class="pinCard">
 <div class="pinTitle">Доступ к календарю</div>
 <div class="pinText">Введи 4-значный PIN-код для просмотра календаря.</div>
-<input class="pinInput" id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
+<div class="pinBoxes" id="pinBoxes">
+<div class="pinBox active" data-index="0"></div>
+<div class="pinBox" data-index="1"></div>
+<div class="pinBox" data-index="2"></div>
+<div class="pinBox" data-index="3"></div>
+</div>
+<input class="pinHiddenInput" id="pinInput" type="password" inputmode="numeric" maxlength="4" autocomplete="one-time-code">
 <div class="pinError" id="pinError"></div>
-<button id="pinButton" type="button">Открыть</button>
+<button class="pinButton" id="pinButton" type="button">Открыть</button>
 </div>
 </div>
 
@@ -415,6 +450,16 @@ loadRevenueData();
 setInterval(loadRevenueData, 5 * 60 * 1000);
 }
 
+function syncPinBoxes(){
+let value = document.getElementById("pinInput").value;
+let boxes = document.querySelectorAll(".pinBox");
+
+boxes.forEach((box, index) => {
+box.textContent = value[index] ? "•" : "";
+box.classList.toggle("active", index === Math.min(value.length, 3));
+});
+}
+
 function checkPin(){
 let pinInput = document.getElementById("pinInput");
 let pinError = document.getElementById("pinError");
@@ -426,7 +471,9 @@ return;
 }
 
 pinError.innerText = "Неверный PIN-код";
-pinInput.select();
+pinInput.value = "";
+syncPinBoxes();
+pinInput.focus();
 }
 
 function render(){
@@ -660,11 +707,19 @@ document.getElementById("pinButton").addEventListener("click", checkPin);
 document.getElementById("pinInput").addEventListener("keydown", (event) => {
 if (event.key === "Enter") checkPin();
 });
+document.getElementById("pinInput").addEventListener("input", (event) => {
+event.target.value = event.target.value.replace(/\D/g, "").slice(0, 4);
+syncPinBoxes();
+});
+document.getElementById("pinBoxes").addEventListener("click", () => {
+document.getElementById("pinInput").focus();
+});
 
 if (sessionStorage.getItem(accessSessionKey) === "1"){
 unlockApp();
 } else {
 document.getElementById("pinInput").focus();
+syncPinBoxes();
 }
 </script>
 
