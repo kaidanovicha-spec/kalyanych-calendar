@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Календарь Кальяныч</title>
+<style>
+body{
+font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+background:#f5f5f7;
+margin:20px;
+color:#111;
+}
+
+h1{
+margin-bottom:20px;
+}
+
+.header{
+display:flex;
+align-items:center;
+justify-content:space-between;
+max-width:1100px;
+margin-bottom:20px;
+gap:12px;
+}
+
+button{
+padding:8px 14px;
+border-radius:10px;
+border:none;
+background:black;
+color:white;
+cursor:pointer;
+}
+
+.stats{
+display:grid;
+grid-template-columns:repeat(7,minmax(0,1fr));
+gap:12px;
+max-width:1100px;
+margin-bottom:20px;
+}
+
+.statCard{
+background:white;
+padding:14px;
+border-radius:14px;
+box-shadow:0 4px 20px rgba(0,0,0,0.08);
+min-width:0;
+}
+
+.statTitle{
+font-size:13px;
+color:#777;
+}
+
+.statValue{
+font-size:20px;
+font-weight:600;
+line-height:1.2;
+word-break:break-word;
+}
+
+.statCompare{
+margin-top:6px;
+font-size:12px;
+color:#666;
+line-height:1.35;
+}
+
+.calendar{
+display:grid;
+grid-template-columns:repeat(7,1fr) 180px;
+gap:10px;
+max-width:1100px;
+}
+
+.weekSummary{
+background:white;
+border-radius:14px;
+padding:12px;
+box-shadow:0 4px 20px rgba(0,0,0,0.08);
+display:flex;
+flex-direction:column;
+justify-content:center;
+min-height:90px;
+}
+
+.weekSummaryTitle{
+font-size:12px;
+color:#777;
+margin-bottom:6px;
+}
+
+.weekSummaryValue{
+font-size:15px;
+font-weight:600;
+line-height:1.4;
+}
+
+.weekSummaryHeader{
+text-align:center;
+font-weight:600;
+}
+
+.weekday{
+text-align:center;
+font-weight:600;
+}
+
+.day{
+background:white;
+border-radius:14px;
+padding:10px;
+min-height:90px;
+box-shadow:0 4px 20px rgba(0,0,0,0.08);
+}
+
+.revenue{
+font-size:14px;
+font-weight:700;
+margin-bottom:6px;
+}
+
+.cost{
+font-size:12px;
+color:#555;
+margin-bottom:4px;
+}
+
+.gross{
+font-size:12px;
+color:#1f6f43;
+margin-bottom:8px;
+}
+
+.date{
+font-size:20px;
+font-weight:600;
+}
+
+.good{
+background:#dff5e3;
+}
+
+.medium{
+background:#fff4cc;
+}
+
+.low{
+background:#ffe3e3;
+}
+
+.today{
+outline:3px solid black;
+}
+
+.bestBox{
+background:white;
+padding:14px;
+border-radius:14px;
+box-shadow:0 4px 20px rgba(0,0,0,0.08);
+max-width:1100px;
+margin-bottom:10px;
+}
+
+@media (max-width: 900px){
+.stats{
+grid-template-columns:repeat(3,minmax(0,1fr));
+}
+}
+
+@media (max-width: 640px){
+body{
+margin:14px;
+}
+
+.stats{
+grid-template-columns:repeat(2,minmax(0,1fr));
+}
+
+.calendar{
+grid-template-columns:repeat(7,minmax(88px,1fr)) 180px;
+gap:6px;
+overflow-x:auto;
+}
+
+.day{
+padding:8px;
+min-height:78px;
+}
+
+.date{
+font-size:16px;
+}
+
+.revenue{
+font-size:12px;
+}
+
+.statValue{
+font-size:18px;
+}
+}
+
+@media (max-width: 480px){
+.stats{
+grid-template-columns:1fr;
+}
+}
+</style>
+</head>
+<body>
+
+<h1>📊 Календарь Кальяныч</h1>
+
+<div class="header">
+<button onclick="changeMonth(-1)">◀</button>
+<h2 id="monthTitle"></h2>
+<button onclick="changeMonth(1)">▶</button>
+</div>
+
+<div class="stats">
+<div class="statCard">
+<div class="statTitle">Выручка месяца</div>
+<div class="statValue" id="monthTotal"></div>
+<div class="statCompare" id="monthTotalCompare"></div>
+</div>
+
+<div class="statCard">
+<div class="statTitle">Средняя в день</div>
+<div class="statValue" id="monthAverage"></div>
+<div class="statCompare" id="monthAverageCompare"></div>
+</div>
+
+<div class="statCard">
+<div class="statTitle">НДС 5%</div>
+<div class="statValue" id="monthNds"></div>
+</div>
+
+<div class="statCard">
+<div class="statTitle">Себестоимость месяца</div>
+<div class="statValue" id="monthCost"></div>
+<div class="statCompare">Процент себестоимости: 54,6%</div>
+</div>
+
+<div class="statCard">
+<div class="statTitle">Валовая выручка</div>
+<div class="statValue" id="monthGross"></div>
+</div>
+
+<div class="statCard">
+<div class="statTitle">Прогноз месяца</div>
+<div class="statValue" id="forecast"></div>
+<div class="statCompare" id="forecastCompare"></div>
+</div>
+
+<div class="statCard">
+<div class="statTitle">К прошлому месяцу</div>
+<div class="statValue" id="compare"></div>
+</div>
+</div>
+
+<div id="bestWorst"></div>
+<div class="calendar" id="calendar"></div>
+
+<script>
+let today = new Date();
+let year = today.getFullYear();
+let month = today.getMonth();
+const fixedCostPercent = 54.6;
+const revenueApiUrl = "https://script.google.com/macros/s/AKfycbyPoZgiulk-_qC7hKRxkoOarINnqzsQ5wtLed7rVVSW994dVC2QFxZwyQuT3Dr_hQTJ0w/exec";
+let revenueData = {};
+
+const monthNames = [
+"Январь","Февраль","Март","Апрель","Май","Июнь",
+"Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"
+];
+
+const weekdays = ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
+
+function formatDate(y,m,d){
+let mm = String(m + 1).padStart(2,"0");
+let dd = String(d).padStart(2,"0");
+return y + "-" + mm + "-" + dd;
+}
+
+function formatMoney(value){
+return Number(value || 0).toLocaleString("ru-RU") + " ₽";
+}
+
+function calculateCost(value){
+return Math.round(Number(value || 0) * (fixedCostPercent / 100));
+}
+
+function calculateGross(value){
+return Math.round(Number(value || 0) - calculateCost(value));
+}
+
+function formatDelta(current, previous){
+if (previous <= 0){
+return "Нет данных для сравнения";
+}
+
+let diff = ((current - previous) / previous * 100).toFixed(1);
+let sign = Number(diff) > 0 ? "+" : "";
+let amount = current - previous;
+let amountSign = amount > 0 ? "+" : "";
+return amountSign + formatMoney(amount) + " (" + sign + diff + "%) к прошлому месяцу";
+}
+
+function revenueClass(v){
+if (!v) return "";
+if (v >= 140000) return "good";
+if (v >= 100000) return "medium";
+return "low";
+}
+
+function changeMonth(n){
+month += n;
+
+if (month < 0){
+month = 11;
+year--;
+}
+
+if (month > 11){
+month = 0;
+year++;
+}
+
+render();
+}
+
+function render(){
+const calendar = document.getElementById("calendar");
+calendar.innerHTML = "";
+
+document.getElementById("monthTitle").innerText = monthNames[month] + " " + year;
+
+weekdays.forEach((dayName) => {
+let el = document.createElement("div");
+el.className = "weekday";
+el.innerText = dayName;
+calendar.appendChild(el);
+});
+
+let weekHeader = document.createElement("div");
+weekHeader.className = "weekSummaryHeader";
+weekHeader.innerText = "Итог недели";
+calendar.appendChild(weekHeader);
+
+let first = new Date(year, month, 1);
+let start = first.getDay();
+start = start === 0 ? 6 : start - 1;
+
+let days = new Date(year, month + 1, 0).getDate();
+
+let total = 0;
+let count = 0;
+let best = null;
+let worst = null;
+let bestDay = null;
+let worstDay = null;
+
+for (let d = 1; d <= days; d++){
+let date = formatDate(year, month, d);
+let revenue = Number(revenueData[date] || 0);
+
+if (revenue > 0){
+total += revenue;
+count++;
+
+if (best === null || revenue > best){
+best = revenue;
+bestDay = d;
+}
+
+if (worst === null || revenue < worst){
+worst = revenue;
+worstDay = d;
+}
+}
+}
+
+let avg = count ? Math.round(total / count) : 0;
+let nds = Math.round(total * 0.05);
+let forecast = count ? Math.round(avg * days) : 0;
+let monthGross = calculateGross(total);
+
+document.getElementById("monthTotal").innerText = formatMoney(total);
+document.getElementById("monthAverage").innerText = formatMoney(avg);
+document.getElementById("monthNds").innerText = formatMoney(nds);
+document.getElementById("forecast").innerText = formatMoney(forecast);
+document.getElementById("monthGross").innerText = formatMoney(monthGross);
+
+document.getElementById("bestWorst").innerHTML = count
+? "<div class='bestBox'>🏆 Лучший день: " + bestDay + " " + monthNames[month] + " — " +
+formatMoney(best) + "<br>" +
+"😢 Худший день: " + worstDay + " " + monthNames[month] + " — " +
+formatMoney(worst) + "</div>"
+: "<div class='bestBox'>За " + monthNames[month].toLowerCase() + " " + year + " пока нет сохранённых выручек.</div>";
+
+let prevMonth = month - 1;
+let prevYear = year;
+
+if (prevMonth < 0){
+prevMonth = 11;
+prevYear--;
+}
+
+let prevTotal = 0;
+let prevCount = 0;
+let prevPeriodTotal = 0;
+let prevPeriodCount = 0;
+let currentPeriodTotal = 0;
+let isCurrentView = month === today.getMonth() && year === today.getFullYear();
+let latestFilledDay = 0;
+let prevMonthDays = new Date(prevYear, prevMonth + 1, 0).getDate();
+
+for (let date in revenueData){
+let parsed = new Date(date + "T00:00:00");
+let value = Number(revenueData[date] || 0);
+
+if (parsed.getMonth() === month && parsed.getFullYear() === year && value > 0){
+latestFilledDay = Math.max(latestFilledDay, parsed.getDate());
+}
+}
+
+let periodEnd = isCurrentView
+? (latestFilledDay || Math.min(today.getDate(), days))
+: days;
+let prevPeriodEnd = Math.min(periodEnd, prevMonthDays);
+let weekAnchorDay = latestFilledDay || Math.min(periodEnd, days);
+for (let date in revenueData){
+let parsed = new Date(date + "T00:00:00");
+let value = Number(revenueData[date] || 0);
+
+if (parsed.getMonth() === prevMonth && parsed.getFullYear() === prevYear){
+prevTotal += value;
+
+if (value > 0){
+prevCount++;
+}
+
+if (parsed.getDate() <= prevPeriodEnd && value > 0){
+prevPeriodTotal += value;
+prevPeriodCount++;
+}
+}
+
+if (parsed.getMonth() === month && parsed.getFullYear() === year && parsed.getDate() <= periodEnd && value > 0){
+currentPeriodTotal += value;
+}
+
+}
+
+let totalSlots = Math.ceil((start + days) / 7) * 7;
+let calendarDay = 1;
+
+for (let slot = 0; slot < totalSlots; slot++){
+let weekdayIndex = slot % 7;
+let hasDate = slot >= start && calendarDay <= days;
+
+if (hasDate){
+let date = formatDate(year, month, calendarDay);
+let revenue = Number(revenueData[date] || 0);
+let cell = document.createElement("div");
+let isToday = calendarDay === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+let emoji = "";
+
+if (bestDay === calendarDay) emoji = " 🏆";
+if (worstDay === calendarDay) emoji = " 😢";
+if (bestDay === calendarDay && worstDay === calendarDay) emoji = " 🏆";
+
+cell.className = "day " + revenueClass(revenue) + (isToday ? " today" : "");
+cell.innerHTML =
+"<div class='revenue'>" + (revenue ? formatMoney(revenue) : "") + "</div>" +
+"<div class='cost'>" + (revenue ? "Себестоимость: " + formatMoney(calculateCost(revenue)) : "") + "</div>" +
+"<div class='gross'>" + (revenue ? "Валовая: " + formatMoney(calculateGross(revenue)) : "") + "</div>" +
+"<div class='date'>" + calendarDay + emoji + "</div>";
+
+calendar.appendChild(cell);
+calendarDay++;
+} else {
+calendar.appendChild(document.createElement("div"));
+}
+
+if (weekdayIndex === 6){
+let weekStartDay = Math.max(1, slot - 6 - start + 1);
+let weekEndDay = Math.min(days, slot - start + 1);
+let weekRevenue = 0;
+let weekCost = 0;
+let weekGross = 0;
+
+if (weekEndDay >= weekStartDay){
+for (let day = weekStartDay; day <= weekEndDay; day++){
+let revenue = Number(revenueData[formatDate(year, month, day)] || 0);
+if (revenue > 0){
+weekRevenue += revenue;
+weekCost += calculateCost(revenue);
+weekGross += calculateGross(revenue);
+}
+}
+}
+
+let weekSummary = document.createElement("div");
+let isAnchorWeek = weekAnchorDay > 0 && weekAnchorDay >= weekStartDay && weekAnchorDay <= weekEndDay;
+weekSummary.className = "weekSummary" + (isAnchorWeek ? " today" : "");
+weekSummary.innerHTML =
+"<div class='weekSummaryTitle'>Неделя " + weekStartDay + "-" + weekEndDay + "</div>" +
+"<div class='weekSummaryValue'>Выручка: " + formatMoney(weekRevenue) + "<br>Себестоимость: " + formatMoney(weekCost) + "<br>Валовая: " + formatMoney(weekGross) + "</div>";
+calendar.appendChild(weekSummary);
+}
+}
+
+let compare = "—";
+
+if (prevTotal > 0){
+let diff = ((total - prevTotal) / prevTotal * 100).toFixed(1);
+compare = (Number(diff) > 0 ? "+" : "") + diff + "%";
+}
+
+document.getElementById("compare").innerText = compare;
+
+let periodLabel = isCurrentView ? "1-" + periodEnd + " число" : "полный месяц";
+let prevAverageFullMonth = prevCount ? Math.round(prevTotal / prevCount) : 0;
+let prevForecast = prevCount ? Math.round((prevTotal / prevCount) * prevMonthDays) : 0;
+let monthCost = calculateCost(total);
+
+document.getElementById("monthTotalCompare").innerText =
+periodLabel + ": " + formatDelta(currentPeriodTotal, prevPeriodTotal);
+
+document.getElementById("monthAverageCompare").innerText =
+"полный месяц: " + formatDelta(avg, prevAverageFullMonth);
+
+document.getElementById("forecastCompare").innerText =
+"полный месяц: " + formatDelta(forecast, prevForecast);
+
+document.getElementById("monthCost").innerText = formatMoney(monthCost);
+}
+
+async function loadRevenueData(){
+try {
+let response = await fetch(revenueApiUrl, { cache: "no-store" });
+if (!response.ok){
+throw new Error("HTTP " + response.status);
+}
+
+let json = await response.json();
+revenueData = json && typeof json === "object" ? json : {};
+render();
+} catch (error) {
+console.error("Не удалось загрузить данные календаря:", error);
+revenueData = {};
+render();
+document.getElementById("bestWorst").innerHTML =
+"<div class='bestBox'>Не удалось загрузить данные из Google Sheets. Проверь ссылку Apps Script и доступ к веб-приложению.</div>";
+}
+}
+
+loadRevenueData();
+</script>
+
+</body>
+</html>
