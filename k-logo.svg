@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="0" fill="#ff7a00"></rect>
+
+  <!-- Стойка -->
+  <rect x="150" y="96" width="74" height="320" fill="#000000"></rect>
+
+  <!-- Верхний луч -->
+  <polygon points="224,248 318,96 396,96 286,248" fill="#000000"></polygon>
+
+  <!-- Нижний луч -->
+  <polygon points="224,264 286,264 396,416 318,416" fill="#000000"></polygon>
+</svg>
