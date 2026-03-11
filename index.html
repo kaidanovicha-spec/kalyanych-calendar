@@ -165,6 +165,65 @@ max-width:1100px;
 margin-bottom:10px;
 }
 
+.pinOverlay{
+position:fixed;
+inset:0;
+background:rgba(17,17,17,0.72);
+display:flex;
+align-items:center;
+justify-content:center;
+padding:20px;
+z-index:1000;
+}
+
+.pinOverlay[hidden]{
+display:none;
+}
+
+.pinCard{
+width:100%;
+max-width:360px;
+background:white;
+border-radius:18px;
+padding:24px;
+box-shadow:0 20px 60px rgba(0,0,0,0.2);
+}
+
+.pinTitle{
+font-size:24px;
+font-weight:700;
+margin-bottom:8px;
+}
+
+.pinText{
+font-size:14px;
+color:#666;
+margin-bottom:14px;
+line-height:1.4;
+}
+
+.pinInput{
+width:100%;
+padding:12px 14px;
+border:1px solid #ddd;
+border-radius:12px;
+font-size:20px;
+letter-spacing:6px;
+text-align:center;
+margin-bottom:12px;
+}
+
+.pinError{
+font-size:13px;
+color:#c62828;
+min-height:18px;
+margin-bottom:10px;
+}
+
+.appContent[hidden]{
+display:none;
+}
+
 @media (max-width: 900px){
 .stats{
 grid-template-columns:repeat(3,minmax(0,1fr));
@@ -212,6 +271,18 @@ grid-template-columns:1fr;
 </style>
 </head>
 <body>
+
+<div class="pinOverlay" id="pinOverlay">
+<div class="pinCard">
+<div class="pinTitle">Доступ к календарю</div>
+<div class="pinText">Введи 4-значный PIN-код для просмотра календаря.</div>
+<input class="pinInput" id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
+<div class="pinError" id="pinError"></div>
+<button id="pinButton" type="button">Открыть</button>
+</div>
+</div>
+
+<div class="appContent" id="appContent" hidden>
 
 <h1>📊 Календарь Кальяныч</h1>
 
@@ -264,12 +335,15 @@ grid-template-columns:1fr;
 
 <div id="bestWorst"></div>
 <div class="calendar" id="calendar"></div>
+</div>
 
 <script>
 let today = new Date();
 let year = today.getFullYear();
 let month = today.getMonth();
 const fixedCostPercent = 54.6;
+const accessPin = "0489";
+const accessSessionKey = "kalyanychCalendarAccessGranted";
 const revenueApiUrl = "https://script.google.com/macros/s/AKfycbyPoZgiulk-_qC7hKRxkoOarINnqzsQ5wtLed7rVVSW994dVC2QFxZwyQuT3Dr_hQTJ0w/exec";
 let revenueData = {};
 
@@ -331,6 +405,28 @@ year++;
 }
 
 render();
+}
+
+function unlockApp(){
+document.getElementById("pinOverlay").hidden = true;
+document.getElementById("appContent").hidden = false;
+sessionStorage.setItem(accessSessionKey, "1");
+loadRevenueData();
+setInterval(loadRevenueData, 5 * 60 * 1000);
+}
+
+function checkPin(){
+let pinInput = document.getElementById("pinInput");
+let pinError = document.getElementById("pinError");
+
+if (pinInput.value === accessPin){
+pinError.innerText = "";
+unlockApp();
+return;
+}
+
+pinError.innerText = "Неверный PIN-код";
+pinInput.select();
 }
 
 function render(){
@@ -560,7 +656,16 @@ document.getElementById("bestWorst").innerHTML =
 }
 }
 
-loadRevenueData();
+document.getElementById("pinButton").addEventListener("click", checkPin);
+document.getElementById("pinInput").addEventListener("keydown", (event) => {
+if (event.key === "Enter") checkPin();
+});
+
+if (sessionStorage.getItem(accessSessionKey) === "1"){
+unlockApp();
+} else {
+document.getElementById("pinInput").focus();
+}
 </script>
 
 </body>
