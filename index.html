@@ -181,6 +181,25 @@ flex-direction:column;
 justify-content:flex-start;
 }
 
+.reportButton{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+margin-top:14px;
+padding:12px 16px;
+border-radius:12px;
+background:#111;
+color:#fff;
+text-decoration:none;
+font-size:14px;
+font-weight:600;
+width:max-content;
+}
+
+.reportButton:hover{
+background:#000;
+}
+
 .topIndicators{
 display:grid;
 grid-template-columns:1fr 1fr;
@@ -715,7 +734,7 @@ document.getElementById("topIndicators").innerHTML = count
 ? "<div class='bestBox'>🏆 Лучший день: " + bestDay + " " + monthNames[month] + " — " +
 formatMoney(best) + "<br>" +
 "😢 Худший день: " + worstDay + " " + monthNames[month] + " — " +
-formatMoney(worst) + "</div>" +
+formatMoney(worst) + "<a class='reportButton' href='./Отчет_по_магазинам.html' target='_blank' rel='noopener noreferrer'>Смотреть сводный отчет по сети 2026</a></div>" +
 "<div class='targetBox'>" +
 "<div class='targetHeader'><div class='targetTitle'>Точка безубыточности</div><div class='targetState'>" + targetIcon + "</div></div>" +
 "<div class='targetValue'>" + formatMoney(total) + "</div>" +
@@ -724,7 +743,7 @@ formatMoney(worst) + "</div>" +
 "<div class='targetTrack'><div class='targetMidpoint'></div><div class='targetFill " + targetColor + "' style='left:" + fillLeft + "%;width:" + fillWidth + "%;'></div></div>" +
 "<div class='targetLabelsWide'><span>0 ₽</span><span>" + formatMoney(breakEvenTarget) + "</span><span>" + formatMoney(scaleMax) + "</span></div>" +
 "</div>"
-: "<div class='bestBox'>За " + monthNames[month].toLowerCase() + " " + year + " пока нет сохранённых выручек.</div>" +
+: "<div class='bestBox'>За " + monthNames[month].toLowerCase() + " " + year + " пока нет сохранённых выручек.<a class='reportButton' href='./Отчет_по_магазинам.html' target='_blank' rel='noopener noreferrer'>Смотреть сводный отчет по сети 2026</a></div>" +
 "<div class='targetBox'>" +
 "<div class='targetHeader'><div class='targetTitle'>Точка безубыточности</div><div class='targetState'>🚗</div></div>" +
 "<div class='targetValue'>0 ₽</div>" +
