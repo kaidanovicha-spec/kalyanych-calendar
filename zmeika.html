@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Кальяныч змейка</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="page">
+    <section class="panel">
+      <div class="heading">
+        <img class="logo" src="k-logo.svg" alt="Логотип К">
+        <div>
+          <p class="eyebrow">Аркада</p>
+          <h1>Кальяныч змейка</h1>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <span>Счёт</span>
+          <strong id="score">0</strong>
+        </div>
+        <div class="stat">
+          <span>Рекорд</span>
+          <strong id="best">0</strong>
+        </div>
+      </div>
+
+      <p class="hint">Управление: стрелки или WASD. Пробел — пауза, Enter — рестарт.</p>
+    </section>
+
+    <section class="game-shell">
+      <canvas id="game" width="600" height="600" aria-label="Игровое поле змейки"></canvas>
+      <div class="overlay" id="overlay">
+        <h2 id="overlay-title">Нажми любую стрелку</h2>
+        <p id="overlay-text">Собирай мешочки денег и не врезайся в стены или в себя.</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
