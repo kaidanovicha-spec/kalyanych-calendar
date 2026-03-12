@@ -85,6 +85,7 @@ display:grid;
 grid-template-columns:repeat(7,1fr) 180px;
 gap:10px;
 max-width:1100px;
+margin-top:44px;
 }
 
 .weekSummary{
@@ -174,6 +175,130 @@ border-radius:14px;
 box-shadow:0 4px 20px rgba(0,0,0,0.08);
 max-width:1100px;
 margin-bottom:10px;
+min-height:160px;
+display:flex;
+flex-direction:column;
+justify-content:flex-start;
+}
+
+.topIndicators{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:12px;
+max-width:1100px;
+margin-bottom:10px;
+align-items:stretch;
+}
+
+.topIndicators .bestBox,
+.topIndicators .targetBox{
+margin-bottom:0;
+height:100%;
+}
+
+.targetBox{
+background:white;
+padding:14px;
+border-radius:14px;
+box-shadow:0 4px 20px rgba(0,0,0,0.08);
+min-height:160px;
+display:flex;
+flex-direction:column;
+}
+
+.targetHeader{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:12px;
+margin-bottom:10px;
+}
+
+.targetTitle{
+font-size:13px;
+color:#777;
+}
+
+.targetState{
+font-size:28px;
+line-height:1;
+}
+
+.targetValue{
+font-size:24px;
+font-weight:700;
+margin-bottom:6px;
+}
+
+.targetMeta{
+font-size:13px;
+color:#666;
+margin-bottom:8px;
+}
+
+.targetHint{
+font-size:13px;
+color:#666;
+margin-bottom:12px;
+}
+
+.targetTrack{
+position:relative;
+height:22px;
+border-radius:999px;
+background:#ececf1;
+overflow:hidden;
+margin-bottom:10px;
+}
+
+.targetFill{
+position:absolute;
+top:0;
+bottom:0;
+border-radius:999px;
+transition:left 0.3s ease,width 0.3s ease;
+}
+
+.targetFill.red{
+background:linear-gradient(90deg,#ff7b7b,#ff4d4d);
+}
+
+.targetFill.green{
+background:linear-gradient(90deg,#56c271,#1b9c4a);
+}
+
+.targetLabels{
+display:flex;
+justify-content:space-between;
+font-size:12px;
+color:#777;
+}
+
+.targetMidpoint{
+position:absolute;
+left:50%;
+top:-4px;
+bottom:-4px;
+width:2px;
+background:#111;
+opacity:0.25;
+}
+
+.targetLabelsWide{
+display:grid;
+grid-template-columns:1fr 1fr 1fr;
+font-size:12px;
+color:#777;
+align-items:center;
+margin-top:auto;
+}
+
+.targetLabelsWide span:nth-child(2){
+text-align:center;
+}
+
+.targetLabelsWide span:nth-child(3){
+text-align:right;
 }
 
 .pinOverlay{
@@ -267,6 +392,10 @@ display:none;
 @media (max-width: 900px){
 .stats{
 grid-template-columns:repeat(3,minmax(0,1fr));
+}
+
+.topIndicators{
+grid-template-columns:1fr;
 }
 }
 
@@ -379,7 +508,7 @@ grid-template-columns:1fr;
 </div>
 </div>
 
-<div id="bestWorst"></div>
+<div class="topIndicators" id="topIndicators"></div>
 <div class="calendar" id="calendar"></div>
 </div>
 
@@ -388,6 +517,7 @@ let today = new Date();
 let year = today.getFullYear();
 let month = today.getMonth();
 const fixedCostPercent = 54.6;
+const breakEvenTarget = 2900000;
 const accessPin = "0489";
 const accessSessionKey = "kalyanychCalendarAccessGranted";
 const revenueApiUrl = "https://script.google.com/macros/s/AKfycbyPoZgiulk-_qC7hKRxkoOarINnqzsQ5wtLed7rVVSW994dVC2QFxZwyQuT3Dr_hQTJ0w/exec";
@@ -542,6 +672,16 @@ let avg = count ? Math.round(total / count) : 0;
 let nds = Math.round(total * 0.05);
 let forecast = count ? Math.round(avg * days) : 0;
 let monthGross = calculateGross(total);
+let latestFilledDay = 0;
+
+for (let date in revenueData){
+let parsed = new Date(date + "T00:00:00");
+let value = Number(revenueData[date] || 0);
+
+if (parsed.getMonth() === month && parsed.getFullYear() === year && value > 0){
+latestFilledDay = Math.max(latestFilledDay, parsed.getDate());
+}
+}
 
 document.getElementById("monthTotal").innerText = formatMoney(total);
 document.getElementById("monthAverage").innerText = formatMoney(avg);
@@ -549,12 +689,49 @@ document.getElementById("monthNds").innerText = formatMoney(nds);
 document.getElementById("forecast").innerText = formatMoney(forecast);
 document.getElementById("monthGross").innerText = formatMoney(monthGross);
 
-document.getElementById("bestWorst").innerHTML = count
+let targetDiff = total - breakEvenTarget;
+let scaleMax = breakEvenTarget * 2;
+let targetPercent = Math.max(0, Math.min((total / scaleMax) * 100, 100));
+let targetColor = total >= breakEvenTarget ? "green" : "red";
+let fillLeft = total >= breakEvenTarget ? 50 : 0;
+let fillWidth = total >= breakEvenTarget ? Math.max(0, targetPercent - 50) : targetPercent;
+let targetIcon = "🚗";
+if (total >= breakEvenTarget && targetDiff < 500000){
+targetIcon = "😎";
+}
+if (targetDiff >= 500000){
+targetIcon = "💰";
+}
+let targetMessage = total >= breakEvenTarget
+? "Выше точки безубыточности на " + formatMoney(targetDiff)
+: "До точки безубыточности осталось " + formatMoney(Math.abs(targetDiff));
+let remainingDays = Math.max(days - latestFilledDay, 0);
+let requiredPerDay = targetDiff >= 0
+? 0
+: (remainingDays > 0 ? Math.ceil(Math.abs(targetDiff) / remainingDays) : Math.abs(targetDiff));
+
+document.getElementById("topIndicators").innerHTML = count
 ? "<div class='bestBox'>🏆 Лучший день: " + bestDay + " " + monthNames[month] + " — " +
 formatMoney(best) + "<br>" +
 "😢 Худший день: " + worstDay + " " + monthNames[month] + " — " +
-formatMoney(worst) + "</div>"
-: "<div class='bestBox'>За " + monthNames[month].toLowerCase() + " " + year + " пока нет сохранённых выручек.</div>";
+formatMoney(worst) + "</div>" +
+"<div class='targetBox'>" +
+"<div class='targetHeader'><div class='targetTitle'>Точка безубыточности</div><div class='targetState'>" + targetIcon + "</div></div>" +
+"<div class='targetValue'>" + formatMoney(total) + "</div>" +
+"<div class='targetMeta'>" + targetMessage + "</div>" +
+"<div class='targetHint'>Минимум в день: " + formatMoney(requiredPerDay) + "</div>" +
+"<div class='targetTrack'><div class='targetMidpoint'></div><div class='targetFill " + targetColor + "' style='left:" + fillLeft + "%;width:" + fillWidth + "%;'></div></div>" +
+"<div class='targetLabelsWide'><span>0 ₽</span><span>" + formatMoney(breakEvenTarget) + "</span><span>" + formatMoney(scaleMax) + "</span></div>" +
+"</div>"
+: "<div class='bestBox'>За " + monthNames[month].toLowerCase() + " " + year + " пока нет сохранённых выручек.</div>" +
+"<div class='targetBox'>" +
+"<div class='targetHeader'><div class='targetTitle'>Точка безубыточности</div><div class='targetState'>🚗</div></div>" +
+"<div class='targetValue'>0 ₽</div>" +
+"<div class='targetMeta'>До точки безубыточности осталось " + formatMoney(breakEvenTarget) + "</div>" +
+"<div class='targetHint'>Минимум в день: " + formatMoney(Math.ceil(breakEvenTarget / days)) + "</div>" +
+"<div class='targetTrack'><div class='targetMidpoint'></div><div class='targetFill red' style='left:0%;width:0%;'></div></div>" +
+"<div class='targetLabelsWide'><span>0 ₽</span><span>" + formatMoney(breakEvenTarget) + "</span><span>" + formatMoney(scaleMax) + "</span></div>" +
+"</div>";
 
 let prevMonth = month - 1;
 let prevYear = year;
@@ -570,17 +747,7 @@ let prevPeriodTotal = 0;
 let prevPeriodCount = 0;
 let currentPeriodTotal = 0;
 let isCurrentView = month === today.getMonth() && year === today.getFullYear();
-let latestFilledDay = 0;
 let prevMonthDays = new Date(prevYear, prevMonth + 1, 0).getDate();
-
-for (let date in revenueData){
-let parsed = new Date(date + "T00:00:00");
-let value = Number(revenueData[date] || 0);
-
-if (parsed.getMonth() === month && parsed.getFullYear() === year && value > 0){
-latestFilledDay = Math.max(latestFilledDay, parsed.getDate());
-}
-}
 
 let periodEnd = isCurrentView
 ? (latestFilledDay || Math.min(today.getDate(), days))
@@ -709,7 +876,7 @@ render();
 console.error("Не удалось загрузить данные календаря:", error);
 revenueData = {};
 render();
-document.getElementById("bestWorst").innerHTML =
+document.getElementById("topIndicators").innerHTML =
 "<div class='bestBox'>Не удалось загрузить данные из Google Sheets. Проверь ссылку Apps Script и доступ к веб-приложению.</div>";
 }
 }
