@@ -19,7 +19,7 @@ const levelConfig = {
     moveInterval: 145
   },
   manager: {
-    title: "2: управляющий",
+    title: "2: Управляющий",
     obstacleCount: 5,
     obstacleTypes: ["store"],
     moneyPerBag: 500,
