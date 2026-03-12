@@ -27,6 +27,18 @@ h1{
 margin-bottom:20px;
 }
 
+.brandTitle{
+display:flex;
+align-items:center;
+gap:14px;
+}
+
+.brandLogo{
+width:42px;
+height:42px;
+flex:0 0 auto;
+}
+
 .header{
 display:flex;
 align-items:center;
@@ -34,6 +46,33 @@ justify-content:space-between;
 max-width:1100px;
 margin-bottom:20px;
 gap:12px;
+}
+
+.monthHeader{
+display:flex;
+align-items:center;
+justify-content:center;
+gap:14px;
+flex:1;
+min-width:0;
+}
+
+.monthExpectation{
+font-size:14px;
+font-weight:600;
+color:#666;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+max-width:360px;
+}
+
+.monthExpectation.positive{
+color:#1b9c4a;
+}
+
+.monthExpectation.negative{
+color:#d94848;
 }
 
 button{
@@ -59,6 +98,14 @@ padding:14px;
 border-radius:14px;
 box-shadow:0 4px 20px rgba(0,0,0,0.08);
 min-width:0;
+}
+
+.statCard.positive{
+background:#e6f7ea;
+}
+
+.statCard.negative{
+background:#fdeaea;
 }
 
 .statTitle{
@@ -185,6 +232,35 @@ justify-content:flex-start;
 font-size:13px;
 color:#777;
 margin-bottom:10px;
+}
+
+.reportCardHeader{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:12px;
+margin-bottom:10px;
+}
+
+.reportYearSwitcher{
+display:flex;
+align-items:center;
+gap:8px;
+}
+
+.reportYearButton{
+padding:4px 10px;
+min-width:34px;
+border-radius:999px;
+font-size:12px;
+}
+
+.reportYearValue{
+font-size:13px;
+font-weight:700;
+color:#111;
+min-width:54px;
+text-align:center;
 }
 
 .monthsChart{
@@ -484,6 +560,18 @@ body{
 margin:14px;
 }
 
+.monthHeader{
+flex-direction:column;
+gap:6px;
+}
+
+.monthExpectation{
+max-width:none;
+font-size:13px;
+text-align:center;
+white-space:normal;
+}
+
 .stats{
 grid-template-columns:repeat(2,minmax(0,1fr));
 }
@@ -539,22 +627,25 @@ grid-template-columns:1fr;
 
 <div class="appContent" id="appContent" hidden>
 
-<h1>📊 Календарь Кальяныч</h1>
+<h1 class="brandTitle"><img class="brandLogo" src="./k-logo.svg" alt="К">Календарь Кальяныч</h1>
 
 <div class="header">
 <button onclick="changeMonth(-1)">◀</button>
+<div class="monthHeader">
 <h2 id="monthTitle"></h2>
+<div class="monthExpectation" id="monthExpectation"></div>
+</div>
 <button onclick="changeMonth(1)">▶</button>
 </div>
 
 <div class="stats">
-<div class="statCard">
+<div class="statCard" id="monthTotalCard">
 <div class="statTitle">Выручка месяца</div>
 <div class="statValue" id="monthTotal"></div>
 <div class="statCompare" id="monthTotalCompare"></div>
 </div>
 
-<div class="statCard">
+<div class="statCard" id="monthAverageCard">
 <div class="statTitle">Средняя в день</div>
 <div class="statValue" id="monthAverage"></div>
 <div class="statCompare" id="monthAverageCompare"></div>
@@ -568,7 +659,7 @@ grid-template-columns:1fr;
 <div class="statCard">
 <div class="statTitle">Себестоимость месяца</div>
 <div class="statValue" id="monthCost"></div>
-<div class="statCompare">Процент себестоимости: 54,6%</div>
+<div class="statCompare" id="costPercentLabel"></div>
 </div>
 
 <div class="statCard">
@@ -576,15 +667,16 @@ grid-template-columns:1fr;
 <div class="statValue" id="monthGross"></div>
 </div>
 
-<div class="statCard">
+<div class="statCard" id="forecastCard">
 <div class="statTitle">Прогноз месяца</div>
 <div class="statValue" id="forecast"></div>
 <div class="statCompare" id="forecastCompare"></div>
 </div>
 
-<div class="statCard">
-<div class="statTitle">К прошлому месяцу</div>
+<div class="statCard" id="compareCard">
+<div class="statTitle">К прошлому году</div>
 <div class="statValue" id="compare"></div>
+<div class="statCompare" id="compareMeta"></div>
 </div>
 </div>
 
@@ -596,8 +688,6 @@ grid-template-columns:1fr;
 let today = new Date();
 let year = today.getFullYear();
 let month = today.getMonth();
-const fixedCostPercent = 54.6;
-const breakEvenTarget = 2900000;
 const accessPin = "0489";
 const accessSessionKey = "kalyanychCalendarAccessGranted";
 const revenueApiUrl = "https://script.google.com/macros/s/AKfycbyPoZgiulk-_qC7hKRxkoOarINnqzsQ5wtLed7rVVSW994dVC2QFxZwyQuT3Dr_hQTJ0w/exec";
@@ -620,8 +710,20 @@ function formatMoney(value){
 return Number(value || 0).toLocaleString("ru-RU") + " ₽";
 }
 
+function getBreakEvenTarget(targetYear){
+if (targetYear === 2025) return 2750000;
+if (targetYear === 2026) return 2900000;
+return 2900000;
+}
+
+function getCostPercent(targetYear){
+if (targetYear === 2025) return 58.6;
+if (targetYear === 2026) return 54.6;
+return 54.6;
+}
+
 function calculateCost(value){
-return Math.round(Number(value || 0) * (fixedCostPercent / 100));
+return Math.round(Number(value || 0) * (getCostPercent(year) / 100));
 }
 
 function calculateGross(value){
@@ -638,6 +740,22 @@ let sign = Number(diff) > 0 ? "+" : "";
 let amount = current - previous;
 let amountSign = amount > 0 ? "+" : "";
 return amountSign + formatMoney(amount) + " (" + sign + diff + "%) к прошлому месяцу";
+}
+
+function getTrend(current, previous){
+if (previous <= 0) return "neutral";
+if (current > previous) return "positive";
+if (current < previous) return "negative";
+return "neutral";
+}
+
+function applyTrendCard(cardId, trend){
+let card = document.getElementById(cardId);
+if (!card) return;
+card.classList.remove("positive", "negative");
+if (trend === "positive" || trend === "negative"){
+card.classList.add(trend);
+}
 }
 
 function revenueClass(v){
@@ -665,6 +783,11 @@ render();
 
 function openMonth(targetMonth){
 month = targetMonth;
+render();
+}
+
+function changeChartYear(step){
+year += step;
 render();
 }
 
@@ -759,6 +882,7 @@ let forecast = count ? Math.round(avg * days) : 0;
 let monthGross = calculateGross(total);
 let latestFilledDay = 0;
 let monthlyTotals = new Array(12).fill(0);
+let previousYearMonthlyTotals = new Array(12).fill(0);
 
 for (let date in revenueData){
 let parsed = new Date(date + "T00:00:00");
@@ -771,10 +895,15 @@ latestFilledDay = Math.max(latestFilledDay, parsed.getDate());
 if (parsed.getFullYear() === year && value > 0){
 monthlyTotals[parsed.getMonth()] += value;
 }
+
+if (parsed.getFullYear() === year - 1 && value > 0){
+previousYearMonthlyTotals[parsed.getMonth()] += value;
+}
 }
 
 let maxMonthlyTotal = Math.max(...monthlyTotals, 1);
 let monthShortNames = ["Я","Ф","М","А","М","И","И","А","С","О","Н","Д"];
+let breakEvenTarget = getBreakEvenTarget(year);
 let monthsChartHtml = monthlyTotals.map((value, index) => {
 let barHeight = value > 0 ? Math.max(8, Math.round((value / maxMonthlyTotal) * 78)) : 6;
 let barClass = value >= breakEvenTarget ? "green" : "red";
@@ -783,18 +912,43 @@ let barStyle = "height:" + barHeight + "px;";
 return "<button class='monthBarWrap' type='button' onclick='openMonth(" + index + ")' title='" + monthNames[index] + ": " + formatMoney(value) + "'><div class='monthBar " + barClass + "' style='" + barStyle + "'></div><div class='monthBarLabel'>" + monthShortNames[index] + "</div></button>";
 }).join("");
 
+let monthExpectation = document.getElementById("monthExpectation");
+monthExpectation.innerText = "";
+monthExpectation.classList.remove("positive", "negative");
+
+let isCurrentCalendarMonth = year === today.getFullYear() && month === today.getMonth();
+if (isCurrentCalendarMonth && month > 0) {
+let previousYearCurrentMonth = previousYearMonthlyTotals[month];
+let previousYearPrevMonth = previousYearMonthlyTotals[month - 1];
+
+if (previousYearCurrentMonth > 0 && previousYearPrevMonth > 0) {
+let expectedDiff = ((previousYearCurrentMonth - previousYearPrevMonth) / previousYearPrevMonth * 100).toFixed(1);
+let expectedValue = Math.abs(Number(expectedDiff));
+
+if (Number(expectedDiff) > 0) {
+monthExpectation.innerText = "Ожидаем рост на " + expectedValue + "%";
+monthExpectation.classList.add("positive");
+} else if (Number(expectedDiff) < 0) {
+monthExpectation.innerText = "Ожидаем падение на " + expectedValue + "%";
+monthExpectation.classList.add("negative");
+} else {
+monthExpectation.innerText = "Ожидаем без изменений";
+}
+}
+}
+
 document.getElementById("monthTotal").innerText = formatMoney(total);
 document.getElementById("monthAverage").innerText = formatMoney(avg);
 document.getElementById("monthNds").innerText = formatMoney(nds);
 document.getElementById("forecast").innerText = formatMoney(forecast);
 document.getElementById("monthGross").innerText = formatMoney(monthGross);
+document.getElementById("costPercentLabel").innerText = "Процент себестоимости: " + String(getCostPercent(year)).replace(".", ",") + "%";
 
 let targetDiff = total - breakEvenTarget;
 let scaleMax = breakEvenTarget * 2;
 let targetPercent = Math.max(0, Math.min((total / scaleMax) * 100, 100));
-let targetColor = total >= breakEvenTarget ? "green" : "red";
-let fillLeft = total >= breakEvenTarget ? 50 : 0;
-let fillWidth = total >= breakEvenTarget ? Math.max(0, targetPercent - 50) : targetPercent;
+let redFillWidth = Math.min(targetPercent, 50);
+let greenFillWidth = total >= breakEvenTarget ? Math.max(0, targetPercent - 50) : 0;
 let targetIcon = "🚗";
 if (total >= breakEvenTarget && targetDiff < 500000){
 targetIcon = "😎";
@@ -811,16 +965,16 @@ let requiredPerDay = targetDiff >= 0
 : (remainingDays > 0 ? Math.ceil(Math.abs(targetDiff) / remainingDays) : Math.abs(targetDiff));
 
 document.getElementById("topIndicators").innerHTML = count
-? "<div class='bestBox'><div class='reportCardTitle'>Выручка по месяцам за " + year + "</div><div class='monthsChart'>" + monthsChartHtml + "</div><div class='reportButtonRow'><a class='reportButton' href='./Отчет_по_магазинам.html' target='_blank' rel='noopener noreferrer'>Смотреть сводный отчет по сети 2026</a></div></div>" +
+? "<div class='bestBox'><div class='reportCardHeader'><div class='reportCardTitle'>Выручка по месяцам</div><div class='reportYearSwitcher'><button class='reportYearButton' type='button' onclick='changeChartYear(-1)'>◀</button><div class='reportYearValue'>" + year + "</div><button class='reportYearButton' type='button' onclick='changeChartYear(1)'>▶</button></div></div><div class='monthsChart'>" + monthsChartHtml + "</div><div class='reportButtonRow'><a class='reportButton' href='./Отчет_по_магазинам.html' target='_blank' rel='noopener noreferrer'>Смотреть сводный отчет по сети 2026</a></div></div>" +
 "<div class='targetBox'>" +
 "<div class='targetHeader'><div class='targetTitle'>Точка безубыточности</div><div class='targetState'>" + targetIcon + "</div></div>" +
 "<div class='targetValue'>" + formatMoney(total) + "</div>" +
 "<div class='targetMeta'>" + targetMessage + "</div>" +
 "<div class='targetHint'>Минимум в день: " + formatMoney(requiredPerDay) + "</div>" +
-"<div class='targetTrack'><div class='targetMidpoint'></div><div class='targetFill " + targetColor + "' style='left:" + fillLeft + "%;width:" + fillWidth + "%;'></div></div>" +
+"<div class='targetTrack'><div class='targetMidpoint'></div><div class='targetFill red' style='left:0%;width:" + redFillWidth + "%;'></div><div class='targetFill green' style='left:50%;width:" + greenFillWidth + "%;'></div></div>" +
 "<div class='targetLabelsWide'><span>0 ₽</span><span>" + formatMoney(breakEvenTarget) + "</span><span>" + formatMoney(scaleMax) + "</span></div>" +
 "</div>"
-: "<div class='bestBox'><div class='reportCardTitle'>Выручка по месяцам за " + year + "</div><div class='monthsChart'>" + monthsChartHtml + "</div><div class='reportButtonRow'><a class='reportButton' href='./Отчет_по_магазинам.html' target='_blank' rel='noopener noreferrer'>Смотреть сводный отчет по сети 2026</a></div></div>" +
+: "<div class='bestBox'><div class='reportCardHeader'><div class='reportCardTitle'>Выручка по месяцам</div><div class='reportYearSwitcher'><button class='reportYearButton' type='button' onclick='changeChartYear(-1)'>◀</button><div class='reportYearValue'>" + year + "</div><button class='reportYearButton' type='button' onclick='changeChartYear(1)'>▶</button></div></div><div class='monthsChart'>" + monthsChartHtml + "</div><div class='reportButtonRow'><a class='reportButton' href='./Отчет_по_магазинам.html' target='_blank' rel='noopener noreferrer'>Смотреть сводный отчет по сети 2026</a></div></div>" +
 "<div class='targetBox'>" +
 "<div class='targetHeader'><div class='targetTitle'>Точка безубыточности</div><div class='targetState'>🚗</div></div>" +
 "<div class='targetValue'>0 ₽</div>" +
@@ -845,6 +999,9 @@ let prevPeriodCount = 0;
 let currentPeriodTotal = 0;
 let isCurrentView = month === today.getMonth() && year === today.getFullYear();
 let prevMonthDays = new Date(prevYear, prevMonth + 1, 0).getDate();
+let previousYear = year - 1;
+let workedEntriesCurrentYear = [];
+let workedEntriesPreviousYear = [];
 
 let periodEnd = isCurrentView
 ? (latestFilledDay || Math.min(today.getDate(), days))
@@ -870,6 +1027,14 @@ prevPeriodCount++;
 
 if (parsed.getMonth() === month && parsed.getFullYear() === year && parsed.getDate() <= periodEnd && value > 0){
 currentPeriodTotal += value;
+}
+
+if (parsed.getFullYear() === year && value > 0){
+workedEntriesCurrentYear.push({ date, value });
+}
+
+if (parsed.getFullYear() === previousYear && value > 0){
+workedEntriesPreviousYear.push({ date, value });
 }
 
 }
@@ -934,18 +1099,36 @@ calendar.appendChild(weekSummary);
 }
 
 let compare = "—";
+workedEntriesCurrentYear.sort((a, b) => a.date.localeCompare(b.date));
+workedEntriesPreviousYear.sort((a, b) => a.date.localeCompare(b.date));
 
-if (prevTotal > 0){
-let diff = ((total - prevTotal) / prevTotal * 100).toFixed(1);
+let workedDaysCurrentYear = workedEntriesCurrentYear.length;
+let matchedWorkedDaysPreviousYear = Math.min(workedDaysCurrentYear, workedEntriesPreviousYear.length);
+let comparableCurrentRevenue = workedEntriesCurrentYear
+  .slice(0, matchedWorkedDaysPreviousYear)
+  .reduce((sum, entry) => sum + Number(entry.value || 0), 0);
+let comparablePreviousRevenue = workedEntriesPreviousYear
+  .slice(0, matchedWorkedDaysPreviousYear)
+  .reduce((sum, entry) => sum + Number(entry.value || 0), 0);
+let compareTrend = getTrend(comparableCurrentRevenue, comparablePreviousRevenue);
+
+if (comparablePreviousRevenue > 0 && matchedWorkedDaysPreviousYear > 0){
+let diff = ((comparableCurrentRevenue - comparablePreviousRevenue) / comparablePreviousRevenue * 100).toFixed(1);
 compare = (Number(diff) > 0 ? "+" : "") + diff + "%";
 }
 
 document.getElementById("compare").innerText = compare;
+document.getElementById("compareMeta").innerText = matchedWorkedDaysPreviousYear > 0
+? matchedWorkedDaysPreviousYear + " дн.: " + formatMoney(comparableCurrentRevenue) + " vs " + formatMoney(comparablePreviousRevenue)
+: "Нет данных за " + previousYear + " год";
 
 let periodLabel = isCurrentView ? "1-" + periodEnd + " число" : "полный месяц";
 let prevAverageFullMonth = prevCount ? Math.round(prevTotal / prevCount) : 0;
 let prevForecast = prevCount ? Math.round((prevTotal / prevCount) * prevMonthDays) : 0;
 let monthCost = calculateCost(total);
+let monthTotalTrend = getTrend(currentPeriodTotal, prevPeriodTotal);
+let monthAverageTrend = getTrend(avg, prevAverageFullMonth);
+let forecastTrend = getTrend(forecast, prevForecast);
 
 document.getElementById("monthTotalCompare").innerText =
 periodLabel + ": " + formatDelta(currentPeriodTotal, prevPeriodTotal);
@@ -957,6 +1140,10 @@ document.getElementById("forecastCompare").innerText =
 "полный месяц: " + formatDelta(forecast, prevForecast);
 
 document.getElementById("monthCost").innerText = formatMoney(monthCost);
+applyTrendCard("monthTotalCard", monthTotalTrend);
+applyTrendCard("monthAverageCard", monthAverageTrend);
+applyTrendCard("forecastCard", forecastTrend);
+applyTrendCard("compareCard", compareTrend);
 }
 
 async function loadRevenueData(){
