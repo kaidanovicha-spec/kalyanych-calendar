@@ -5,11 +5,34 @@ const bestNode = document.getElementById("best");
 const overlay = document.getElementById("overlay");
 const overlayTitle = document.getElementById("overlay-title");
 const overlayText = document.getElementById("overlay-text");
+const difficultyButtons = document.querySelectorAll(".difficulty-button");
 
 const cellSize = 30;
 const gridSize = canvas.width / cellSize;
-const moveInterval = 120;
 const bestKey = "snake-k-best";
+const levelConfig = {
+  intern: {
+    title: "1: Продавец",
+    obstacleCount: 0,
+    obstacleTypes: [],
+    moneyPerBag: 100,
+    moveInterval: 145
+  },
+  manager: {
+    title: "2: управляющий",
+    obstacleCount: 5,
+    obstacleTypes: ["store"],
+    moneyPerBag: 500,
+    moveInterval: 132
+  },
+  owner: {
+    title: "3: ИПэшник",
+    obstacleCount: 10,
+    obstacleTypes: ["court", "store", "police", "tax", "contract", "camera", "stamp", "safe", "truck", "notice"],
+    moneyPerBag: 1000,
+    moveInterval: 119
+  }
+};
 
 const headImage = new Image();
 headImage.src = "k-logo.svg";
@@ -24,8 +47,32 @@ let running = false;
 let started = false;
 let gameOver = false;
 let lastTick = 0;
+let obstacles = [];
+let currentLevel = "intern";
 
-bestNode.textContent = String(bestScore);
+bestNode.textContent = formatMoney(bestScore);
+
+function formatMoney(value) {
+  return `${value.toLocaleString("ru-RU")} ₽`;
+}
+
+function getLevelMessage(level) {
+  if (level === "manager") {
+    return "Собирай мешочки денег и обходи 5 магазинов-помех.";
+  }
+
+  if (level === "owner") {
+    return "Собирай мешочки денег и обходи 10 препятствий: суд, магазин, полицейского и другие.";
+  }
+
+  return "Собирай мешочки денег и не врезайся в стены или в себя.";
+}
+
+function updateDifficultyButtons() {
+  difficultyButtons.forEach((button) => {
+    button.classList.toggle("active", button.dataset.level === currentLevel);
+  });
+}
 
 function resetGame() {
   snake = [
@@ -35,14 +82,16 @@ function resetGame() {
   ];
   direction = { x: 1, y: 0 };
   nextDirection = { x: 1, y: 0 };
+  obstacles = spawnObstacles();
   apple = spawnApple();
   score = 0;
   running = false;
   started = false;
   gameOver = false;
   lastTick = 0;
-  scoreNode.textContent = "0";
-  showOverlay("Нажми любую стрелку", "Собирай мешочки денег и не врезайся в стены или в себя.");
+  scoreNode.textContent = formatMoney(0);
+  updateDifficultyButtons();
+  showOverlay(levelConfig[currentLevel].title, getLevelMessage(currentLevel));
   draw();
 }
 
@@ -53,10 +102,34 @@ function spawnApple() {
       y: Math.floor(Math.random() * gridSize)
     };
     const occupied = snake?.some((segment) => segment.x === candidate.x && segment.y === candidate.y);
-    if (!occupied) {
+    const blocked = obstacles.some((obstacle) => obstacle.x === candidate.x && obstacle.y === candidate.y);
+    if (!occupied && !blocked) {
       return candidate;
     }
   }
+}
+
+function spawnObstacles() {
+  const config = levelConfig[currentLevel];
+  const nextObstacles = [];
+
+  while (nextObstacles.length < config.obstacleCount) {
+    const candidate = {
+      x: Math.floor(Math.random() * gridSize),
+      y: Math.floor(Math.random() * gridSize),
+      type: config.obstacleTypes[nextObstacles.length % config.obstacleTypes.length]
+    };
+
+    const onSnake = snake?.some((segment) => segment.x === candidate.x && segment.y === candidate.y);
+    const duplicate = nextObstacles.some((obstacle) => obstacle.x === candidate.x && obstacle.y === candidate.y);
+    const tooCloseToStart = candidate.x >= 4 && candidate.x <= 11 && candidate.y >= 7 && candidate.y <= 13;
+
+    if (!onSnake && !duplicate && !tooCloseToStart) {
+      nextObstacles.push(candidate);
+    }
+  }
+
+  return nextObstacles;
 }
 
 function showOverlay(title, text) {
@@ -120,8 +193,9 @@ function update() {
     newHead.y >= gridSize;
 
   const hitSelf = snake.some((segment) => segment.x === newHead.x && segment.y === newHead.y);
+  const hitObstacle = obstacles.some((obstacle) => obstacle.x === newHead.x && obstacle.y === newHead.y);
 
-  if (hitWall || hitSelf) {
+  if (hitWall || hitSelf || hitObstacle) {
     endGame();
     draw();
     return;
@@ -130,12 +204,12 @@ function update() {
   snake.unshift(newHead);
 
   if (newHead.x === apple.x && newHead.y === apple.y) {
-    score += 1;
-    scoreNode.textContent = String(score);
+    score += levelConfig[currentLevel].moneyPerBag;
+    scoreNode.textContent = formatMoney(score);
     if (score > bestScore) {
       bestScore = score;
       localStorage.setItem(bestKey, String(bestScore));
-      bestNode.textContent = String(bestScore);
+      bestNode.textContent = formatMoney(bestScore);
     }
     apple = spawnApple();
   } else {
@@ -149,30 +223,169 @@ function drawBoard() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-function drawApple() {
-  const x = apple.x * cellSize;
-  const y = apple.y * cellSize;
+function drawMoneyBag(itemX, itemY) {
+  const x = itemX * cellSize;
+  const y = itemY * cellSize;
 
   ctx.fillStyle = "#9b5d2e";
-  roundRect(ctx, x + 6, y + 9, 18, 16, 8);
+  roundRect(ctx, x + 5, y + 8, 20, 18, 9);
   ctx.fill();
 
   ctx.beginPath();
-  ctx.moveTo(x + 10, y + 9);
-  ctx.lineTo(x + 15, y + 4);
-  ctx.lineTo(x + 20, y + 9);
+  ctx.moveTo(x + 9.5, y + 8);
+  ctx.lineTo(x + 15, y + 2.5);
+  ctx.lineTo(x + 20.5, y + 8);
   ctx.closePath();
   ctx.fillStyle = "#c9894d";
   ctx.fill();
 
   ctx.fillStyle = "#6d3d16";
-  ctx.fillRect(x + 10, y + 8, 10, 3);
+  ctx.fillRect(x + 9.5, y + 7, 11, 3.3);
 
   ctx.fillStyle = "#ffd447";
   ctx.font = "bold 12px sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText("$", x + 15, y + 18);
+}
+
+function drawStore(x, y) {
+  ctx.fillStyle = "#f4efe7";
+  roundRect(ctx, x + 4, y + 8, 22, 16, 4);
+  ctx.fill();
+  ctx.fillStyle = "#c7472f";
+  ctx.fillRect(x + 4, y + 8, 22, 5);
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(x + 8, y + 16, 5, 8);
+  ctx.fillRect(x + 17, y + 16, 5, 8);
+}
+
+function drawCourt(x, y) {
+  ctx.fillStyle = "#d8d0c4";
+  ctx.fillRect(x + 6, y + 10, 18, 2);
+  ctx.fillRect(x + 8, y + 12, 3, 10);
+  ctx.fillRect(x + 14, y + 12, 3, 10);
+  ctx.fillRect(x + 20, y + 12, 3, 10);
+  ctx.beginPath();
+  ctx.moveTo(x + 5, y + 10);
+  ctx.lineTo(x + 15, y + 5);
+  ctx.lineTo(x + 25, y + 10);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawPolice(x, y) {
+  ctx.fillStyle = "#1f5ea8";
+  roundRect(ctx, x + 6, y + 10, 18, 12, 6);
+  ctx.fill();
+  ctx.fillStyle = "#ffd447";
+  ctx.fillRect(x + 10, y + 14, 10, 4);
+  ctx.fillStyle = "#234";
+  ctx.fillRect(x + 9, y + 8, 12, 3);
+}
+
+function drawTax(x, y) {
+  ctx.fillStyle = "#e7f1ff";
+  roundRect(ctx, x + 7, y + 6, 16, 18, 4);
+  ctx.fill();
+  ctx.fillStyle = "#3d6ca8";
+  ctx.fillRect(x + 10, y + 10, 10, 2);
+  ctx.fillRect(x + 10, y + 14, 8, 2);
+  ctx.fillRect(x + 10, y + 18, 6, 2);
+}
+
+function drawContract(x, y) {
+  ctx.fillStyle = "#fff7e3";
+  roundRect(ctx, x + 8, y + 6, 14, 18, 3);
+  ctx.fill();
+  ctx.fillStyle = "#b9862f";
+  ctx.beginPath();
+  ctx.arc(x + 15, y + 22, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillRect(x + 11, y + 11, 8, 2);
+}
+
+function drawCamera(x, y) {
+  ctx.fillStyle = "#4e5b65";
+  roundRect(ctx, x + 6, y + 10, 18, 12, 4);
+  ctx.fill();
+  ctx.fillStyle = "#93b7d8";
+  ctx.beginPath();
+  ctx.arc(x + 15, y + 16, 4, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawStamp(x, y) {
+  ctx.fillStyle = "#7c4dff";
+  roundRect(ctx, x + 9, y + 8, 12, 8, 4);
+  ctx.fill();
+  ctx.fillStyle = "#5a35c6";
+  ctx.fillRect(x + 11, y + 16, 8, 6);
+}
+
+function drawSafe(x, y) {
+  ctx.fillStyle = "#64707a";
+  roundRect(ctx, x + 7, y + 7, 16, 16, 3);
+  ctx.fill();
+  ctx.fillStyle = "#d7dee5";
+  ctx.beginPath();
+  ctx.arc(x + 15, y + 15, 4, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawTruck(x, y) {
+  ctx.fillStyle = "#ff9f1c";
+  ctx.fillRect(x + 6, y + 11, 10, 8);
+  ctx.fillRect(x + 16, y + 13, 8, 6);
+  ctx.fillStyle = "#3f3f46";
+  ctx.beginPath();
+  ctx.arc(x + 11, y + 21, 2.5, 0, Math.PI * 2);
+  ctx.arc(x + 21, y + 21, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawNotice(x, y) {
+  ctx.fillStyle = "#ffe37b";
+  roundRect(ctx, x + 8, y + 7, 14, 18, 3);
+  ctx.fill();
+  ctx.fillStyle = "#8d5c00";
+  ctx.fillRect(x + 14, y + 11, 2, 7);
+  ctx.fillRect(x + 14, y + 20, 2, 2);
+}
+
+function drawObstacle(obstacle) {
+  const x = obstacle.x * cellSize;
+  const y = obstacle.y * cellSize;
+
+  ctx.save();
+  ctx.fillStyle = "#00000010";
+  ctx.beginPath();
+  ctx.arc(x + 15, y + 25, 8, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (obstacle.type === "store") {
+    drawStore(x, y);
+  } else if (obstacle.type === "court") {
+    drawCourt(x, y);
+  } else if (obstacle.type === "police") {
+    drawPolice(x, y);
+  } else if (obstacle.type === "tax") {
+    drawTax(x, y);
+  } else if (obstacle.type === "contract") {
+    drawContract(x, y);
+  } else if (obstacle.type === "camera") {
+    drawCamera(x, y);
+  } else if (obstacle.type === "stamp") {
+    drawStamp(x, y);
+  } else if (obstacle.type === "safe") {
+    drawSafe(x, y);
+  } else if (obstacle.type === "truck") {
+    drawTruck(x, y);
+  } else if (obstacle.type === "notice") {
+    drawNotice(x, y);
+  }
+
+  ctx.restore();
 }
 
 function getHeadRotation(segment) {
@@ -229,7 +442,8 @@ function roundRect(context, x, y, width, height, radius) {
 
 function draw() {
   drawBoard();
-  drawApple();
+  obstacles.forEach(drawObstacle);
+  drawMoneyBag(apple.x, apple.y);
   snake.forEach(drawSegment);
 }
 
@@ -242,7 +456,7 @@ function loop(timestamp) {
     lastTick = timestamp;
   }
 
-  if (timestamp - lastTick >= moveInterval) {
+  if (timestamp - lastTick >= levelConfig[currentLevel].moveInterval) {
     lastTick = timestamp;
     update();
   }
@@ -272,6 +486,13 @@ window.addEventListener("keydown", (event) => {
   } else if (key === "enter") {
     resetGame();
   }
+});
+
+difficultyButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    currentLevel = button.dataset.level;
+    resetGame();
+  });
 });
 
 headImage.addEventListener("load", draw);
