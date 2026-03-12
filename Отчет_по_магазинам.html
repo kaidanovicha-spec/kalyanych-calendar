@@ -1,0 +1,1878 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Сводный отчет по магазинам</title>
+  <style>
+    :root {
+      --bg: #f7f7f5;
+      --paper: #ffffff;
+      --paper-soft: #fcfaf7;
+      --ink: #1f2328;
+      --muted: #6f7379;
+      --line: #e7e3dd;
+      --accent: #d56f2d;
+      --accent-soft: #fbf1e8;
+      --accent-line: #f0c7a8;
+      --up: #3f7d56;
+      --down: #b0565d;
+      --flat: #9a7a2f;
+      --shadow: 0 8px 24px rgba(30, 36, 42, 0.05);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: auto; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
+      background: var(--bg);
+    }
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 20px 54px;
+    }
+    h1, h2, h3, h4 {
+      font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
+      margin: 0;
+      line-height: 1.15;
+    }
+    h1 { font-size: clamp(28px, 4vw, 46px); max-width: 860px; margin-top: 8px; font-weight: 700; }
+    h2 { font-size: 28px; font-weight: 500; }
+    h3 { font-size: 24px; font-weight: 400; }
+    h4 { font-size: 18px; margin-bottom: 12px; font-weight: 500; }
+    p { color: var(--muted); line-height: 1.55; }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+    .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .hero, .stat-card, .panel, .table-wrap, .store-card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+    }
+    .hero {
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+      border-top: 4px solid var(--accent);
+    }
+    .hero-grid, .two-col, .metrics-grid, .store-grid, .compare-row, .summary-strip {
+      display: grid;
+      gap: 16px;
+    }
+    .hero-grid {
+      margin-top: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+    .stat-card {
+      padding: 18px 18px 16px;
+      box-shadow: none;
+    }
+    .stat-card span {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      font-weight: 400;
+    }
+    .stat-card strong {
+      font-size: 24px;
+      font-weight: 600;
+    }
+    .months-nav {
+      margin-top: 18px;
+      padding: 18px 20px;
+      background: var(--paper-soft);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+    .months-nav .section-title {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+    .months-nav-item + .months-nav-item {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid #eee7df;
+    }
+    .months-nav-month {
+      display: inline-block;
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--ink);
+    }
+    .months-nav-stores {
+      margin-top: 4px;
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--muted);
+    }
+    .months-nav-stores a {
+      color: var(--muted);
+      font-weight: 400;
+    }
+    .months-nav-month:hover,
+    .months-nav-stores a:hover,
+    .store-link:hover,
+    .back-link:hover {
+      color: var(--accent);
+    }
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 16px;
+      margin: 30px 0 14px;
+    }
+    .month-section {
+      margin-top: 34px;
+      padding-top: 2px;
+    }
+    .month-header {
+      display: grid;
+      grid-template-columns: 1.25fr 0.95fr;
+      gap: 22px;
+      align-items: start;
+      padding: 20px 22px 18px;
+      border: 1px solid #ece6df;
+      background: #fcf8f3;
+      border-top: 3px solid var(--accent);
+      border-radius: 10px;
+      box-shadow: 0 6px 18px rgba(31, 35, 40, 0.04);
+    }
+    .brand-side {
+      min-width: 0;
+    }
+    .brand-name {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.24em;
+      color: var(--ink);
+    }
+    .brand-report-title {
+      margin-top: 8px;
+      font-size: 26px;
+      font-weight: 500;
+      color: var(--ink);
+    }
+    .brand-month {
+      margin-top: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--accent);
+    }
+    .brand-source {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .month-kpis-inline {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 14px;
+      flex-wrap: nowrap;
+      white-space: nowrap;
+      min-width: 0;
+      padding-top: 4px;
+    }
+    .kpi-inline-item {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    .kpi-inline-item span {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 400;
+    }
+    .kpi-inline-item strong {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .kpi-divider {
+      color: var(--accent-line);
+      font-size: 18px;
+      line-height: 1;
+      user-select: none;
+    }
+    .summary-strip {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      background: transparent;
+      padding: 14px 2px 0;
+      gap: 12px;
+    }
+    .summary-item {
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: var(--paper-soft);
+      border: 1px solid var(--line);
+    }
+    .summary-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+    .summary-item strong {
+      display: block;
+      color: var(--ink);
+      font-size: 16px;
+      font-weight: 400;
+    }
+    .two-col {
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      margin-top: 16px;
+    }
+    .panel, .store-card {
+      padding: 20px 22px;
+    }
+    .panel ul {
+      margin: 0;
+      padding-left: 0;
+      line-height: 1.5;
+      list-style: none;
+    }
+    .executive-panel {
+      background: var(--paper-soft);
+      border-color: var(--accent-line);
+    }
+    .executive-list li {
+      display: grid;
+      grid-template-columns: 10px 1fr;
+      gap: 10px;
+      align-items: start;
+      margin-bottom: 10px;
+      color: var(--ink);
+    }
+    .executive-list li:last-child {
+      margin-bottom: 0;
+    }
+    .list-marker {
+      width: 8px;
+      height: 8px;
+      margin-top: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+    .table-wrap {
+      margin-top: 16px;
+      overflow: hidden;
+      padding-top: 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      font-size: 13px;
+    }
+    .center {
+      text-align: center;
+    }
+    th {
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 11px;
+      background: #faf7f3;
+      font-weight: 500;
+    }
+    tr:last-child td { border-bottom: 0; }
+    .month-table td:nth-child(1) {
+      width: 76px;
+      text-align: center;
+      color: var(--ink);
+      font-weight: 400;
+      white-space: nowrap;
+    }
+    .month-table td:nth-child(3) {
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .store-link {
+      color: var(--ink);
+      border-bottom: 1px solid transparent;
+    }
+    .rank-cell {
+      white-space: nowrap;
+    }
+    .rank-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1;
+      border: 1px solid #ece7e0;
+      background: #fbfaf8;
+      color: var(--ink);
+    }
+    .rank-1 {
+      background: #faf2e8;
+      border-color: #efd8be;
+    }
+    .rank-2 {
+      background: #f4f5f6;
+      border-color: #e2e5e8;
+    }
+    .rank-3 {
+      background: #f5f0ea;
+      border-color: #e8ddd1;
+    }
+    .rank-base {
+      background: #fcfbfa;
+      border-color: #efebe6;
+      color: #5f6368;
+    }
+    .store-grid {
+      margin-top: 18px;
+    }
+    .store-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: start;
+      margin-bottom: 12px;
+    }
+    .store-volume {
+      text-align: right;
+    }
+    .store-volume strong {
+      display: block;
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .store-volume span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .store-actions,
+    .store-footer-link {
+      margin-top: 10px;
+    }
+    .store-footer-link {
+      margin-top: 14px;
+    }
+    .month-footer-link {
+      margin-top: 16px;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--muted);
+      padding-bottom: 1px;
+      border-bottom: 1px solid transparent;
+    }
+    .back-to-top {
+      display: inline-block;
+      margin-top: 16px;
+      font-size: 13px;
+      color: #666666;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .back-to-top:hover {
+      color: #333333;
+    }
+    .metrics-grid {
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      margin-top: 16px;
+    }
+    .metric {
+      padding: 14px;
+      border-radius: 12px;
+      background: var(--paper-soft);
+      border: 1px solid var(--line);
+    }
+    .metric span {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .metric strong {
+      font-size: 18px;
+      font-weight: 400;
+    }
+    .compare-row {
+      grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+      margin-top: 10px;
+    }
+    .compare-chip {
+      padding: 12px 13px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: var(--paper-soft);
+    }
+    .compare-chip span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+    .compare-chip strong {
+      font-size: 18px;
+      font-weight: 500;
+    }
+    .compare-chip.up strong { color: var(--up); }
+    .compare-chip.down strong { color: var(--down); }
+    .compare-chip.flat strong { color: var(--flat); }
+    .trend-cell {
+      min-width: 148px;
+    }
+    .trend-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 118px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 500;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+    .trend-up {
+      background: rgba(45, 106, 79, 0.12);
+      color: #22543d;
+      border-color: rgba(45, 106, 79, 0.2);
+    }
+    .trend-flat {
+      background: rgba(214, 158, 46, 0.14);
+      color: #8a6100;
+      border-color: rgba(214, 158, 46, 0.24);
+    }
+    .trend-down {
+      background: rgba(178, 58, 72, 0.12);
+      color: #9b2c2c;
+      border-color: rgba(178, 58, 72, 0.22);
+    }
+    .trend-na {
+      background: rgba(122, 112, 104, 0.10);
+      color: #6f635b;
+      border-color: rgba(122, 112, 104, 0.18);
+    }
+    .bar-track {
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: #f0ece7;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+    .weekday-pill span {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .weekday-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .weekday-pill {
+      padding: 10px;
+      border-radius: 12px;
+      background: var(--paper-soft);
+      border: 1px solid var(--line);
+    }
+    .alert {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: var(--accent-soft);
+      border: 1px solid var(--accent-line);
+    }
+    .stability-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 500;
+      border: 1px solid transparent;
+    }
+    .stability-green {
+      background: rgba(45, 106, 79, 0.12);
+      color: #22543d;
+      border-color: rgba(45, 106, 79, 0.2);
+    }
+    .stability-yellow {
+      background: rgba(214, 158, 46, 0.14);
+      color: #8a6100;
+      border-color: rgba(214, 158, 46, 0.24);
+    }
+    .stability-orange {
+      background: rgba(221, 107, 32, 0.14);
+      color: #9c4221;
+      border-color: rgba(221, 107, 32, 0.24);
+    }
+    .stability-red {
+      background: rgba(178, 58, 72, 0.12);
+      color: #9b2c2c;
+      border-color: rgba(178, 58, 72, 0.22);
+    }
+    .alert ul {
+      margin: 10px 0 0;
+      padding-left: 18px;
+    }
+    .footer-note {
+      margin-top: 28px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    @page {
+      size: A4 portrait;
+      margin: 10mm 9mm 10mm;
+    }
+    @media print {
+      html {
+        scroll-behavior: auto;
+      }
+      body {
+        background: #ffffff;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .page {
+        max-width: none;
+        padding: 0;
+      }
+      .hero, .table-wrap, .panel, .store-card, .month-header {
+        box-shadow: none;
+      }
+      .hero {
+        margin-bottom: 6mm;
+        padding: 18px;
+      }
+      h1 {
+        font-size: 28px;
+      }
+      h2 {
+        font-size: 22px;
+      }
+      h3 {
+        font-size: 19px;
+      }
+      h4 {
+        font-size: 15px;
+      }
+      p, li, td, th, span, a {
+        font-size: 11px;
+      }
+      .month-section + .month-section {
+        page-break-before: always;
+        break-before: page;
+      }
+      .months-nav {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      .section-title,
+      .month-header,
+      .summary-strip {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      .month-header {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 16px 18px 14px;
+      }
+      .month-kpis-inline {
+        justify-content: flex-start;
+        gap: 10px;
+        flex-wrap: wrap;
+        white-space: normal;
+      }
+      .summary-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        padding: 10px 0 0;
+      }
+      .two-col {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .metrics-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .compare-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .weekday-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+      .store-grid {
+        gap: 10px;
+      }
+      .panel,
+      .store-card {
+        padding: 14px 16px;
+        page-break-inside: auto;
+        break-inside: auto;
+      }
+      .table-wrap {
+        page-break-inside: auto;
+        break-inside: auto;
+        overflow: visible;
+      }
+      table,
+      .month-table {
+        width: 100%;
+        table-layout: fixed;
+      }
+      th, td {
+        padding: 8px 7px;
+        font-size: 10px;
+      }
+      td, th {
+        overflow-wrap: anywhere;
+        word-break: normal;
+      }
+      .month-table td:nth-child(1) {
+        width: 50px;
+      }
+      .trend-cell {
+        min-width: 0;
+      }
+      .trend-badge,
+      .rank-badge,
+      .stability-pill {
+        white-space: nowrap;
+      }
+      table {
+        page-break-inside: auto;
+      }
+      thead {
+        display: table-header-group;
+      }
+      tr {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+    }
+    @media (max-width: 900px) {
+      .month-header {
+        grid-template-columns: 1fr;
+      }
+      .month-kpis-inline {
+        justify-content: flex-start;
+        overflow-x: auto;
+      }
+      .summary-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .weekday-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 640px) {
+      .page {
+        padding: 16px 12px 40px;
+      }
+      .hero, .panel, .store-card {
+        padding: 18px;
+      }
+      .month-header {
+        padding: 18px;
+      }
+      .summary-strip {
+        padding: 14px 18px 0;
+        grid-template-columns: 1fr;
+      }
+      .month-kpis-inline {
+        justify-content: flex-start;
+        gap: 10px;
+        font-size: 0;
+      }
+      .kpi-inline-item {
+        font-size: 14px;
+      }
+      th, td {
+        padding: 12px 10px;
+      }
+      .weekday-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div id="top"></div>
+    <section class="hero">
+      <div class="eyebrow">Минималистичный управленческий PDF-отчет сети</div>
+      <h1>Сводный отчет по магазинам сети «Кальяныч»</h1>
+      <p>Отчет автоматически собирается из всех выгрузок вида <strong>Отчет *.xlsx</strong> в текущей папке. Сейчас внутри <strong>2</strong> месяца, последний актуальный период: <strong>Февраль 2026</strong>.</p>
+      <div class="hero-grid">
+        <div class="stat-card"><span>Последний месяц</span><strong>Февраль 2026</strong></div>
+        <div class="stat-card"><span>Выручка последнего месяца</span><strong>3 123 694 ₽</strong></div>
+        <div class="stat-card"><span>Количество чеков</span><strong>3141</strong></div>
+        <div class="stat-card"><span>Средний чек</span><strong>996 ₽</strong></div>
+      </div>
+    </section>
+
+    <section class="months-nav">
+      <div class="section-title">
+        <div>
+          <div class="eyebrow">Навигация</div>
+          <h2>Месяцы в отчете</h2>
+        </div>
+      </div>
+      
+            <div class="months-nav-item">
+              <a class="months-nav-month" href="#month-2026-01">Январь 2026</a>
+              <div class="months-nav-stores"><a href="#store-2026-01-vidnyy">Видный</a> • <a href="#store-2026-01-kremlevskaya">Кремлевская</a> • <a href="#store-2026-01-gazovikov">Газовиков</a> • <a href="#store-2026-01-yamskoy">ТЦ Ямской</a> • <a href="#store-2026-01-ostrov">ТЦ Остров</a></div>
+            </div>
+            
+            <div class="months-nav-item">
+              <a class="months-nav-month" href="#month-2026-02">Февраль 2026</a>
+              <div class="months-nav-stores"><a href="#store-2026-02-yamskoy">ТЦ Ямской</a> • <a href="#store-2026-02-vidnyy">Видный</a> • <a href="#store-2026-02-gazovikov">Газовиков</a> • <a href="#store-2026-02-kremlevskaya">Кремлевская</a> • <a href="#store-2026-02-ostrov">ТЦ Остров</a></div>
+            </div>
+            
+    </section>
+
+    
+    <section id="month-2026-01" class="month-section">
+      <header class="month-header">
+        <div class="brand-side">
+          <div class="brand-name">КАЛЬЯНЫЧ</div>
+          <div class="brand-report-title">Сводный отчет по магазинам</div>
+          <div class="brand-month">Январь 2026</div>
+          <div class="brand-source">Источник: Отчет январь 2026.xlsx</div>
+        </div>
+        <div class="month-kpis-inline">
+          <div class="kpi-inline-item"><span>Выручка</span><strong>3 539 196 ₽</strong></div>
+          <div class="kpi-divider">|</div>
+          <div class="kpi-inline-item"><span>Чеки</span><strong>3541</strong></div>
+          <div class="kpi-divider">|</div>
+          <div class="kpi-inline-item"><span>Средний чек</span><strong>1 002 ₽</strong></div>
+        </div>
+      </header>
+
+      <div class="summary-strip">
+        <div class="summary-item"><span>Нал / безнал</span><strong>360 445 ₽ / 3 189 106 ₽</strong></div>
+        <div class="summary-item"><span>Безналичная доля</span><strong>89,8%</strong></div>
+        <div class="summary-item"><span>Лучший день</span><strong>23.01.2026</strong></div>
+        <div class="summary-item"><span>Слабый день</span><strong>28.01.2026</strong></div>
+      </div>
+
+      <div class="two-col">
+        <div class="panel executive-panel">
+          <h4>Ключевые выводы</h4>
+          <ul class="executive-list">
+            <li><span class="list-marker"></span><span>Самая стабильная точка по дневной выручке: <strong>Кремлевская</strong>.</span></li>
+            <li><span class="list-marker"></span><span>Самая волатильная точка: <strong>Газовиков</strong>.</span></li>
+            <li><span class="list-marker"></span><span>Лучший день сети: <strong>23.01.2026</strong>, 151 312 ₽.</span></li>
+            <li><span class="list-marker"></span><span>Самый слабый день сети: <strong>28.01.2026</strong>, 85 754 ₽.</span></li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h4>Сравнение месяца с предыдущим</h4>
+          <p>Это базовый месяц в накопительном отчете. Сравнение начнется со следующего добавленного периода.</p>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="month-table">
+          <thead>
+            <tr>
+              <th>Рейтинг</th>
+              <th>Магазин</th>
+              <th>Выручка</th>
+              <th>Доля</th>
+              <th>Средний чек</th>
+              <th>Количество чеков</th>
+              <th>Безнал</th>
+              <th>Динамика точки</th>
+            </tr>
+          </thead>
+          <tbody>
+            
+            <tr>
+              <td class="center rank-cell"><span class="rank-badge rank-1">1</span></td>
+              <td><a class="store-link" href="#store-2026-01-vidnyy">Видный</a></td>
+              <td>778 250 ₽</td>
+              <td>22,0%</td>
+              <td>949 ₽</td>
+              <td>820</td>
+              <td>91,4%</td>
+              <td class="trend-cell"><span class="trend-badge trend-na">—</span></td>
+            </tr>
+            
+            <tr>
+              <td class="center rank-cell"><span class="rank-badge rank-2">2</span></td>
+              <td><a class="store-link" href="#store-2026-01-kremlevskaya">Кремлевская</a></td>
+              <td>699 579 ₽</td>
+              <td>19,8%</td>
+              <td>908 ₽</td>
+              <td>773</td>
+              <td>89,5%</td>
+              <td class="trend-cell"><span class="trend-badge trend-na">—</span></td>
+            </tr>
+            
+            <tr>
+              <td class="center rank-cell"><span class="rank-badge rank-3">3</span></td>
+              <td><a class="store-link" href="#store-2026-01-gazovikov">Газовиков</a></td>
+              <td>694 797 ₽</td>
+              <td>19,6%</td>
+              <td>1 082 ₽</td>
+              <td>643</td>
+              <td>89,6%</td>
+              <td class="trend-cell"><span class="trend-badge trend-na">—</span></td>
+            </tr>
+            
+            <tr>
+              <td class="center rank-cell"><span class="rank-badge rank-base">4</span></td>
+              <td><a class="store-link" href="#store-2026-01-yamskoy">ТЦ Ямской</a></td>
+              <td>686 184 ₽</td>
+              <td>19,4%</td>
+              <td>1 020 ₽</td>
+              <td>679</td>
+              <td>92,3%</td>
+              <td class="trend-cell"><span class="trend-badge trend-na">—</span></td>
+            </tr>
+            
+            <tr>
+              <td class="center rank-cell"><span class="rank-badge rank-base">5</span></td>
+              <td><a class="store-link" href="#store-2026-01-ostrov">ТЦ Остров</a></td>
+              <td>680 386 ₽</td>
+              <td>19,2%</td>
+              <td>1 088 ₽</td>
+              <td>626</td>
+              <td>86,3%</td>
+              <td class="trend-cell"><span class="trend-badge trend-na">—</span></td>
+            </tr>
+            
+          </tbody>
+        </table>
+      </div>
+
+      <div class="store-grid">
+        
+            <section id="store-2026-01-vidnyy" class="store-card">
+              <div class="store-head">
+                <div>
+                  <div class="eyebrow">Магазин • Январь 2026</div>
+                  <h3>Видный</h3>
+                </div>
+                <div class="store-volume">
+                  <strong>778 250 ₽</strong>
+                  <span>доля 22,0%</span>
+                </div>
+              </div>
+              <div class="store-actions">
+                <a class="back-link" href="#month-2026-01">← К месяцу</a>
+              </div>
+              <div class="bar-track"><div class="bar-fill" style="width: 100%"></div></div>
+              <div class="metrics-grid">
+                <div class="metric"><span>Выручка</span><strong>778 250 ₽</strong></div>
+                <div class="metric"><span>Количество чеков</span><strong>820</strong></div>
+                <div class="metric"><span>Средний чек</span><strong>949 ₽</strong></div>
+                <div class="metric"><span>Нал / безнал</span><strong>67 266 ₽ / 710 984 ₽</strong></div>
+              </div>
+              <div class="two-col">
+                <div class="panel">
+                  <h4>Сравнение с прошлым месяцем</h4>
+                  <p>Для этого месяца нет предыдущего периода для сравнения.</p>
+                </div>
+                <div class="panel">
+                  <h4>Дневной профиль</h4>
+                  <p>Средняя дневная выручка: <strong>25 105 ₽</strong>.</p>
+                  <p>Медиана дня: <strong>25 084 ₽</strong>.</p>
+                  <p>Лучший день: <strong>30.01.2026</strong>, 41 994 ₽.</p>
+                  <p>Самый слабый день: <strong>28.01.2026</strong>, 10 414 ₽.</p>
+                </div>
+              </div>
+              <div class="two-col">
+                <div class="panel">
+                  <h4>Оценка стабильности точки</h4>
+                  <p><span class="stability-pill stability-yellow">🟡 Стабильная выручка</span></p>
+                  <p>Есть небольшие колебания, но точка работает предсказуемо.</p>
+                </div>
+                <div class="panel">
+                  <h4>Распределение по дням недели</h4>
+                  <div class="weekday-grid">
+            <div class="weekday-pill">
+              <span>Пн</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 67%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Вт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 70%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Ср</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 64%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Чт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 85%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Пт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 100%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Сб</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 87%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Вс</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 60%"></div></div>
+            </div>
+            </div>
+                </div>
+              </div>
+              <div class="store-footer-link">
+                <a class="back-to-top" href="#top">↑ К началу отчета</a>
+              </div>
+              
+            </section>
+            
+            <section id="store-2026-01-kremlevskaya" class="store-card">
+              <div class="store-head">
+                <div>
+                  <div class="eyebrow">Магазин • Январь 2026</div>
+                  <h3>Кремлевская</h3>
+                </div>
+                <div class="store-volume">
+                  <strong>699 579 ₽</strong>
+                  <span>доля 19,8%</span>
+                </div>
+              </div>
+              <div class="store-actions">
+                <a class="back-link" href="#month-2026-01">← К месяцу</a>
+              </div>
+              <div class="bar-track"><div class="bar-fill" style="width: 90%"></div></div>
+              <div class="metrics-grid">
+                <div class="metric"><span>Выручка</span><strong>699 579 ₽</strong></div>
+                <div class="metric"><span>Количество чеков</span><strong>773</strong></div>
+                <div class="metric"><span>Средний чек</span><strong>908 ₽</strong></div>
+                <div class="metric"><span>Нал / безнал</span><strong>73 640 ₽ / 628 159 ₽</strong></div>
+              </div>
+              <div class="two-col">
+                <div class="panel">
+                  <h4>Сравнение с прошлым месяцем</h4>
+                  <p>Для этого месяца нет предыдущего периода для сравнения.</p>
+                </div>
+                <div class="panel">
+                  <h4>Дневной профиль</h4>
+                  <p>Средняя дневная выручка: <strong>22 567 ₽</strong>.</p>
+                  <p>Медиана дня: <strong>21 898 ₽</strong>.</p>
+                  <p>Лучший день: <strong>05.01.2026</strong>, 34 797 ₽.</p>
+                  <p>Самый слабый день: <strong>19.01.2026</strong>, 13 200 ₽.</p>
+                </div>
+              </div>
+              <div class="two-col">
+                <div class="panel">
+                  <h4>Оценка стабильности точки</h4>
+                  <p><span class="stability-pill stability-yellow">🟡 Стабильная выручка</span></p>
+                  <p>Есть небольшие колебания, но точка работает предсказуемо.</p>
+                </div>
+                <div class="panel">
+                  <h4>Распределение по дням недели</h4>
+                  <div class="weekday-grid">
+            <div class="weekday-pill">
+              <span>Пн</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 68%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Вт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 56%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Ср</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 68%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Чт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 83%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Пт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 100%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Сб</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 95%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Вс</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 65%"></div></div>
+            </div>
+            </div>
+                </div>
+              </div>
+              <div class="store-footer-link">
+                <a class="back-to-top" href="#top">↑ К началу отчета</a>
+              </div>
+              
+            </section>
+            
+            <section id="store-2026-01-gazovikov" class="store-card">
+              <div class="store-head">
+                <div>
+                  <div class="eyebrow">Магазин • Январь 2026</div>
+                  <h3>Газовиков</h3>
+                </div>
+                <div class="store-volume">
+                  <strong>694 797 ₽</strong>
+                  <span>доля 19,6%</span>
+                </div>
+              </div>
+              <div class="store-actions">
+                <a class="back-link" href="#month-2026-01">← К месяцу</a>
+              </div>
+              <div class="bar-track"><div class="bar-fill" style="width: 89%"></div></div>
+              <div class="metrics-grid">
+                <div class="metric"><span>Выручка</span><strong>694 797 ₽</strong></div>
+                <div class="metric"><span>Количество чеков</span><strong>643</strong></div>
+                <div class="metric"><span>Средний чек</span><strong>1 082 ₽</strong></div>
+                <div class="metric"><span>Нал / безнал</span><strong>72 588 ₽ / 623 444 ₽</strong></div>
+              </div>
+              <div class="two-col">
+                <div class="panel">
+                  <h4>Сравнение с прошлым месяцем</h4>
+                  <p>Для этого месяца нет предыдущего периода для сравнения.</p>
+                </div>
+                <div class="panel">
+                  <h4>Дневной профиль</h4>
+                  <p>Средняя дневная выручка: <strong>22 413 ₽</strong>.</p>
+                  <p>Медиана дня: <strong>21 817 ₽</strong>.</p>
+                  <p>Лучший день: <strong>21.01.2026</strong>, 38 245 ₽.</p>
+                  <p>Самый слабый день: <strong>10.01.2026</strong>, 10 699 ₽.</p>
+                </div>
+              </div>
+              <div class="two-col">
+                <div class="panel">
+                  <h4>Оценка стабильности точки</h4>
+                  <p><span class="stability-pill stability-orange">🟠 Нестабильная выручка</span></p>
+                  <p>Есть заметные скачки по дням. Требует внимания.</p>
+                </div>
+                <div class="panel">
+                  <h4>Распределение по дням недели</h4>
+                  <div class="weekday-grid">
+            <div class="weekday-pill">
+              <span>Пн</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 51%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Вт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 63%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Ср</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 71%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Чт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 70%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Пт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 100%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Сб</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 87%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Вс</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 47%"></div></div>
+            </div>
+            </div>
+                </div>
+              </div>
+              <div class="store-footer-link">
+                <a class="back-to-top" href="#top">↑ К началу отчета</a>
+              </div>
+              <div class="alert"><strong>Аномалии в выгрузке:</strong><ul><li>01.01.2026: в один день закрыто 2 смены.</li></ul></div>
+            </section>
+            
+            <section id="store-2026-01-yamskoy" class="store-card">
+              <div class="store-head">
+                <div>
+                  <div class="eyebrow">Магазин • Январь 2026</div>
+                  <h3>ТЦ Ямской</h3>
+                </div>
+                <div class="store-volume">
+                  <strong>686 184 ₽</strong>
+                  <span>доля 19,4%</span>
+                </div>
+              </div>
+              <div class="store-actions">
+                <a class="back-link" href="#month-2026-01">← К месяцу</a>
+              </div>
+              <div class="bar-track"><div class="bar-fill" style="width: 88%"></div></div>
+              <div class="metrics-grid">
+                <div class="metric"><span>Выручка</span><strong>686 184 ₽</strong></div>
+                <div class="metric"><span>Количество чеков</span><strong>679</strong></div>
+                <div class="metric"><span>Средний чек</span><strong>1 020 ₽</strong></div>
+                <div class="metric"><span>Нал / безнал</span><strong>53 418 ₽ / 639 051 ₽</strong></div>
+              </div>
+              <div class="two-col">
+                <div class="panel">
+                  <h4>Сравнение с прошлым месяцем</h4>
+                  <p>Для этого месяца нет предыдущего периода для сравнения.</p>
+                </div>
+                <div class="panel">
+                  <h4>Дневной профиль</h4>
+                  <p>Средняя дневная выручка: <strong>22 873 ₽</strong>.</p>
+                  <p>Медиана дня: <strong>22 952 ₽</strong>.</p>
+                  <p>Лучший день: <strong>02.01.2026</strong>, 44 189 ₽.</p>
+                  <p>Самый слабый день: <strong>25.01.2026</strong>, 10 558 ₽.</p>
+                </div>
+              </div>
+              <div class="two-col">
+                <div class="panel">
+                  <h4>Оценка стабильности точки</h4>
+                  <p><span class="stability-pill stability-yellow">🟡 Стабильная выручка</span></p>
+                  <p>Есть небольшие колебания, но точка работает предсказуемо.</p>
+                </div>
+                <div class="panel">
+                  <h4>Распределение по дням недели</h4>
+                  <div class="weekday-grid">
+            <div class="weekday-pill">
+              <span>Пн</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 49%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Вт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 62%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Ср</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 50%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Чт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 72%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Пт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 100%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Сб</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 85%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Вс</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 42%"></div></div>
+            </div>
+            </div>
+                </div>
+              </div>
+              <div class="store-footer-link">
+                <a class="back-to-top" href="#top">↑ К началу отчета</a>
+              </div>
+              <div class="alert"><strong>Аномалии в выгрузке:</strong><ul><li>21.01.2026: в один день закрыто 2 смены.</li></ul></div>
+            </section>
+            
+            <section id="store-2026-01-ostrov" class="store-card">
+              <div class="store-head">
+                <div>
+                  <div class="eyebrow">Магазин • Январь 2026</div>
+                  <h3>ТЦ Остров</h3>
+                </div>
+                <div class="store-volume">
+                  <strong>680 386 ₽</strong>
+                  <span>доля 19,2%</span>
+                </div>
+              </div>
+              <div class="store-actions">
+                <a class="back-link" href="#month-2026-01">← К месяцу</a>
+              </div>
+              <div class="bar-track"><div class="bar-fill" style="width: 87%"></div></div>
+              <div class="metrics-grid">
+                <div class="metric"><span>Выручка</span><strong>680 386 ₽</strong></div>
+                <div class="metric"><span>Количество чеков</span><strong>626</strong></div>
+                <div class="metric"><span>Средний чек</span><strong>1 088 ₽</strong></div>
+                <div class="metric"><span>Нал / безнал</span><strong>93 533 ₽ / 587 468 ₽</strong></div>
+              </div>
+              <div class="two-col">
+                <div class="panel">
+                  <h4>Сравнение с прошлым месяцем</h4>
+                  <p>Для этого месяца нет предыдущего периода для сравнения.</p>
+                </div>
+                <div class="panel">
+                  <h4>Дневной профиль</h4>
+                  <p>Средняя дневная выручка: <strong>22 680 ₽</strong>.</p>
+                  <p>Медиана дня: <strong>22 152 ₽</strong>.</p>
+                  <p>Лучший день: <strong>08.01.2026</strong>, 41 129 ₽.</p>
+                  <p>Самый слабый день: <strong>14.01.2026</strong>, 11 130 ₽.</p>
+                </div>
+              </div>
+              <div class="two-col">
+                <div class="panel">
+                  <h4>Оценка стабильности точки</h4>
+                  <p><span class="stability-pill stability-orange">🟠 Нестабильная выручка</span></p>
+                  <p>Есть заметные скачки по дням. Требует внимания.</p>
+                </div>
+                <div class="panel">
+                  <h4>Распределение по дням недели</h4>
+                  <div class="weekday-grid">
+            <div class="weekday-pill">
+              <span>Пн</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 62%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Вт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 59%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Ср</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 65%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Чт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 98%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Пт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 100%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Сб</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 94%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Вс</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 75%"></div></div>
+            </div>
+            </div>
+                </div>
+              </div>
+              <div class="store-footer-link">
+                <a class="back-to-top" href="#top">↑ К началу отчета</a>
+              </div>
+              
+            </section>
+            
+      </div>
+      <div class="month-footer-link">
+        <a class="back-to-top" href="#top">↑ К началу отчета</a>
+      </div>
+    </section>
+    
+    <section id="month-2026-02" class="month-section">
+      <header class="month-header">
+        <div class="brand-side">
+          <div class="brand-name">КАЛЬЯНЫЧ</div>
+          <div class="brand-report-title">Сводный отчет по магазинам</div>
+          <div class="brand-month">Февраль 2026</div>
+          <div class="brand-source">Источник: Отчет февраль 2026.xlsx</div>
+        </div>
+        <div class="month-kpis-inline">
+          <div class="kpi-inline-item"><span>Выручка</span><strong>3 123 694 ₽</strong></div>
+          <div class="kpi-divider">|</div>
+          <div class="kpi-inline-item"><span>Чеки</span><strong>3141</strong></div>
+          <div class="kpi-divider">|</div>
+          <div class="kpi-inline-item"><span>Средний чек</span><strong>996 ₽</strong></div>
+        </div>
+      </header>
+
+      <div class="summary-strip">
+        <div class="summary-item"><span>Нал / безнал</span><strong>294 293 ₽ / 2 835 606 ₽</strong></div>
+        <div class="summary-item"><span>Безналичная доля</span><strong>90,6%</strong></div>
+        <div class="summary-item"><span>Лучший день</span><strong>14.02.2026</strong></div>
+        <div class="summary-item"><span>Слабый день</span><strong>02.02.2026</strong></div>
+      </div>
+
+      <div class="two-col">
+        <div class="panel executive-panel">
+          <h4>Ключевые выводы</h4>
+          <ul class="executive-list">
+            <li><span class="list-marker"></span><span>Самая стабильная точка по дневной выручке: <strong>Видный</strong>.</span></li>
+            <li><span class="list-marker"></span><span>Самая волатильная точка: <strong>ТЦ Остров</strong>.</span></li>
+            <li><span class="list-marker"></span><span>Лучший день сети: <strong>14.02.2026</strong>, 150 281 ₽.</span></li>
+            <li><span class="list-marker"></span><span>Самый слабый день сети: <strong>02.02.2026</strong>, 69 276 ₽.</span></li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h4>Сравнение месяца с предыдущим</h4>
+          <div class="compare-row"><div class="compare-chip down"><span>Выручка</span><strong>-11,7% (-415 502 ₽)</strong></div><div class="compare-chip down"><span>Чеки</span><strong>-11,3%</strong></div><div class="compare-chip down"><span>Средний чек</span><strong>-0,6%</strong></div><div class="compare-chip up"><span>Безналичная доля</span><strong>+0,8 п.п.</strong></div></div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="month-table">
+          <thead>
+            <tr>
+              <th>Рейтинг</th>
+              <th>Магазин</th>
+              <th>Выручка</th>
+              <th>Доля</th>
+              <th>Средний чек</th>
+              <th>Количество чеков</th>
+              <th>Безнал</th>
+              <th>Динамика точки</th>
+            </tr>
+          </thead>
+          <tbody>
+            
+            <tr>
+              <td class="center rank-cell"><span class="rank-badge rank-1">1</span></td>
+              <td><a class="store-link" href="#store-2026-02-yamskoy">ТЦ Ямской</a></td>
+              <td>728 674 ₽</td>
+              <td>23,3%</td>
+              <td>1 068 ₽</td>
+              <td>682</td>
+              <td>93,6%</td>
+              <td class="trend-cell"><span class="trend-badge trend-up">🟢 Растет</span></td>
+            </tr>
+            
+            <tr>
+              <td class="center rank-cell"><span class="rank-badge rank-2">2</span></td>
+              <td><a class="store-link" href="#store-2026-02-vidnyy">Видный</a></td>
+              <td>650 496 ₽</td>
+              <td>20,8%</td>
+              <td>918 ₽</td>
+              <td>713</td>
+              <td>93,4%</td>
+              <td class="trend-cell"><span class="trend-badge trend-down">🔻 Падает</span></td>
+            </tr>
+            
+            <tr>
+              <td class="center rank-cell"><span class="rank-badge rank-3">3</span></td>
+              <td><a class="store-link" href="#store-2026-02-gazovikov">Газовиков</a></td>
+              <td>599 419 ₽</td>
+              <td>19,2%</td>
+              <td>1 131 ₽</td>
+              <td>530</td>
+              <td>91,5%</td>
+              <td class="trend-cell"><span class="trend-badge trend-down">🔻 Падает</span></td>
+            </tr>
+            
+            <tr>
+              <td class="center rank-cell"><span class="rank-badge rank-base">4</span></td>
+              <td><a class="store-link" href="#store-2026-02-kremlevskaya">Кремлевская</a></td>
+              <td>579 423 ₽</td>
+              <td>18,5%</td>
+              <td>898 ₽</td>
+              <td>645</td>
+              <td>85,5%</td>
+              <td class="trend-cell"><span class="trend-badge trend-down">🔻 Падает</span></td>
+            </tr>
+            
+            <tr>
+              <td class="center rank-cell"><span class="rank-badge rank-base">5</span></td>
+              <td><a class="store-link" href="#store-2026-02-ostrov">ТЦ Остров</a></td>
+              <td>565 682 ₽</td>
+              <td>18,1%</td>
+              <td>994 ₽</td>
+              <td>571</td>
+              <td>87,8%</td>
+              <td class="trend-cell"><span class="trend-badge trend-down">🔻 Падает</span></td>
+            </tr>
+            
+          </tbody>
+        </table>
+      </div>
+
+      <div class="store-grid">
+        
+            <section id="store-2026-02-yamskoy" class="store-card">
+              <div class="store-head">
+                <div>
+                  <div class="eyebrow">Магазин • Февраль 2026</div>
+                  <h3>ТЦ Ямской</h3>
+                </div>
+                <div class="store-volume">
+                  <strong>728 674 ₽</strong>
+                  <span>доля 23,3%</span>
+                </div>
+              </div>
+              <div class="store-actions">
+                <a class="back-link" href="#month-2026-02">← К месяцу</a>
+              </div>
+              <div class="bar-track"><div class="bar-fill" style="width: 100%"></div></div>
+              <div class="metrics-grid">
+                <div class="metric"><span>Выручка</span><strong>728 674 ₽</strong></div>
+                <div class="metric"><span>Количество чеков</span><strong>682</strong></div>
+                <div class="metric"><span>Средний чек</span><strong>1 068 ₽</strong></div>
+                <div class="metric"><span>Нал / безнал</span><strong>46 621 ₽ / 682 053 ₽</strong></div>
+              </div>
+              <div class="two-col">
+                <div class="panel">
+                  <h4>Сравнение с прошлым месяцем</h4>
+                  <div class="compare-row"><div class="compare-chip up"><span>Выручка</span><strong>+6,2% (+42 490 ₽)</strong></div><div class="compare-chip up"><span>Чеки</span><strong>+0,4%</strong></div><div class="compare-chip up"><span>Средний чек</span><strong>+4,8%</strong></div><div class="compare-chip up"><span>Безналичная доля</span><strong>+1,3 п.п.</strong></div><div class="compare-chip down"><span>Наличная доля</span><strong>-1,3 п.п.</strong></div></div>
+                </div>
+                <div class="panel">
+                  <h4>Дневной профиль</h4>
+                  <p>Средняя дневная выручка: <strong>26 024 ₽</strong>.</p>
+                  <p>Медиана дня: <strong>24 598 ₽</strong>.</p>
+                  <p>Лучший день: <strong>07.02.2026</strong>, 43 871 ₽.</p>
+                  <p>Самый слабый день: <strong>02.02.2026</strong>, 7 015 ₽.</p>
+                </div>
+              </div>
+              <div class="two-col">
+                <div class="panel">
+                  <h4>Оценка стабильности точки</h4>
+                  <p><span class="stability-pill stability-orange">🟠 Нестабильная выручка</span></p>
+                  <p>Есть заметные скачки по дням. Требует внимания.</p>
+                </div>
+                <div class="panel">
+                  <h4>Распределение по дням недели</h4>
+                  <div class="weekday-grid">
+            <div class="weekday-pill">
+              <span>Пн</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 57%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Вт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 75%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Ср</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 71%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Чт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 60%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Пт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 96%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Сб</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 100%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Вс</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 48%"></div></div>
+            </div>
+            </div>
+                </div>
+              </div>
+              <div class="store-footer-link">
+                <a class="back-to-top" href="#top">↑ К началу отчета</a>
+              </div>
+              
+            </section>
+            
+            <section id="store-2026-02-vidnyy" class="store-card">
+              <div class="store-head">
+                <div>
+                  <div class="eyebrow">Магазин • Февраль 2026</div>
+                  <h3>Видный</h3>
+                </div>
+                <div class="store-volume">
+                  <strong>650 496 ₽</strong>
+                  <span>доля 20,8%</span>
+                </div>
+              </div>
+              <div class="store-actions">
+                <a class="back-link" href="#month-2026-02">← К месяцу</a>
+              </div>
+              <div class="bar-track"><div class="bar-fill" style="width: 89%"></div></div>
+              <div class="metrics-grid">
+                <div class="metric"><span>Выручка</span><strong>650 496 ₽</strong></div>
+                <div class="metric"><span>Количество чеков</span><strong>713</strong></div>
+                <div class="metric"><span>Средний чек</span><strong>918 ₽</strong></div>
+                <div class="metric"><span>Нал / безнал</span><strong>43 357 ₽ / 611 264 ₽</strong></div>
+              </div>
+              <div class="two-col">
+                <div class="panel">
+                  <h4>Сравнение с прошлым месяцем</h4>
+                  <div class="compare-row"><div class="compare-chip down"><span>Выручка</span><strong>-16,4% (-127 754 ₽)</strong></div><div class="compare-chip down"><span>Чеки</span><strong>-13,0%</strong></div><div class="compare-chip down"><span>Средний чек</span><strong>-3,3%</strong></div><div class="compare-chip up"><span>Безналичная доля</span><strong>+2,0 п.п.</strong></div><div class="compare-chip down"><span>Наличная доля</span><strong>-2,0 п.п.</strong></div></div>
+                </div>
+                <div class="panel">
+                  <h4>Дневной профиль</h4>
+                  <p>Средняя дневная выручка: <strong>23 232 ₽</strong>.</p>
+                  <p>Медиана дня: <strong>23 074 ₽</strong>.</p>
+                  <p>Лучший день: <strong>05.02.2026</strong>, 33 656 ₽.</p>
+                  <p>Самый слабый день: <strong>15.02.2026</strong>, 14 424 ₽.</p>
+                </div>
+              </div>
+              <div class="two-col">
+                <div class="panel">
+                  <h4>Оценка стабильности точки</h4>
+                  <p><span class="stability-pill stability-green">🟢 Очень стабильная выручка</span></p>
+                  <p>Поток клиентов ровный, продажи распределены равномерно по дням.</p>
+                </div>
+                <div class="panel">
+                  <h4>Распределение по дням недели</h4>
+                  <div class="weekday-grid">
+            <div class="weekday-pill">
+              <span>Пн</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 83%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Вт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 90%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Ср</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 86%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Чт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 100%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Пт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 100%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Сб</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 92%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Вс</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 77%"></div></div>
+            </div>
+            </div>
+                </div>
+              </div>
+              <div class="store-footer-link">
+                <a class="back-to-top" href="#top">↑ К началу отчета</a>
+              </div>
+              
+            </section>
+            
+            <section id="store-2026-02-gazovikov" class="store-card">
+              <div class="store-head">
+                <div>
+                  <div class="eyebrow">Магазин • Февраль 2026</div>
+                  <h3>Газовиков</h3>
+                </div>
+                <div class="store-volume">
+                  <strong>599 419 ₽</strong>
+                  <span>доля 19,2%</span>
+                </div>
+              </div>
+              <div class="store-actions">
+                <a class="back-link" href="#month-2026-02">← К месяцу</a>
+              </div>
+              <div class="bar-track"><div class="bar-fill" style="width: 82%"></div></div>
+              <div class="metrics-grid">
+                <div class="metric"><span>Выручка</span><strong>599 419 ₽</strong></div>
+                <div class="metric"><span>Количество чеков</span><strong>530</strong></div>
+                <div class="metric"><span>Средний чек</span><strong>1 131 ₽</strong></div>
+                <div class="metric"><span>Нал / безнал</span><strong>51 160 ₽ / 548 259 ₽</strong></div>
+              </div>
+              <div class="two-col">
+                <div class="panel">
+                  <h4>Сравнение с прошлым месяцем</h4>
+                  <div class="compare-row"><div class="compare-chip down"><span>Выручка</span><strong>-13,7% (-95 378 ₽)</strong></div><div class="compare-chip down"><span>Чеки</span><strong>-17,6%</strong></div><div class="compare-chip up"><span>Средний чек</span><strong>+4,5%</strong></div><div class="compare-chip up"><span>Безналичная доля</span><strong>+1,9 п.п.</strong></div><div class="compare-chip down"><span>Наличная доля</span><strong>-1,9 п.п.</strong></div></div>
+                </div>
+                <div class="panel">
+                  <h4>Дневной профиль</h4>
+                  <p>Средняя дневная выручка: <strong>21 408 ₽</strong>.</p>
+                  <p>Медиана дня: <strong>20 546 ₽</strong>.</p>
+                  <p>Лучший день: <strong>14.02.2026</strong>, 39 215 ₽.</p>
+                  <p>Самый слабый день: <strong>02.02.2026</strong>, 10 897 ₽.</p>
+                </div>
+              </div>
+              <div class="two-col">
+                <div class="panel">
+                  <h4>Оценка стабильности точки</h4>
+                  <p><span class="stability-pill stability-orange">🟠 Нестабильная выручка</span></p>
+                  <p>Есть заметные скачки по дням. Требует внимания.</p>
+                </div>
+                <div class="panel">
+                  <h4>Распределение по дням недели</h4>
+                  <div class="weekday-grid">
+            <div class="weekday-pill">
+              <span>Пн</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 61%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Вт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 60%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Ср</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 59%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Чт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 77%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Пт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 100%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Сб</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 97%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Вс</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 64%"></div></div>
+            </div>
+            </div>
+                </div>
+              </div>
+              <div class="store-footer-link">
+                <a class="back-to-top" href="#top">↑ К началу отчета</a>
+              </div>
+              
+            </section>
+            
+            <section id="store-2026-02-kremlevskaya" class="store-card">
+              <div class="store-head">
+                <div>
+                  <div class="eyebrow">Магазин • Февраль 2026</div>
+                  <h3>Кремлевская</h3>
+                </div>
+                <div class="store-volume">
+                  <strong>579 423 ₽</strong>
+                  <span>доля 18,5%</span>
+                </div>
+              </div>
+              <div class="store-actions">
+                <a class="back-link" href="#month-2026-02">← К месяцу</a>
+              </div>
+              <div class="bar-track"><div class="bar-fill" style="width: 80%"></div></div>
+              <div class="metrics-grid">
+                <div class="metric"><span>Выручка</span><strong>579 423 ₽</strong></div>
+                <div class="metric"><span>Количество чеков</span><strong>645</strong></div>
+                <div class="metric"><span>Средний чек</span><strong>898 ₽</strong></div>
+                <div class="metric"><span>Нал / безнал</span><strong>84 145 ₽ / 495 278 ₽</strong></div>
+              </div>
+              <div class="two-col">
+                <div class="panel">
+                  <h4>Сравнение с прошлым месяцем</h4>
+                  <div class="compare-row"><div class="compare-chip down"><span>Выручка</span><strong>-17,2% (-120 156 ₽)</strong></div><div class="compare-chip down"><span>Чеки</span><strong>-16,6%</strong></div><div class="compare-chip down"><span>Средний чек</span><strong>-1,1%</strong></div><div class="compare-chip down"><span>Безналичная доля</span><strong>-4,0 п.п.</strong></div><div class="compare-chip up"><span>Наличная доля</span><strong>+4,0 п.п.</strong></div></div>
+                </div>
+                <div class="panel">
+                  <h4>Дневной профиль</h4>
+                  <p>Средняя дневная выручка: <strong>20 694 ₽</strong>.</p>
+                  <p>Медиана дня: <strong>20 944 ₽</strong>.</p>
+                  <p>Лучший день: <strong>15.02.2026</strong>, 34 205 ₽.</p>
+                  <p>Самый слабый день: <strong>18.02.2026</strong>, 7 656 ₽.</p>
+                </div>
+              </div>
+              <div class="two-col">
+                <div class="panel">
+                  <h4>Оценка стабильности точки</h4>
+                  <p><span class="stability-pill stability-yellow">🟡 Стабильная выручка</span></p>
+                  <p>Есть небольшие колебания, но точка работает предсказуемо.</p>
+                </div>
+                <div class="panel">
+                  <h4>Распределение по дням недели</h4>
+                  <div class="weekday-grid">
+            <div class="weekday-pill">
+              <span>Пн</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 86%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Вт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 85%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Ср</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 63%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Чт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 65%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Пт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 80%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Сб</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 100%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Вс</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 93%"></div></div>
+            </div>
+            </div>
+                </div>
+              </div>
+              <div class="store-footer-link">
+                <a class="back-to-top" href="#top">↑ К началу отчета</a>
+              </div>
+              
+            </section>
+            
+            <section id="store-2026-02-ostrov" class="store-card">
+              <div class="store-head">
+                <div>
+                  <div class="eyebrow">Магазин • Февраль 2026</div>
+                  <h3>ТЦ Остров</h3>
+                </div>
+                <div class="store-volume">
+                  <strong>565 682 ₽</strong>
+                  <span>доля 18,1%</span>
+                </div>
+              </div>
+              <div class="store-actions">
+                <a class="back-link" href="#month-2026-02">← К месяцу</a>
+              </div>
+              <div class="bar-track"><div class="bar-fill" style="width: 78%"></div></div>
+              <div class="metrics-grid">
+                <div class="metric"><span>Выручка</span><strong>565 682 ₽</strong></div>
+                <div class="metric"><span>Количество чеков</span><strong>571</strong></div>
+                <div class="metric"><span>Средний чек</span><strong>994 ₽</strong></div>
+                <div class="metric"><span>Нал / безнал</span><strong>69 010 ₽ / 498 752 ₽</strong></div>
+              </div>
+              <div class="two-col">
+                <div class="panel">
+                  <h4>Сравнение с прошлым месяцем</h4>
+                  <div class="compare-row"><div class="compare-chip down"><span>Выручка</span><strong>-16,9% (-114 704 ₽)</strong></div><div class="compare-chip down"><span>Чеки</span><strong>-8,8%</strong></div><div class="compare-chip down"><span>Средний чек</span><strong>-8,6%</strong></div><div class="compare-chip up"><span>Безналичная доля</span><strong>+1,6 п.п.</strong></div><div class="compare-chip down"><span>Наличная доля</span><strong>-1,6 п.п.</strong></div></div>
+                </div>
+                <div class="panel">
+                  <h4>Дневной профиль</h4>
+                  <p>Средняя дневная выручка: <strong>20 203 ₽</strong>.</p>
+                  <p>Медиана дня: <strong>18 548 ₽</strong>.</p>
+                  <p>Лучший день: <strong>15.02.2026</strong>, 41 572 ₽.</p>
+                  <p>Самый слабый день: <strong>09.02.2026</strong>, 9 250 ₽.</p>
+                </div>
+              </div>
+              <div class="two-col">
+                <div class="panel">
+                  <h4>Оценка стабильности точки</h4>
+                  <p><span class="stability-pill stability-red">🔴 Очень нестабильная точка</span></p>
+                  <p>Сильные колебания выручки по дням. Возможны проблемы с трафиком или работой смен.</p>
+                </div>
+                <div class="panel">
+                  <h4>Распределение по дням недели</h4>
+                  <div class="weekday-grid">
+            <div class="weekday-pill">
+              <span>Пн</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 43%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Вт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 62%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Ср</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 96%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Чт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 100%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Пт</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 93%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Сб</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 88%"></div></div>
+            </div>
+            
+            <div class="weekday-pill">
+              <span>Вс</span>
+              <div class="bar-track"><div class="bar-fill" style="width: 76%"></div></div>
+            </div>
+            </div>
+                </div>
+              </div>
+              <div class="store-footer-link">
+                <a class="back-to-top" href="#top">↑ К началу отчета</a>
+              </div>
+              <div class="alert"><strong>Аномалии в выгрузке:</strong><ul><li>23.02.2026: несколько смен, одна из них с нулевой выручкой.</li></ul></div>
+            </section>
+            
+      </div>
+      <div class="month-footer-link">
+        <a class="back-to-top" href="#top">↑ К началу отчета</a>
+      </div>
+    </section>
+    
+
+    <p class="footer-note">Новые месяцы достаточно положить в эту же папку как отдельный файл Excel формата <strong>Отчет *.xlsx</strong>, затем заново запустить генератор. Отчет соберется в один HTML автоматически.</p>
+  </div>
+</body>
+</html>
