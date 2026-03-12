@@ -39,6 +39,16 @@ height:42px;
 flex:0 0 auto;
 }
 
+.brandLogoLink{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+text-decoration:none;
+color:inherit;
+cursor:pointer;
+flex:0 0 auto;
+}
+
 .header{
 display:flex;
 align-items:center;
@@ -627,7 +637,12 @@ grid-template-columns:1fr;
 
 <div class="appContent" id="appContent" hidden>
 
-<h1 class="brandTitle"><img class="brandLogo" src="./k-logo.svg" alt="К">Календарь Кальяныч</h1>
+<h1 class="brandTitle">
+<a class="brandLogoLink" href="https://kaidanovicha-spec.github.io/kalyanych-calendar/zmeika.html" target="_blank" rel="noopener noreferrer" aria-label="Открыть игру Змейка">
+<img class="brandLogo" src="./k-logo.svg" alt="К">
+</a>
+Календарь Кальяныч
+</h1>
 
 <div class="header">
 <button onclick="changeMonth(-1)">◀</button>
