@@ -667,8 +667,9 @@ grid-template-columns:1fr;
 </div>
 
 <div class="statCard">
-<div class="statTitle">НДС 5%</div>
+<div class="statTitle" id="taxCardTitle">НДС 5%</div>
 <div class="statValue" id="monthNds"></div>
+<div class="statCompare" id="yearNds"></div>
 </div>
 
 <div class="statCard">
@@ -898,6 +899,11 @@ let monthGross = calculateGross(total);
 let latestFilledDay = 0;
 let monthlyTotals = new Array(12).fill(0);
 let previousYearMonthlyTotals = new Array(12).fill(0);
+let yearTotalRevenue = 0;
+let bestDayOfYear = null;
+let worstDayOfYear = null;
+let bestDayOfYearLabel = "";
+let worstDayOfYearLabel = "";
 
 for (let date in revenueData){
 let parsed = new Date(date + "T00:00:00");
@@ -909,6 +915,17 @@ latestFilledDay = Math.max(latestFilledDay, parsed.getDate());
 
 if (parsed.getFullYear() === year && value > 0){
 monthlyTotals[parsed.getMonth()] += value;
+yearTotalRevenue += value;
+
+if (bestDayOfYear === null || value > bestDayOfYear){
+bestDayOfYear = value;
+bestDayOfYearLabel = parsed.getDate() + " " + monthNames[parsed.getMonth()];
+}
+
+if (worstDayOfYear === null || value < worstDayOfYear){
+worstDayOfYear = value;
+worstDayOfYearLabel = parsed.getDate() + " " + monthNames[parsed.getMonth()];
+}
 }
 
 if (parsed.getFullYear() === year - 1 && value > 0){
@@ -919,6 +936,11 @@ previousYearMonthlyTotals[parsed.getMonth()] += value;
 let maxMonthlyTotal = Math.max(...monthlyTotals, 1);
 let monthShortNames = ["Я","Ф","М","А","М","И","И","А","С","О","Н","Д"];
 let breakEvenTarget = getBreakEvenTarget(year);
+let bestMonthValue = Math.max(...monthlyTotals);
+let worstMonthCandidates = monthlyTotals.filter((value) => value > 0);
+let worstMonthValue = worstMonthCandidates.length ? Math.min(...worstMonthCandidates) : 0;
+let bestMonthIndex = monthlyTotals.findIndex((value) => value === bestMonthValue);
+let worstMonthIndex = monthlyTotals.findIndex((value) => value === worstMonthValue);
 let monthsChartHtml = monthlyTotals.map((value, index) => {
 let barHeight = value > 0 ? Math.max(8, Math.round((value / maxMonthlyTotal) * 78)) : 6;
 let barClass = value >= breakEvenTarget ? "green" : "red";
@@ -954,10 +976,19 @@ monthExpectation.innerText = "Ожидаем без изменений";
 
 document.getElementById("monthTotal").innerText = formatMoney(total);
 document.getElementById("monthAverage").innerText = formatMoney(avg);
-document.getElementById("monthNds").innerText = formatMoney(nds);
 document.getElementById("forecast").innerText = formatMoney(forecast);
 document.getElementById("monthGross").innerText = formatMoney(monthGross);
 document.getElementById("costPercentLabel").innerText = "Процент себестоимости: " + String(getCostPercent(year)).replace(".", ",") + "%";
+if (year === 2025) {
+document.getElementById("taxCardTitle").innerText = "Итоги года";
+document.getElementById("monthNds").innerHTML =
+"Топ месяц: " + (bestMonthIndex >= 0 ? monthNames[bestMonthIndex] + " — " + formatMoney(bestMonthValue) : "—");
+document.getElementById("yearNds").innerHTML = "";
+} else {
+document.getElementById("taxCardTitle").innerText = "НДС 5%";
+document.getElementById("monthNds").innerText = formatMoney(nds);
+document.getElementById("yearNds").innerText = "За " + year + " год: " + formatMoney(Math.round(yearTotalRevenue * 0.05));
+}
 
 let targetDiff = total - breakEvenTarget;
 let scaleMax = breakEvenTarget * 2;

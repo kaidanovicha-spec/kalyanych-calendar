@@ -9,39 +9,54 @@
 <body>
   <main class="page">
     <section class="panel">
-      <div class="heading">
-        <img class="logo" src="k-logo.svg" alt="Логотип К">
-        <div>
-          <p class="eyebrow">Аркада</p>
-          <h1>Кальяныч змейка</h1>
+      <div class="panel-inner">
+        <div class="heading">
+          <img class="logo" src="k-logo.svg" alt="Логотип К">
+          <div>
+            <p class="eyebrow">Аркада</p>
+            <h1>Кальяныч змейка</h1>
+          </div>
         </div>
-      </div>
 
-      <div class="stats">
-        <div class="stat">
-          <span>Деньги</span>
-          <strong id="score">0 ₽</strong>
+        <div class="stats">
+          <div class="stat">
+            <span>Деньги</span>
+            <strong id="score">0 ₽</strong>
+          </div>
+          <div class="stat">
+            <span>Рекорд</span>
+            <strong id="best">0 ₽</strong>
+          </div>
         </div>
-        <div class="stat">
-          <span>Рекорд</span>
-          <strong id="best">0 ₽</strong>
+
+        <div class="difficulty" aria-label="Уровни сложности">
+          <button class="difficulty-button active" type="button" data-level="intern">1: Продавец</button>
+          <button class="difficulty-button" type="button" data-level="manager">2: Управляющий</button>
+          <button class="difficulty-button" type="button" data-level="owner">3: ИПэшник</button>
+          <button class="difficulty-button" type="button" data-level="tax">4: Налоговая</button>
         </div>
-      </div>
 
-      <div class="difficulty" aria-label="Уровни сложности">
-        <button class="difficulty-button active" type="button" data-level="intern">1: Продавец</button>
-        <button class="difficulty-button" type="button" data-level="manager">2: Управляющий</button>
-        <button class="difficulty-button" type="button" data-level="owner">3: ИПэшник</button>
-      </div>
+        <div class="expansion-bar">
+          <div class="buy-field-buttons">
+            <button class="buy-field-button" id="buy-left-field-button" type="button" disabled>Открыть левое поле за 50 000 ₽</button>
+            <button class="buy-field-button" id="buy-right-field-button" type="button" disabled>Открыть правое поле за 50 000 ₽</button>
+          </div>
+          <span class="buy-field-note" id="buy-field-note">Поставь на паузу и накопи 50 000 ₽, чтобы открыть одно из боковых полей.</span>
+        </div>
 
-      <p class="hint">Управление: стрелки или WASD. Пробел — пауза, Enter — рестарт.</p>
+        <p class="hint">Управление: стрелки или WASD. Пробел — пауза, кнопки сверху открывают поля, `🍺` замедляет на 1 минуту, Enter — рестарт.</p>
+      </div>
     </section>
 
     <section class="game-shell">
-      <canvas id="game" width="600" height="600" aria-label="Игровое поле змейки"></canvas>
+      <canvas id="game" width="900" height="600" aria-label="Игровое поле змейки"></canvas>
       <div class="overlay" id="overlay">
         <h2 id="overlay-title">Нажми любую стрелку</h2>
         <p id="overlay-text">Собирай мешочки денег и не врезайся в стены или в себя.</p>
+      </div>
+      <div class="game-footer">
+        <span class="collected-line">Собрано за игру: <strong id="collected-money">0 ₽</strong></span>
+        <span class="beer-timer" id="beer-timer">🍺 не активно</span>
       </div>
     </section>
   </main>

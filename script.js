@@ -6,31 +6,59 @@ const overlay = document.getElementById("overlay");
 const overlayTitle = document.getElementById("overlay-title");
 const overlayText = document.getElementById("overlay-text");
 const difficultyButtons = document.querySelectorAll(".difficulty-button");
+const buyLeftFieldButton = document.getElementById("buy-left-field-button");
+const buyRightFieldButton = document.getElementById("buy-right-field-button");
+const buyFieldNote = document.getElementById("buy-field-note");
+const collectedMoneyNode = document.getElementById("collected-money");
+const beerTimerNode = document.getElementById("beer-timer");
 
 const cellSize = 30;
-const gridSize = canvas.width / cellSize;
-const bestKey = "snake-k-best";
+const gridColumns = canvas.width / cellSize;
+const gridRows = canvas.height / cellSize;
+const fieldUnlockCost = 50000;
+const sideZoneColumns = 5;
+const beerDurationMs = 60_000;
+const beerMoneyStep = 15_000;
 const levelConfig = {
   intern: {
     title: "1: Продавец",
     obstacleCount: 0,
     obstacleTypes: [],
     moneyPerBag: 100,
-    moveInterval: 145
+    moveInterval: 145,
+    moneyBagCount: 1,
+    beerSlots: 1,
+    beerMode: "milestone"
   },
   manager: {
     title: "2: Управляющий",
     obstacleCount: 5,
-    obstacleTypes: ["store"],
+    obstacleTypes: ["🏬"],
     moneyPerBag: 500,
-    moveInterval: 132
+    moveInterval: 132,
+    moneyBagCount: 1,
+    beerSlots: 1,
+    beerMode: "milestone"
   },
   owner: {
     title: "3: ИПэшник",
     obstacleCount: 10,
-    obstacleTypes: ["court", "store", "police", "tax", "contract", "camera", "stamp", "safe", "truck", "notice"],
+    obstacleTypes: ["👮🏻‍♀️", "🕵🏻", "👩🏻‍🎓", "🧑🏻‍⚖️", "🥷🏻", "🔥", "☄️", "🌪️", "❄️", "🏬"],
     moneyPerBag: 1000,
-    moveInterval: 119
+    moveInterval: 119,
+    moneyBagCount: 1,
+    beerSlots: 1,
+    beerMode: "milestone"
+  },
+  tax: {
+    title: "4: Налоговая",
+    obstacleCount: 0,
+    obstacleTypes: [],
+    moneyPerBag: 5000,
+    moveInterval: 145,
+    moneyBagCount: 10,
+    beerSlots: 3,
+    beerMode: "always"
   }
 };
 
@@ -40,89 +68,204 @@ headImage.src = "k-logo.svg";
 let snake;
 let direction;
 let nextDirection;
-let apple;
+let moneyBags = [];
 let score;
-let bestScore = Number(localStorage.getItem(bestKey) || 0);
+let bestScore = 0;
 let running = false;
 let started = false;
 let gameOver = false;
 let lastTick = 0;
 let obstacles = [];
 let currentLevel = "intern";
+let unlockedSides = { left: false, right: false };
+let beers = [];
+let slowUntil = 0;
+let collectedMoney = 0;
+let nextBeerMilestone = beerMoneyStep;
 
 bestNode.textContent = formatMoney(bestScore);
+collectedMoneyNode.textContent = formatMoney(0);
+updateBeerTimer();
 
 function formatMoney(value) {
   return `${value.toLocaleString("ru-RU")} ₽`;
 }
 
+function getBestKey(level) {
+  return `snake-k-best-${level}`;
+}
+
+function loadBestScore(level) {
+  return Number(localStorage.getItem(getBestKey(level)) || 0);
+}
+
+function saveBestScore(level, value) {
+  localStorage.setItem(getBestKey(level), String(value));
+}
+
 function getLevelMessage(level) {
   if (level === "manager") {
-    return "Собирай мешочки денег и обходи 5 магазинов-помех.";
+    return "Собирай мешочки денег, обходи 5 магазинов и лови 🍺 для временного замедления.";
   }
 
   if (level === "owner") {
-    return "Собирай мешочки денег и обходи 10 препятствий: суд, магазин, полицейского и другие.";
+    return "Собирай мешочки денег, обходи 10 эмодзи-помех и лови 🍺 для временного замедления.";
   }
 
-  return "Собирай мешочки денег и не врезайся в стены или в себя.";
+  if (level === "tax") {
+    return "Налоговая просто собирает деньги: сразу 10 мешочков и 3 пива на поле, без препятствий.";
+  }
+
+  return "Собирай мешочки денег, бери 🍺 для передышки и не врезайся в стены или в себя.";
+}
+
+function getActiveBounds() {
+  return {
+    minX: unlockedSides.left ? 0 : sideZoneColumns,
+    maxX: unlockedSides.right ? gridColumns - 1 : gridColumns - sideZoneColumns - 1,
+    minY: 0,
+    maxY: gridRows - 1
+  };
+}
+
+function canUnlockField(side) {
+  return !unlockedSides[side] && score >= fieldUnlockCost;
+}
+
+function updateFieldPurchaseUI() {
+  const canBuyLeft = !running && started && !gameOver && canUnlockField("left");
+  const canBuyRight = !running && started && !gameOver && canUnlockField("right");
+
+  buyLeftFieldButton.disabled = !canBuyLeft;
+  buyRightFieldButton.disabled = !canBuyRight;
+
+  if (unlockedSides.left && unlockedSides.right) {
+    buyFieldNote.textContent = "Оба боковых поля уже открыты. Теперь можно заработать больше.";
+    return;
+  }
+
+  if (canBuyLeft || canBuyRight) {
+    buyFieldNote.textContent = "На паузе можно открыть левое или правое поле за 50 000 ₽.";
+    return;
+  }
+
+  const remaining = Math.max(fieldUnlockCost - score, 0);
+  buyFieldNote.textContent = `Поставь на паузу и накопи ${formatMoney(remaining)}, чтобы открыть одно из боковых полей.`;
 }
 
 function updateDifficultyButtons() {
   difficultyButtons.forEach((button) => {
     button.classList.toggle("active", button.dataset.level === currentLevel);
   });
+  bestScore = loadBestScore(currentLevel);
+  bestNode.textContent = formatMoney(bestScore);
 }
 
-function resetGame() {
-  snake = [
-    { x: 8, y: 10 },
-    { x: 7, y: 10 },
-    { x: 6, y: 10 }
-  ];
-  direction = { x: 1, y: 0 };
-  nextDirection = { x: 1, y: 0 };
-  obstacles = spawnObstacles();
-  apple = spawnApple();
-  score = 0;
-  running = false;
-  started = false;
-  gameOver = false;
-  lastTick = 0;
-  scoreNode.textContent = formatMoney(0);
-  updateDifficultyButtons();
-  showOverlay(levelConfig[currentLevel].title, getLevelMessage(currentLevel));
-  draw();
+function updateBeerTimer() {
+  const remainingMs = Math.max(slowUntil - Date.now(), 0);
+
+  if (remainingMs <= 0) {
+    beerTimerNode.textContent = "🍺 не активно";
+    beerTimerNode.classList.remove("active");
+    return;
+  }
+
+  const totalSeconds = Math.ceil(remainingMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  beerTimerNode.textContent = `🍺 замедление: ${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  beerTimerNode.classList.add("active");
 }
 
-function spawnApple() {
+function randomBetween(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function isCellBlocked(x, y) {
+  const onSnake = snake?.some((segment) => segment.x === x && segment.y === y);
+  const onObstacle = obstacles.some((obstacle) => obstacle.x === x && obstacle.y === y);
+  const onBag = moneyBags.some((bag) => bag.x === x && bag.y === y);
+  const onBeer = beers.some((beer) => beer.x === x && beer.y === y);
+  return onSnake || onObstacle || onBag || onBeer;
+}
+
+function spawnFreeCell() {
+  const activeBounds = getActiveBounds();
+
   while (true) {
     const candidate = {
-      x: Math.floor(Math.random() * gridSize),
-      y: Math.floor(Math.random() * gridSize)
+      x: randomBetween(activeBounds.minX, activeBounds.maxX),
+      y: randomBetween(activeBounds.minY, activeBounds.maxY)
     };
-    const occupied = snake?.some((segment) => segment.x === candidate.x && segment.y === candidate.y);
-    const blocked = obstacles.some((obstacle) => obstacle.x === candidate.x && obstacle.y === candidate.y);
-    if (!occupied && !blocked) {
+
+    if (!isCellBlocked(candidate.x, candidate.y)) {
       return candidate;
     }
+  }
+}
+
+function spawnMoneyBags(count) {
+  moneyBags = [];
+  while (moneyBags.length < count) {
+    moneyBags.push(spawnFreeCell());
+  }
+}
+
+function spawnBeerItem() {
+  return spawnFreeCell();
+}
+
+function refillBeers(force = false) {
+  const config = levelConfig[currentLevel];
+
+  if (config.beerMode !== "always" && !force) {
+    return;
+  }
+
+  while (beers.length < config.beerSlots) {
+    beers.push(spawnBeerItem());
+  }
+}
+
+function maybeSpawnBeer() {
+  const config = levelConfig[currentLevel];
+
+  if (config.beerMode === "always") {
+    refillBeers();
+    return;
+  }
+
+  if (beers.length < config.beerSlots && collectedMoney >= nextBeerMilestone) {
+    beers.push(spawnBeerItem());
+    nextBeerMilestone += beerMoneyStep;
   }
 }
 
 function spawnObstacles() {
   const config = levelConfig[currentLevel];
   const nextObstacles = [];
+  const activeBounds = getActiveBounds();
+  const safeZone = {
+    minX: Math.max(activeBounds.minX, Math.floor((activeBounds.minX + activeBounds.maxX) / 2) - 4),
+    maxX: Math.min(activeBounds.maxX, Math.floor((activeBounds.minX + activeBounds.maxX) / 2) + 3),
+    minY: 7,
+    maxY: 13
+  };
 
   while (nextObstacles.length < config.obstacleCount) {
     const candidate = {
-      x: Math.floor(Math.random() * gridSize),
-      y: Math.floor(Math.random() * gridSize),
+      x: randomBetween(activeBounds.minX, activeBounds.maxX),
+      y: randomBetween(activeBounds.minY, activeBounds.maxY),
       type: config.obstacleTypes[nextObstacles.length % config.obstacleTypes.length]
     };
 
     const onSnake = snake?.some((segment) => segment.x === candidate.x && segment.y === candidate.y);
     const duplicate = nextObstacles.some((obstacle) => obstacle.x === candidate.x && obstacle.y === candidate.y);
-    const tooCloseToStart = candidate.x >= 4 && candidate.x <= 11 && candidate.y >= 7 && candidate.y <= 13;
+    const tooCloseToStart =
+      candidate.x >= safeZone.minX &&
+      candidate.x <= safeZone.maxX &&
+      candidate.y >= safeZone.minY &&
+      candidate.y <= safeZone.maxY;
 
     if (!onSnake && !duplicate && !tooCloseToStart) {
       nextObstacles.push(candidate);
@@ -132,14 +275,52 @@ function spawnObstacles() {
   return nextObstacles;
 }
 
+function resetGame() {
+  unlockedSides = { left: false, right: false };
+  beers = [];
+  moneyBags = [];
+  slowUntil = 0;
+  collectedMoney = 0;
+  nextBeerMilestone = beerMoneyStep;
+
+  const activeBounds = getActiveBounds();
+  const centerX = Math.floor((activeBounds.minX + activeBounds.maxX) / 2);
+  const centerY = Math.floor((activeBounds.minY + activeBounds.maxY) / 2);
+
+  snake = [
+    { x: centerX, y: centerY },
+    { x: centerX - 1, y: centerY },
+    { x: centerX - 2, y: centerY }
+  ];
+  direction = { x: 1, y: 0 };
+  nextDirection = { x: 1, y: 0 };
+  obstacles = spawnObstacles();
+  spawnMoneyBags(levelConfig[currentLevel].moneyBagCount);
+  refillBeers(true);
+  score = 0;
+  running = false;
+  started = false;
+  gameOver = false;
+  lastTick = 0;
+  scoreNode.textContent = formatMoney(0);
+  collectedMoneyNode.textContent = formatMoney(0);
+  updateBeerTimer();
+  updateDifficultyButtons();
+  updateFieldPurchaseUI();
+  showOverlay(levelConfig[currentLevel].title, getLevelMessage(currentLevel));
+  draw();
+}
+
 function showOverlay(title, text) {
   overlayTitle.textContent = title;
   overlayText.textContent = text;
   overlay.classList.remove("hidden");
+  updateFieldPurchaseUI();
 }
 
 function hideOverlay() {
   overlay.classList.add("hidden");
+  updateFieldPurchaseUI();
 }
 
 function setDirection(x, y) {
@@ -168,7 +349,11 @@ function togglePause() {
     hideOverlay();
     requestAnimationFrame(loop);
   } else {
-    showOverlay("Пауза", "Нажми пробел, чтобы продолжить.");
+    const canBuyAny = canUnlockField("left") || canUnlockField("right");
+    const pauseText = canBuyAny
+      ? "Нажми пробел, чтобы продолжить, или используй кнопки сверху, чтобы открыть левое или правое поле за 50 000 ₽."
+      : "Нажми пробел, чтобы продолжить.";
+    showOverlay("Пауза", pauseText);
   }
 }
 
@@ -178,7 +363,31 @@ function endGame() {
   showOverlay("Игра окончена", "Нажми Enter, чтобы начать заново.");
 }
 
+function buyField(side) {
+  if (running || !started || gameOver || !canUnlockField(side)) {
+    return;
+  }
+
+  score -= fieldUnlockCost;
+  scoreNode.textContent = formatMoney(score);
+  unlockedSides[side] = true;
+  obstacles = spawnObstacles();
+  beers = [];
+  moneyBags = [];
+  spawnMoneyBags(levelConfig[currentLevel].moneyBagCount);
+  refillBeers(true);
+  updateFieldPurchaseUI();
+  showOverlay("Поле открыто", `${side === "left" ? "Левое" : "Правое"} поле активировано. Нажми пробел, чтобы продолжить.`);
+  draw();
+}
+
+function getCurrentMoveInterval() {
+  const baseInterval = levelConfig[currentLevel].moveInterval;
+  return Date.now() < slowUntil ? baseInterval * 2 : baseInterval;
+}
+
 function update() {
+  const activeBounds = getActiveBounds();
   direction = nextDirection;
   const head = snake[0];
   const newHead = {
@@ -187,10 +396,10 @@ function update() {
   };
 
   const hitWall =
-    newHead.x < 0 ||
-    newHead.y < 0 ||
-    newHead.x >= gridSize ||
-    newHead.y >= gridSize;
+    newHead.x < activeBounds.minX ||
+    newHead.y < activeBounds.minY ||
+    newHead.x > activeBounds.maxX ||
+    newHead.y > activeBounds.maxY;
 
   const hitSelf = snake.some((segment) => segment.x === newHead.x && segment.y === newHead.y);
   const hitObstacle = obstacles.some((obstacle) => obstacle.x === newHead.x && obstacle.y === newHead.y);
@@ -203,15 +412,32 @@ function update() {
 
   snake.unshift(newHead);
 
-  if (newHead.x === apple.x && newHead.y === apple.y) {
-    score += levelConfig[currentLevel].moneyPerBag;
+  const bagIndex = moneyBags.findIndex((bag) => bag.x === newHead.x && bag.y === newHead.y);
+  const beerIndex = beers.findIndex((beer) => beer.x === newHead.x && beer.y === newHead.y);
+
+  if (bagIndex !== -1) {
+    const bagValue = levelConfig[currentLevel].moneyPerBag;
+    score += bagValue;
+    collectedMoney += bagValue;
     scoreNode.textContent = formatMoney(score);
+    collectedMoneyNode.textContent = formatMoney(collectedMoney);
+
     if (score > bestScore) {
       bestScore = score;
-      localStorage.setItem(bestKey, String(bestScore));
+      saveBestScore(currentLevel, bestScore);
       bestNode.textContent = formatMoney(bestScore);
     }
-    apple = spawnApple();
+
+    updateFieldPurchaseUI();
+    moneyBags.splice(bagIndex, 1);
+    moneyBags.push(spawnFreeCell());
+    maybeSpawnBeer();
+  } else if (beerIndex !== -1) {
+    slowUntil = Date.now() + beerDurationMs;
+    beers.splice(beerIndex, 1);
+    refillBeers();
+    updateBeerTimer();
+    snake.pop();
   } else {
     snake.pop();
   }
@@ -221,6 +447,75 @@ function update() {
 
 function drawBoard() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const activeBounds = getActiveBounds();
+
+  ctx.fillStyle = "#f8ead0";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = "#f5dfbc";
+  ctx.fillRect(
+    activeBounds.minX * cellSize,
+    activeBounds.minY * cellSize,
+    (activeBounds.maxX - activeBounds.minX + 1) * cellSize,
+    (activeBounds.maxY - activeBounds.minY + 1) * cellSize
+  );
+
+  drawGrid();
+
+  if (!unlockedSides.left) {
+    drawLockedZone(0, sideZoneColumns * cellSize, "Открой\nза 50 000 ₽");
+  }
+
+  if (!unlockedSides.right) {
+    drawLockedZone(canvas.width - sideZoneColumns * cellSize, sideZoneColumns * cellSize, "Открой\nза 50 000 ₽");
+  }
+}
+
+function drawGrid() {
+  ctx.strokeStyle = "#ffffff55";
+  ctx.lineWidth = 1;
+
+  for (let x = 0; x <= canvas.width; x += cellSize) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, canvas.height);
+    ctx.stroke();
+  }
+
+  for (let y = 0; y <= canvas.height; y += cellSize) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(canvas.width, y);
+    ctx.stroke();
+  }
+}
+
+function drawLockedZone(startX, width, label) {
+  ctx.save();
+  ctx.fillStyle = "#ead6b645";
+  ctx.fillRect(startX, 0, width, canvas.height);
+
+  ctx.fillStyle = "#b76a1d";
+  ctx.font = "bold 22px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  const lines = label.split("\n");
+  lines.forEach((line, index) => {
+    ctx.fillText(line, startX + width / 2, canvas.height / 2 + index * 28 - 14);
+  });
+
+  ctx.restore();
+}
+
+function drawBeer(itemX, itemY) {
+  const x = itemX * cellSize;
+  const y = itemY * cellSize;
+
+  ctx.font = "22px 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("🍺", x + 15, y + 17);
 }
 
 function drawMoneyBag(itemX, itemY) {
@@ -249,154 +544,37 @@ function drawMoneyBag(itemX, itemY) {
   ctx.fillText("$", x + 15, y + 18);
 }
 
-function drawStore(x, y) {
-  ctx.fillStyle = "#f4efe7";
-  roundRect(ctx, x + 4, y + 8, 22, 16, 4);
-  ctx.fill();
-  ctx.fillStyle = "#c7472f";
-  ctx.fillRect(x + 4, y + 8, 22, 5);
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(x + 8, y + 16, 5, 8);
-  ctx.fillRect(x + 17, y + 16, 5, 8);
-}
-
-function drawCourt(x, y) {
-  ctx.fillStyle = "#d8d0c4";
-  ctx.fillRect(x + 6, y + 10, 18, 2);
-  ctx.fillRect(x + 8, y + 12, 3, 10);
-  ctx.fillRect(x + 14, y + 12, 3, 10);
-  ctx.fillRect(x + 20, y + 12, 3, 10);
-  ctx.beginPath();
-  ctx.moveTo(x + 5, y + 10);
-  ctx.lineTo(x + 15, y + 5);
-  ctx.lineTo(x + 25, y + 10);
-  ctx.closePath();
-  ctx.fill();
-}
-
-function drawPolice(x, y) {
-  ctx.fillStyle = "#1f5ea8";
-  roundRect(ctx, x + 6, y + 10, 18, 12, 6);
-  ctx.fill();
-  ctx.fillStyle = "#ffd447";
-  ctx.fillRect(x + 10, y + 14, 10, 4);
-  ctx.fillStyle = "#234";
-  ctx.fillRect(x + 9, y + 8, 12, 3);
-}
-
-function drawTax(x, y) {
-  ctx.fillStyle = "#e7f1ff";
-  roundRect(ctx, x + 7, y + 6, 16, 18, 4);
-  ctx.fill();
-  ctx.fillStyle = "#3d6ca8";
-  ctx.fillRect(x + 10, y + 10, 10, 2);
-  ctx.fillRect(x + 10, y + 14, 8, 2);
-  ctx.fillRect(x + 10, y + 18, 6, 2);
-}
-
-function drawContract(x, y) {
-  ctx.fillStyle = "#fff7e3";
-  roundRect(ctx, x + 8, y + 6, 14, 18, 3);
-  ctx.fill();
-  ctx.fillStyle = "#b9862f";
-  ctx.beginPath();
-  ctx.arc(x + 15, y + 22, 3, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillRect(x + 11, y + 11, 8, 2);
-}
-
-function drawCamera(x, y) {
-  ctx.fillStyle = "#4e5b65";
-  roundRect(ctx, x + 6, y + 10, 18, 12, 4);
-  ctx.fill();
-  ctx.fillStyle = "#93b7d8";
-  ctx.beginPath();
-  ctx.arc(x + 15, y + 16, 4, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-function drawStamp(x, y) {
-  ctx.fillStyle = "#7c4dff";
-  roundRect(ctx, x + 9, y + 8, 12, 8, 4);
-  ctx.fill();
-  ctx.fillStyle = "#5a35c6";
-  ctx.fillRect(x + 11, y + 16, 8, 6);
-}
-
-function drawSafe(x, y) {
-  ctx.fillStyle = "#64707a";
-  roundRect(ctx, x + 7, y + 7, 16, 16, 3);
-  ctx.fill();
-  ctx.fillStyle = "#d7dee5";
-  ctx.beginPath();
-  ctx.arc(x + 15, y + 15, 4, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-function drawTruck(x, y) {
-  ctx.fillStyle = "#ff9f1c";
-  ctx.fillRect(x + 6, y + 11, 10, 8);
-  ctx.fillRect(x + 16, y + 13, 8, 6);
-  ctx.fillStyle = "#3f3f46";
-  ctx.beginPath();
-  ctx.arc(x + 11, y + 21, 2.5, 0, Math.PI * 2);
-  ctx.arc(x + 21, y + 21, 2.5, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-function drawNotice(x, y) {
-  ctx.fillStyle = "#ffe37b";
-  roundRect(ctx, x + 8, y + 7, 14, 18, 3);
-  ctx.fill();
-  ctx.fillStyle = "#8d5c00";
-  ctx.fillRect(x + 14, y + 11, 2, 7);
-  ctx.fillRect(x + 14, y + 20, 2, 2);
-}
-
 function drawObstacle(obstacle) {
   const x = obstacle.x * cellSize;
   const y = obstacle.y * cellSize;
 
   ctx.save();
-  ctx.fillStyle = "#00000010";
-  ctx.beginPath();
-  ctx.arc(x + 15, y + 25, 8, 0, Math.PI * 2);
-  ctx.fill();
-
-  if (obstacle.type === "store") {
-    drawStore(x, y);
-  } else if (obstacle.type === "court") {
-    drawCourt(x, y);
-  } else if (obstacle.type === "police") {
-    drawPolice(x, y);
-  } else if (obstacle.type === "tax") {
-    drawTax(x, y);
-  } else if (obstacle.type === "contract") {
-    drawContract(x, y);
-  } else if (obstacle.type === "camera") {
-    drawCamera(x, y);
-  } else if (obstacle.type === "stamp") {
-    drawStamp(x, y);
-  } else if (obstacle.type === "safe") {
-    drawSafe(x, y);
-  } else if (obstacle.type === "truck") {
-    drawTruck(x, y);
-  } else if (obstacle.type === "notice") {
-    drawNotice(x, y);
-  }
-
+  ctx.font = "22px 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(obstacle.type, x + 15, y + 17);
   ctx.restore();
 }
 
 function getHeadRotation(segment) {
-  const lookX = apple.x - segment.x;
-  const lookY = apple.y - segment.y;
+  const nearestBag = moneyBags.reduce((closest, bag) => {
+    if (!closest) {
+      return bag;
+    }
+
+    const currentDistance = Math.abs(closest.x - segment.x) + Math.abs(closest.y - segment.y);
+    const candidateDistance = Math.abs(bag.x - segment.x) + Math.abs(bag.y - segment.y);
+    return candidateDistance < currentDistance ? bag : closest;
+  }, null);
+
+  const target = nearestBag || { x: segment.x + direction.x, y: segment.y + direction.y };
+  const lookX = target.x - segment.x;
+  const lookY = target.y - segment.y;
 
   if (lookX === 0 && lookY === 0) {
     return Math.atan2(direction.y, direction.x);
   }
 
-  // The source SVG already faces right, so the flat side stays at the back.
   return Math.atan2(lookY, lookX);
 }
 
@@ -425,7 +603,7 @@ function drawSegment(segment, index) {
     return;
   }
 
-  ctx.fillStyle = index % 2 === 0 ? "#1f8f54" : "#16673c";
+  ctx.fillStyle = index % 2 === 0 ? "#ff9b34" : "#d96a0c";
   roundRect(ctx, x + 2, y + 2, size, size, 9);
   ctx.fill();
 }
@@ -443,7 +621,8 @@ function roundRect(context, x, y, width, height, radius) {
 function draw() {
   drawBoard();
   obstacles.forEach(drawObstacle);
-  drawMoneyBag(apple.x, apple.y);
+  moneyBags.forEach((bag) => drawMoneyBag(bag.x, bag.y));
+  beers.forEach((beer) => drawBeer(beer.x, beer.y));
   snake.forEach(drawSegment);
 }
 
@@ -452,11 +631,13 @@ function loop(timestamp) {
     return;
   }
 
+  updateBeerTimer();
+
   if (!lastTick) {
     lastTick = timestamp;
   }
 
-  if (timestamp - lastTick >= levelConfig[currentLevel].moveInterval) {
+  if (timestamp - lastTick >= getCurrentMoveInterval()) {
     lastTick = timestamp;
     update();
   }
@@ -469,7 +650,7 @@ function loop(timestamp) {
 window.addEventListener("keydown", (event) => {
   const key = event.key.toLowerCase();
 
-  if (["arrowup", "arrowdown", "arrowleft", "arrowright", " ", "enter", "w", "a", "s", "d"].includes(key)) {
+  if (["arrowup", "arrowdown", "arrowleft", "arrowright", " ", "enter", "w", "a", "s", "d", "b", "и"].includes(key)) {
     event.preventDefault();
   }
 
@@ -494,6 +675,9 @@ difficultyButtons.forEach((button) => {
     resetGame();
   });
 });
+
+buyLeftFieldButton.addEventListener("click", () => buyField("left"));
+buyRightFieldButton.addEventListener("click", () => buyField("right"));
 
 headImage.addEventListener("load", draw);
 
