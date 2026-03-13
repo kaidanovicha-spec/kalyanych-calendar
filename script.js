@@ -26,6 +26,7 @@ const bribeCost = 15000;
 const sideZoneColumns = 5;
 const beerDurationMs = 60_000;
 const beerMoneyStep = 15_000;
+const davidDropValue = 1;
 const levelConfig = {
   intern: {
     title: "1: Продавец",
@@ -66,6 +67,16 @@ const levelConfig = {
     moneyBagCount: 10,
     beerSlots: 3,
     beerMode: "always"
+  },
+  david: {
+    title: "5: Давид",
+    obstacleCount: 0,
+    obstacleTypes: [],
+    moneyPerBag: davidDropValue,
+    moveInterval: 16,
+    moneyBagCount: 0,
+    beerSlots: 0,
+    beerMode: "none"
   }
 };
 
@@ -91,12 +102,20 @@ let collectedMoney = 0;
 let nextBeerMilestone = beerMoneyStep;
 let purchasedSlowdownMultiplier = 1;
 let awaitingBribeDecision = false;
+let davidPlayerX = 0;
+let davidDrops = [];
+let davidMove = 0;
+let davidLastSpawn = 0;
+let davidSpeedMultiplier = 1;
 
 bestNode.textContent = formatMoney(bestScore);
 collectedMoneyNode.textContent = formatMoney(0);
 updateBeerTimer();
 
 function formatMoney(value) {
+  if (currentLevel === "david") {
+    return `${value.toLocaleString("ru-RU")} л`;
+  }
   return `${value.toLocaleString("ru-RU")} ₽`;
 }
 
@@ -123,6 +142,10 @@ function getLevelMessage(level) {
 
   if (level === "tax") {
     return "Налоговая просто собирает деньги: сразу 10 мешочков и 3 пива на поле, без препятствий.";
+  }
+
+  if (level === "david") {
+    return "Лови капли, которые падают с трубы сверху. Каждая пойманная капля = 1 литр воды.";
   }
 
   return "Собирай мешочки денег, бери 🍺 для передышки и не врезайся в стены или в себя.";
@@ -154,6 +177,14 @@ function canBuySlowdown() {
 }
 
 function updateFieldPurchaseUI() {
+  if (currentLevel === "david") {
+    buyLeftFieldButton.disabled = true;
+    buyRightFieldButton.disabled = true;
+    buySlowdownButton.disabled = true;
+    buyFieldNote.textContent = "В режиме Давид покупки полей и замедления отключены.";
+    return;
+  }
+
   const canBuyLeft = !running && started && !gameOver && canUnlockField("left");
   const canBuyRight = !running && started && !gameOver && canUnlockField("right");
   const canBuySlow = canBuySlowdown();
@@ -322,6 +353,10 @@ function resetGame() {
   collectedMoney = 0;
   nextBeerMilestone = beerMoneyStep;
   awaitingBribeDecision = false;
+  davidDrops = [];
+  davidMove = 0;
+  davidLastSpawn = 0;
+  davidSpeedMultiplier = 1;
 
   const activeBounds = getActiveBounds();
   const centerX = Math.floor((activeBounds.minX + activeBounds.maxX) / 2);
@@ -337,6 +372,7 @@ function resetGame() {
   obstacles = spawnObstacles();
   spawnMoneyBags(levelConfig[currentLevel].moneyBagCount);
   refillBeers(true);
+  davidPlayerX = Math.floor(gridColumns / 2) - 1;
   score = 0;
   running = false;
   started = false;
@@ -366,6 +402,19 @@ function hideOverlay() {
 }
 
 function setDirection(x, y) {
+  if (currentLevel === "david") {
+    davidMove = x;
+
+    if (!started) {
+      started = true;
+      running = true;
+      gameOver = false;
+      hideOverlay();
+      requestAnimationFrame(loop);
+    }
+    return;
+  }
+
   if (direction.x === -x && direction.y === -y) {
     return;
   }
@@ -456,6 +505,10 @@ function continueAfterBribe() {
 }
 
 function buyField(side) {
+  if (currentLevel === "david") {
+    return;
+  }
+
   if (running || !started || gameOver || !canUnlockField(side)) {
     return;
   }
@@ -474,6 +527,10 @@ function buyField(side) {
 }
 
 function buySlowdown() {
+  if (currentLevel === "david") {
+    return;
+  }
+
   if (!canBuySlowdown()) {
     return;
   }
@@ -490,7 +547,76 @@ function getCurrentMoveInterval() {
   return Date.now() < slowUntil ? baseInterval * 2 : baseInterval;
 }
 
+function spawnDavidDrop() {
+  davidDrops.push({
+    x: randomBetween(1, gridColumns - 2),
+    y: 1,
+    speed: (0.09 + Math.random() * 0.04) * davidSpeedMultiplier
+  });
+}
+
+function updateDavid(timestamp) {
+  if (!lastTick) {
+    lastTick = timestamp;
+  }
+
+  const delta = timestamp - lastTick;
+  lastTick = timestamp;
+
+  davidPlayerX += davidMove * (delta / 42);
+  davidPlayerX = Math.max(0, Math.min(gridColumns - 3, davidPlayerX));
+
+  if (!davidLastSpawn || timestamp - davidLastSpawn > 1150) {
+    davidLastSpawn = timestamp;
+    spawnDavidDrop();
+  }
+
+  const bucketMinX = Math.floor(davidPlayerX) + 1;
+  const bucketMaxX = bucketMinX + 1;
+  const bucketY = gridRows - 2;
+
+  const remainingDrops = [];
+  for (const drop of davidDrops) {
+    const nextDrop = { ...drop, y: drop.y + drop.speed * (delta / 16) };
+    const dropCellX = Math.round(nextDrop.x);
+    const dropCellY = Math.round(nextDrop.y);
+
+    if (dropCellY >= bucketY && dropCellX >= bucketMinX && dropCellX <= bucketMaxX) {
+      score += davidDropValue;
+      collectedMoney += davidDropValue;
+      scoreNode.textContent = formatMoney(score);
+      collectedMoneyNode.textContent = formatMoney(collectedMoney);
+      davidSpeedMultiplier = 1 + Math.floor(collectedMoney / 50) * 0.05;
+      if (score > bestScore) {
+        bestScore = score;
+        saveBestScore(currentLevel, bestScore);
+        bestNode.textContent = formatMoney(bestScore);
+      }
+      continue;
+    }
+
+    if (nextDrop.y >= gridRows - 1) {
+      running = false;
+      gameOver = true;
+      showOverlay("Игра окончена", "Капля упала на пол. Нажми Enter, чтобы начать заново.");
+      draw();
+      return;
+    }
+
+    if (nextDrop.y < gridRows) {
+      remainingDrops.push(nextDrop);
+    }
+  }
+
+  davidDrops = remainingDrops;
+  draw();
+}
+
 function update() {
+  if (currentLevel === "david") {
+    return;
+  }
+
   const activeBounds = getActiveBounds();
   direction = nextDirection;
   const head = snake[0];
@@ -557,6 +683,17 @@ function update() {
 
 function drawBoard() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (currentLevel === "david") {
+    ctx.fillStyle = "#f8ead0";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#f5dfbc";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    drawGrid();
+    drawFieldWatermark("Потоп в офисе");
+    return;
+  }
+
   const activeBounds = getActiveBounds();
 
   ctx.fillStyle = "#f8ead0";
@@ -579,6 +716,16 @@ function drawBoard() {
   if (!unlockedSides.right) {
     drawLockedZone(canvas.width - sideZoneColumns * cellSize, sideZoneColumns * cellSize, "Купить");
   }
+}
+
+function drawFieldWatermark(text) {
+  ctx.save();
+  ctx.fillStyle = "#8f6f4d18";
+  ctx.font = "bold 44px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+  ctx.restore();
 }
 
 function drawGrid() {
@@ -666,6 +813,54 @@ function drawObstacle(obstacle) {
   ctx.restore();
 }
 
+function drawDavidPipe() {
+  ctx.fillStyle = "#6f7b85";
+  roundRect(ctx, 8, 10, canvas.width - 16, 16, 8);
+  ctx.fill();
+
+  for (let x = 28; x < canvas.width - 20; x += 120) {
+    ctx.fillStyle = "#5d6770";
+    ctx.fillRect(x, 22, 8, 10);
+  }
+}
+
+function drawDavidDrops() {
+  davidDrops.forEach((drop) => {
+    const x = drop.x * cellSize;
+    const y = drop.y * cellSize;
+    ctx.font = "20px 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("💧", x + 15, y + 14);
+  });
+}
+
+function drawDavidPlayer() {
+  const x = davidPlayerX * cellSize;
+  const y = (gridRows - 3) * cellSize;
+
+  ctx.fillStyle = "#1c1c1c";
+  ctx.beginPath();
+  ctx.arc(x + 45, y + 16, 10, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#2f4f6f";
+  roundRect(ctx, x + 32, y + 28, 26, 34, 10);
+  ctx.fill();
+
+  ctx.fillStyle = "#5c3a1b";
+  ctx.fillRect(x + 26, y + 40, 10, 28);
+
+  ctx.fillStyle = "#a36a2d";
+  roundRect(ctx, x + 20, y + 38, 18, 14, 5);
+  ctx.fill();
+  ctx.strokeStyle = "#6d451f";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(x + 29, y + 38, 7, Math.PI, Math.PI * 2);
+  ctx.stroke();
+}
+
 function getHeadRotation(segment) {
   const nearestBag = moneyBags.reduce((closest, bag) => {
     if (!closest) {
@@ -730,6 +925,14 @@ function roundRect(context, x, y, width, height, radius) {
 
 function draw() {
   drawBoard();
+
+  if (currentLevel === "david") {
+    drawDavidPipe();
+    drawDavidDrops();
+    drawDavidPlayer();
+    return;
+  }
+
   obstacles.forEach(drawObstacle);
   moneyBags.forEach((bag) => drawMoneyBag(bag.x, bag.y));
   beers.forEach((beer) => drawBeer(beer.x, beer.y));
@@ -738,6 +941,12 @@ function draw() {
 
 function loop(timestamp) {
   if (!running) {
+    return;
+  }
+
+  if (currentLevel === "david") {
+    updateDavid(timestamp);
+    requestAnimationFrame(loop);
     return;
   }
 
@@ -764,6 +973,19 @@ window.addEventListener("keydown", (event) => {
     event.preventDefault();
   }
 
+  if (currentLevel === "david") {
+    if (key === "arrowleft" || key === "a") {
+      setDirection(-1, 0);
+    } else if (key === "arrowright" || key === "d") {
+      setDirection(1, 0);
+    } else if (key === " ") {
+      togglePause();
+    } else if (key === "enter") {
+      resetGame();
+    }
+    return;
+  }
+
   if (key === "arrowup" || key === "w") {
     setDirection(0, -1);
   } else if (key === "arrowdown" || key === "s") {
@@ -776,6 +998,17 @@ window.addEventListener("keydown", (event) => {
     togglePause();
   } else if (key === "enter") {
     resetGame();
+  }
+});
+
+window.addEventListener("keyup", (event) => {
+  if (currentLevel !== "david") {
+    return;
+  }
+
+  const key = event.key.toLowerCase();
+  if (key === "arrowleft" || key === "a" || key === "arrowright" || key === "d") {
+    davidMove = 0;
   }
 });
 
