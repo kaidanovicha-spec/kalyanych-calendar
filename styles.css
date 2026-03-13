@@ -238,6 +238,40 @@ canvas {
   color: #4a4035;
 }
 
+.overlay-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.overlay-button {
+  border: 0;
+  border-radius: 14px;
+  padding: 12px 18px;
+  font: inherit;
+  color: #fffaf5;
+  background: linear-gradient(135deg, #ff8a1c, #d65a00);
+  box-shadow: 0 10px 24px #a843001f;
+  cursor: pointer;
+}
+
+.overlay-button:disabled {
+  color: #8c7862;
+  background: #f2e3d1;
+  box-shadow: inset 0 0 0 1px #e5d0b8;
+  cursor: not-allowed;
+}
+
+.overlay-button-muted {
+  color: #5c4632;
+  background: #f7ebdd;
+  box-shadow: inset 0 0 0 1px #e0c9ae;
+}
+
+.hidden {
+  display: none;
+}
+
 @media (max-width: 680px) {
   .page {
     padding: 16px;
@@ -259,5 +293,10 @@ canvas {
 
   .buy-field-buttons {
     grid-template-columns: 1fr;
+  }
+
+  .overlay-actions {
+    flex-direction: column;
+    width: 100%;
   }
 }

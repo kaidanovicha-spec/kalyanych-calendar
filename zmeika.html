@@ -41,6 +41,7 @@
             <button class="buy-field-button" id="buy-left-field-button" type="button" disabled>Открыть левое поле за 50 000 ₽</button>
             <button class="buy-field-button" id="buy-right-field-button" type="button" disabled>Открыть правое поле за 50 000 ₽</button>
           </div>
+          <button class="buy-field-button" id="buy-slowdown-button" type="button" disabled>Замедлить скорость на 10% за 10 000 ₽</button>
           <span class="buy-field-note" id="buy-field-note">Поставь на паузу и накопи 50 000 ₽, чтобы открыть одно из боковых полей.</span>
         </div>
 
@@ -53,6 +54,10 @@
       <div class="overlay" id="overlay">
         <h2 id="overlay-title">Нажми любую стрелку</h2>
         <p id="overlay-text">Собирай мешочки денег и не врезайся в стены или в себя.</p>
+        <div class="overlay-actions hidden" id="overlay-actions">
+          <button class="overlay-button" id="pay-bribe-button" type="button">Заплатить</button>
+          <button class="overlay-button overlay-button-muted" id="restart-from-bribe-button" type="button">Нет денег</button>
+        </div>
       </div>
       <div class="game-footer">
         <span class="collected-line">Собрано за игру: <strong id="collected-money">0 ₽</strong></span>

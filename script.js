@@ -5,9 +5,13 @@ const bestNode = document.getElementById("best");
 const overlay = document.getElementById("overlay");
 const overlayTitle = document.getElementById("overlay-title");
 const overlayText = document.getElementById("overlay-text");
+const overlayActions = document.getElementById("overlay-actions");
+const payBribeButton = document.getElementById("pay-bribe-button");
+const restartFromBribeButton = document.getElementById("restart-from-bribe-button");
 const difficultyButtons = document.querySelectorAll(".difficulty-button");
 const buyLeftFieldButton = document.getElementById("buy-left-field-button");
 const buyRightFieldButton = document.getElementById("buy-right-field-button");
+const buySlowdownButton = document.getElementById("buy-slowdown-button");
 const buyFieldNote = document.getElementById("buy-field-note");
 const collectedMoneyNode = document.getElementById("collected-money");
 const beerTimerNode = document.getElementById("beer-timer");
@@ -15,7 +19,10 @@ const beerTimerNode = document.getElementById("beer-timer");
 const cellSize = 30;
 const gridColumns = canvas.width / cellSize;
 const gridRows = canvas.height / cellSize;
-const fieldUnlockCost = 50000;
+const firstFieldUnlockCost = 25000;
+const secondFieldUnlockCost = 50000;
+const slowdownCost = 10000;
+const bribeCost = 15000;
 const sideZoneColumns = 5;
 const beerDurationMs = 60_000;
 const beerMoneyStep = 15_000;
@@ -82,6 +89,8 @@ let beers = [];
 let slowUntil = 0;
 let collectedMoney = 0;
 let nextBeerMilestone = beerMoneyStep;
+let purchasedSlowdownMultiplier = 1;
+let awaitingBribeDecision = false;
 
 bestNode.textContent = formatMoney(bestScore);
 collectedMoneyNode.textContent = formatMoney(0);
@@ -128,29 +137,58 @@ function getActiveBounds() {
   };
 }
 
+function getUnlockedFieldsCount() {
+  return Number(unlockedSides.left) + Number(unlockedSides.right);
+}
+
+function getNextFieldUnlockCost() {
+  return getUnlockedFieldsCount() === 0 ? firstFieldUnlockCost : secondFieldUnlockCost;
+}
+
 function canUnlockField(side) {
-  return !unlockedSides[side] && score >= fieldUnlockCost;
+  return !unlockedSides[side] && score >= getNextFieldUnlockCost();
+}
+
+function canBuySlowdown() {
+  return !running && started && !gameOver && score >= slowdownCost;
 }
 
 function updateFieldPurchaseUI() {
   const canBuyLeft = !running && started && !gameOver && canUnlockField("left");
   const canBuyRight = !running && started && !gameOver && canUnlockField("right");
+  const canBuySlow = canBuySlowdown();
+  const unlockCost = formatMoney(getNextFieldUnlockCost());
 
   buyLeftFieldButton.disabled = !canBuyLeft;
   buyRightFieldButton.disabled = !canBuyRight;
+  buySlowdownButton.disabled = !canBuySlow;
+  buyLeftFieldButton.textContent = `Открыть левое поле за ${unlockCost}`;
+  buyRightFieldButton.textContent = `Открыть правое поле за ${unlockCost}`;
+  buySlowdownButton.textContent = `Замедлить скорость на 10% за ${formatMoney(slowdownCost)}`;
 
   if (unlockedSides.left && unlockedSides.right) {
-    buyFieldNote.textContent = "Оба боковых поля уже открыты. Теперь можно заработать больше.";
+    buyFieldNote.textContent = canBuySlow
+      ? "Оба поля уже открыты. На паузе можно еще купить замедление скорости на 10%."
+      : "Оба боковых поля уже открыты. Теперь можно заработать больше.";
     return;
   }
 
   if (canBuyLeft || canBuyRight) {
-    buyFieldNote.textContent = "На паузе можно открыть левое или правое поле за 50 000 ₽.";
+    buyFieldNote.textContent = canBuySlow
+      ? `На паузе можно открыть левое или правое поле за ${unlockCost} или купить замедление скорости.`
+      : `На паузе можно открыть левое или правое поле за ${unlockCost}.`;
     return;
   }
 
-  const remaining = Math.max(fieldUnlockCost - score, 0);
-  buyFieldNote.textContent = `Поставь на паузу и накопи ${formatMoney(remaining)}, чтобы открыть одно из боковых полей.`;
+  if (canBuySlow) {
+    buyFieldNote.textContent = "На паузе можно купить замедление скорости на 10%.";
+    return;
+  }
+
+  const remainingField = Math.max(getNextFieldUnlockCost() - score, 0);
+  const remainingSlow = Math.max(slowdownCost - score, 0);
+  const remaining = Math.min(remainingField, remainingSlow);
+  buyFieldNote.textContent = `Поставь на паузу и накопи ${formatMoney(remaining)}, чтобы купить улучшение.`;
 }
 
 function updateDifficultyButtons() {
@@ -280,8 +318,10 @@ function resetGame() {
   beers = [];
   moneyBags = [];
   slowUntil = 0;
+  purchasedSlowdownMultiplier = 1;
   collectedMoney = 0;
   nextBeerMilestone = beerMoneyStep;
+  awaitingBribeDecision = false;
 
   const activeBounds = getActiveBounds();
   const centerX = Math.floor((activeBounds.minX + activeBounds.maxX) / 2);
@@ -315,11 +355,13 @@ function showOverlay(title, text) {
   overlayTitle.textContent = title;
   overlayText.textContent = text;
   overlay.classList.remove("hidden");
+  overlayActions.classList.add("hidden");
   updateFieldPurchaseUI();
 }
 
 function hideOverlay() {
   overlay.classList.add("hidden");
+  overlayActions.classList.add("hidden");
   updateFieldPurchaseUI();
 }
 
@@ -350,9 +392,12 @@ function togglePause() {
     requestAnimationFrame(loop);
   } else {
     const canBuyAny = canUnlockField("left") || canUnlockField("right");
+    const canBuySpeed = canBuySlowdown();
     const pauseText = canBuyAny
-      ? "Нажми пробел, чтобы продолжить, или используй кнопки сверху, чтобы открыть левое или правое поле за 50 000 ₽."
-      : "Нажми пробел, чтобы продолжить.";
+      ? `Нажми пробел, чтобы продолжить, или используй кнопки сверху для открытия поля за ${formatMoney(getNextFieldUnlockCost())}.`
+      : canBuySpeed
+        ? "Нажми пробел, чтобы продолжить, или купи замедление скорости на 10%."
+        : "Нажми пробел, чтобы продолжить.";
     showOverlay("Пауза", pauseText);
   }
 }
@@ -360,7 +405,54 @@ function togglePause() {
 function endGame() {
   running = false;
   gameOver = true;
+  awaitingBribeDecision = false;
   showOverlay("Игра окончена", "Нажми Enter, чтобы начать заново.");
+}
+
+function showBribeOverlay() {
+  running = false;
+  gameOver = true;
+  awaitingBribeDecision = true;
+  overlayTitle.textContent = "Откупиться за 15 000 ₽";
+  overlayText.textContent = "Заплати и продолжай игру из центра поля или начни заново.";
+  payBribeButton.disabled = score < bribeCost;
+  restartFromBribeButton.disabled = false;
+  overlay.classList.remove("hidden");
+  overlayActions.classList.remove("hidden");
+  updateFieldPurchaseUI();
+}
+
+function getCenterSpawnSnake() {
+  const activeBounds = getActiveBounds();
+  const centerX = Math.floor((activeBounds.minX + activeBounds.maxX) / 2);
+  const centerY = Math.floor((activeBounds.minY + activeBounds.maxY) / 2);
+  const targetLength = snake.length;
+  const nextSnake = [];
+
+  for (let index = 0; index < targetLength; index += 1) {
+    nextSnake.push({ x: centerX - index, y: centerY });
+  }
+
+  return nextSnake;
+}
+
+function continueAfterBribe() {
+  if (!awaitingBribeDecision || score < bribeCost) {
+    return;
+  }
+
+  score -= bribeCost;
+  scoreNode.textContent = formatMoney(score);
+  snake = getCenterSpawnSnake();
+  direction = { x: 1, y: 0 };
+  nextDirection = { x: 1, y: 0 };
+  running = true;
+  gameOver = false;
+  awaitingBribeDecision = false;
+  lastTick = 0;
+  hideOverlay();
+  draw();
+  requestAnimationFrame(loop);
 }
 
 function buyField(side) {
@@ -368,7 +460,7 @@ function buyField(side) {
     return;
   }
 
-  score -= fieldUnlockCost;
+  score -= getNextFieldUnlockCost();
   scoreNode.textContent = formatMoney(score);
   unlockedSides[side] = true;
   obstacles = spawnObstacles();
@@ -381,8 +473,20 @@ function buyField(side) {
   draw();
 }
 
+function buySlowdown() {
+  if (!canBuySlowdown()) {
+    return;
+  }
+
+  score -= slowdownCost;
+  scoreNode.textContent = formatMoney(score);
+  purchasedSlowdownMultiplier *= 1.1;
+  updateFieldPurchaseUI();
+  showOverlay("Скорость снижена", "Скорость змейки уменьшена на 10% от текущей. Нажми пробел, чтобы продолжить.");
+}
+
 function getCurrentMoveInterval() {
-  const baseInterval = levelConfig[currentLevel].moveInterval;
+  const baseInterval = levelConfig[currentLevel].moveInterval * purchasedSlowdownMultiplier;
   return Date.now() < slowUntil ? baseInterval * 2 : baseInterval;
 }
 
@@ -403,6 +507,12 @@ function update() {
 
   const hitSelf = snake.some((segment) => segment.x === newHead.x && segment.y === newHead.y);
   const hitObstacle = obstacles.some((obstacle) => obstacle.x === newHead.x && obstacle.y === newHead.y);
+
+  if (hitWall && currentLevel === "owner") {
+    showBribeOverlay();
+    draw();
+    return;
+  }
 
   if (hitWall || hitSelf || hitObstacle) {
     endGame();
@@ -463,11 +573,11 @@ function drawBoard() {
   drawGrid();
 
   if (!unlockedSides.left) {
-    drawLockedZone(0, sideZoneColumns * cellSize, "Открой\nза 50 000 ₽");
+    drawLockedZone(0, sideZoneColumns * cellSize, "Купить");
   }
 
   if (!unlockedSides.right) {
-    drawLockedZone(canvas.width - sideZoneColumns * cellSize, sideZoneColumns * cellSize, "Открой\nза 50 000 ₽");
+    drawLockedZone(canvas.width - sideZoneColumns * cellSize, sideZoneColumns * cellSize, "Купить");
   }
 }
 
@@ -678,6 +788,9 @@ difficultyButtons.forEach((button) => {
 
 buyLeftFieldButton.addEventListener("click", () => buyField("left"));
 buyRightFieldButton.addEventListener("click", () => buyField("right"));
+buySlowdownButton.addEventListener("click", buySlowdown);
+payBribeButton.addEventListener("click", continueAfterBribe);
+restartFromBribeButton.addEventListener("click", resetGame);
 
 headImage.addEventListener("load", draw);
 
