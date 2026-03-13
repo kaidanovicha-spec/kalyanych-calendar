@@ -684,7 +684,7 @@ grid-template-columns:1fr;
 </div>
 
 <div class="statCard" id="forecastCard">
-<div class="statTitle">Прогноз месяца</div>
+<div class="statTitle" id="forecastTitle">Прогноз месяца</div>
 <div class="statValue" id="forecast"></div>
 <div class="statCompare" id="forecastCompare"></div>
 </div>
@@ -979,6 +979,7 @@ document.getElementById("monthAverage").innerText = formatMoney(avg);
 document.getElementById("forecast").innerText = formatMoney(forecast);
 document.getElementById("monthGross").innerText = formatMoney(monthGross);
 document.getElementById("costPercentLabel").innerText = "Процент себестоимости: " + String(getCostPercent(year)).replace(".", ",") + "%";
+document.getElementById("forecastTitle").innerText = isCurrentCalendarMonth ? "Прогноз месяца" : "По итогу месяца";
 if (year === 2025) {
 document.getElementById("taxCardTitle").innerText = "Итоги года";
 document.getElementById("monthNds").innerHTML =
