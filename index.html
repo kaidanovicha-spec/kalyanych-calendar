@@ -21,16 +21,31 @@ font-family:-apple-system,BlinkMacSystemFont,sans-serif;
 background:#f5f5f7;
 margin:20px;
 color:#111;
+transition:background 0.25s ease,color 0.25s ease;
 }
 
 h1{
 margin-bottom:20px;
 }
 
+.appContent{
+position:relative;
+}
+
+.pageTop{
+display:flex;
+align-items:flex-start;
+justify-content:space-between;
+gap:16px;
+max-width:1100px;
+margin-bottom:8px;
+}
+
 .brandTitle{
 display:flex;
 align-items:center;
 gap:14px;
+margin:0;
 }
 
 .brandLogo{
@@ -94,6 +109,19 @@ color:white;
 cursor:pointer;
 }
 
+.uiVersionToggle{
+padding:8px 12px;
+border-radius:999px;
+background:#fff;
+color:#111;
+border:1px solid rgba(17,17,17,0.08);
+box-shadow:0 8px 24px rgba(15,23,42,0.08);
+font-size:12px;
+font-weight:600;
+letter-spacing:0.01em;
+white-space:nowrap;
+}
+
 .stats{
 display:grid;
 grid-template-columns:repeat(7,minmax(0,1fr));
@@ -143,6 +171,9 @@ grid-template-columns:repeat(7,1fr) 180px;
 gap:10px;
 max-width:1100px;
 margin-top:44px;
+padding-top:12px;
+position:relative;
+z-index:0;
 }
 
 .weekSummary{
@@ -171,11 +202,17 @@ line-height:1.4;
 .weekSummaryHeader{
 text-align:center;
 font-weight:600;
+position:relative;
+z-index:1;
+padding-top:2px;
 }
 
 .weekday{
 text-align:center;
 font-weight:600;
+position:relative;
+z-index:1;
+padding-top:2px;
 }
 
 .day{
@@ -363,7 +400,7 @@ height:100%;
 
 .targetBox{
 background:white;
-padding:14px;
+padding:12px 14px;
 border-radius:14px;
 box-shadow:0 4px 20px rgba(0,0,0,0.08);
 min-height:160px;
@@ -376,7 +413,7 @@ display:flex;
 justify-content:space-between;
 align-items:center;
 gap:12px;
-margin-bottom:10px;
+margin-bottom:8px;
 }
 
 .targetTitle{
@@ -392,13 +429,13 @@ line-height:1;
 .targetValue{
 font-size:24px;
 font-weight:700;
-margin-bottom:6px;
+margin-bottom:4px;
 }
 
 .targetMeta{
 font-size:13px;
 color:#666;
-margin-bottom:8px;
+margin-bottom:6px;
 }
 
 .targetHint{
@@ -407,13 +444,40 @@ color:#666;
 margin-bottom:12px;
 }
 
+.targetHintRow{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:12px;
+margin-bottom:8px;
+}
+
+.targetHint{
+margin-bottom:0;
+}
+
+.targetAverageDelta{
+font-size:13px;
+font-weight:600;
+text-align:right;
+white-space:nowrap;
+}
+
+.targetAverageDelta.positive{
+color:#1b9c4a;
+}
+
+.targetAverageDelta.negative{
+color:#d94848;
+}
+
 .targetTrack{
 position:relative;
-height:22px;
+height:20px;
 border-radius:999px;
 background:#ececf1;
 overflow:hidden;
-margin-bottom:10px;
+margin-bottom:2px;
 }
 
 .targetFill{
@@ -453,10 +517,82 @@ opacity:0.25;
 .targetLabelsWide{
 display:grid;
 grid-template-columns:1fr 1fr 1fr;
-font-size:12px;
+font-size:11px;
 color:#777;
 align-items:center;
+margin-top:2px;
+}
+
+.targetPlanSection{
 margin-top:auto;
+padding-top:6px;
+}
+
+.targetPlanHeader{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:12px;
+margin-bottom:4px;
+}
+
+.targetPlanTitle{
+font-size:13px;
+color:#777;
+}
+
+.targetPlanNeed{
+font-size:13px;
+font-weight:600;
+text-align:right;
+}
+
+.targetPlanNeed.positive{
+color:#1b9c4a;
+}
+
+.targetPlanNeed.negative{
+color:#d94848;
+}
+
+.targetPlanTrack{
+position:relative;
+height:20px;
+border-radius:999px;
+background:#ececf1;
+overflow:hidden;
+margin-bottom:2px;
+}
+
+.targetPlanFill{
+position:absolute;
+top:0;
+bottom:0;
+left:0;
+background:linear-gradient(90deg,#ff8a8a,#ff4d4d);
+border-radius:999px;
+}
+
+.targetPlanFill.onTrack{
+background:linear-gradient(90deg,#56c271,#1b9c4a);
+}
+
+.targetPlanMarker{
+position:absolute;
+top:-4px;
+bottom:-4px;
+width:2px;
+background:#111;
+opacity:0.35;
+transform:translateX(-1px);
+}
+
+.targetPlanLabels{
+display:flex;
+justify-content:space-between;
+font-size:11px;
+color:#777;
+margin-top:2px;
 }
 
 .targetLabelsWide span:nth-child(2){
@@ -555,6 +691,585 @@ font-weight:600;
 display:none;
 }
 
+body[data-ui-version="v2"]{
+background:
+radial-gradient(circle at top left,rgba(255,184,107,0.22),transparent 28%),
+radial-gradient(circle at top right,rgba(255,130,92,0.18),transparent 24%),
+linear-gradient(180deg,#fcfbf8 0%,#f4f2ed 100%);
+color:#18212f;
+}
+
+body[data-ui-version="v2"] .appContent{
+max-width:1240px;
+margin:0 auto;
+}
+
+body[data-ui-version="v2"] .pageTop{
+max-width:none;
+margin-bottom:18px;
+align-items:center;
+}
+
+body[data-ui-version="v2"] .brandTitle{
+padding:18px 22px;
+border-radius:26px;
+background:rgba(255,255,255,0.72);
+backdrop-filter:blur(18px);
+box-shadow:0 18px 50px rgba(106,89,70,0.10);
+}
+
+body[data-ui-version="v2"] .brandLogo{
+width:48px;
+height:48px;
+}
+
+body[data-ui-version="v2"] .uiVersionToggle{
+background:#1f2a37;
+color:#fff7ec;
+border-color:transparent;
+box-shadow:0 14px 30px rgba(31,42,55,0.18);
+}
+
+body[data-ui-version="v2"] .header{
+max-width:none;
+padding:18px 22px;
+border-radius:28px;
+background:rgba(255,255,255,0.78);
+box-shadow:0 18px 50px rgba(106,89,70,0.10);
+backdrop-filter:blur(18px);
+margin-bottom:18px;
+}
+
+body[data-ui-version="v2"] .header > button{
+background:#17202c;
+min-width:44px;
+height:44px;
+padding:0;
+border-radius:14px;
+box-shadow:0 10px 24px rgba(23,32,44,0.14);
+}
+
+body[data-ui-version="v2"] .monthHeader{
+align-items:flex-start;
+justify-content:flex-start;
+flex-direction:column;
+gap:4px;
+}
+
+body[data-ui-version="v2"] #monthTitle{
+margin:0;
+font-size:32px;
+line-height:1.05;
+font-weight:700;
+letter-spacing:-0.03em;
+}
+
+body[data-ui-version="v2"] .monthExpectation{
+font-size:13px;
+max-width:none;
+background:#f5f1ea;
+padding:6px 10px;
+border-radius:999px;
+}
+
+body[data-ui-version="v2"] .stats{
+max-width:none;
+grid-template-columns:repeat(4,minmax(0,1fr));
+gap:14px;
+margin-bottom:18px;
+}
+
+body[data-ui-version="v2"] .statCard,
+body[data-ui-version="v2"] .bestBox,
+body[data-ui-version="v2"] .targetBox,
+body[data-ui-version="v2"] .day,
+body[data-ui-version="v2"] .weekSummary{
+background:rgba(255,255,255,0.82);
+border:1px solid rgba(218,206,191,0.60);
+box-shadow:0 18px 40px rgba(104,89,71,0.08);
+backdrop-filter:blur(12px);
+}
+
+body[data-ui-version="v2"] .statCard{
+border-radius:24px;
+padding:18px;
+}
+
+body[data-ui-version="v2"] .statCard.positive{
+background:linear-gradient(180deg,rgba(232,247,237,0.96),rgba(255,255,255,0.86));
+border-color:rgba(145,199,165,0.7);
+}
+
+body[data-ui-version="v2"] .statCard.negative{
+background:linear-gradient(180deg,rgba(253,236,236,0.96),rgba(255,255,255,0.86));
+border-color:rgba(228,163,163,0.72);
+}
+
+body[data-ui-version="v2"] .statTitle,
+body[data-ui-version="v2"] .reportCardTitle,
+body[data-ui-version="v2"] .targetTitle,
+body[data-ui-version="v2"] .weekSummaryTitle{
+color:#7a6f61;
+letter-spacing:0.01em;
+}
+
+body[data-ui-version="v2"] .statValue,
+body[data-ui-version="v2"] .targetValue{
+font-size:30px;
+font-weight:700;
+letter-spacing:-0.04em;
+color:#18212f;
+white-space:nowrap;
+word-break:normal;
+overflow-wrap:normal;
+}
+
+body[data-ui-version="v2"] .statCompare,
+body[data-ui-version="v2"] .targetMeta,
+body[data-ui-version="v2"] .targetHint,
+body[data-ui-version="v2"] .targetLabelsWide,
+body[data-ui-version="v2"] .targetPlanLabels{
+color:#776d60;
+}
+
+body[data-ui-version="v2"] #ndsCard .statValue{
+font-size:22px;
+line-height:1.15;
+white-space:normal;
+word-break:break-word;
+overflow-wrap:anywhere;
+}
+
+body[data-ui-version="v2"] #ndsCard .statCompare{
+min-height:0;
+}
+
+body[data-ui-version="v2"] .topIndicators{
+max-width:none;
+gap:14px;
+margin-bottom:18px;
+}
+
+body[data-ui-version="v2"] .bestBox,
+body[data-ui-version="v2"] .targetBox{
+border-radius:28px;
+padding:18px 20px;
+}
+
+body[data-ui-version="v2"] .reportYearButton,
+body[data-ui-version="v2"] .reportButton{
+background:#17202c;
+color:#fff7ec;
+}
+
+body[data-ui-version="v2"] .reportButton{
+border-radius:14px;
+}
+
+body[data-ui-version="v2"] .monthBar{
+max-width:24px;
+border-radius:12px 12px 4px 4px;
+}
+
+body[data-ui-version="v2"] .monthBar.red{
+background:linear-gradient(180deg,#ff8e80 0%,#f05b57 100%);
+}
+
+body[data-ui-version="v2"] .monthBar.green{
+background:linear-gradient(180deg,#67d38d 0%,#259d63 100%);
+}
+
+body[data-ui-version="v2"] .targetTrack,
+body[data-ui-version="v2"] .targetPlanTrack{
+background:#ece6dc;
+}
+
+body[data-ui-version="v2"] .targetFill.red,
+body[data-ui-version="v2"] .targetPlanFill{
+background:linear-gradient(90deg,#ff8c7f,#ff5e64);
+}
+
+body[data-ui-version="v2"] .targetFill.green,
+body[data-ui-version="v2"] .targetPlanFill.onTrack{
+background:linear-gradient(90deg,#73d49d,#239867);
+}
+
+body[data-ui-version="v2"] .calendar{
+max-width:none;
+gap:12px;
+margin-top:22px;
+}
+
+body[data-ui-version="v2"] .weekday,
+body[data-ui-version="v2"] .weekSummaryHeader{
+font-size:13px;
+letter-spacing:0.02em;
+color:#7a6f61;
+font-weight:700;
+}
+
+body[data-ui-version="v2"] .day{
+border-radius:24px;
+min-height:120px;
+padding:14px;
+}
+
+body[data-ui-version="v2"] .day.good{
+background:linear-gradient(180deg,rgba(225,248,233,0.95),rgba(255,255,255,0.88));
+}
+
+body[data-ui-version="v2"] .day.medium{
+background:linear-gradient(180deg,rgba(255,246,210,0.95),rgba(255,255,255,0.88));
+}
+
+body[data-ui-version="v2"] .day.low{
+background:linear-gradient(180deg,rgba(255,229,229,0.95),rgba(255,255,255,0.88));
+}
+
+body[data-ui-version="v2"] .revenue{
+font-size:16px;
+margin-bottom:8px;
+}
+
+body[data-ui-version="v2"] .cost,
+body[data-ui-version="v2"] .gross{
+font-size:12px;
+}
+
+body[data-ui-version="v2"] .date{
+font-size:22px;
+letter-spacing:-0.03em;
+}
+
+body[data-ui-version="v2"] .today{
+outline:2px solid #17202c;
+outline-offset:0;
+}
+
+body[data-ui-version="v2"] .weekSummary{
+border-radius:24px;
+min-height:120px;
+padding:14px;
+}
+
+.v2Only{
+display:none;
+}
+
+.calendarSection{
+display:contents;
+}
+
+body[data-ui-version="v2"] .header,
+body[data-ui-version="v2"] .stats,
+body[data-ui-version="v2"] .topIndicators{
+display:none;
+}
+
+body[data-ui-version="v2"] .v2Only{
+display:block;
+}
+
+body[data-ui-version="v2"] .appContent{
+display:flex;
+flex-direction:column;
+gap:26px;
+}
+
+body[data-ui-version="v2"] .pageTop{
+margin-bottom:0;
+}
+
+body[data-ui-version="v2"] .brandTitle{
+padding:10px 0;
+background:transparent;
+box-shadow:none;
+backdrop-filter:none;
+}
+
+body[data-ui-version="v2"] .uiVersionToggle{
+margin-top:6px;
+}
+
+body[data-ui-version="v2"] .v2HeroSection,
+body[data-ui-version="v2"] .v2MetricsSection,
+body[data-ui-version="v2"] .v2Section,
+body[data-ui-version="v2"] .calendarSection{
+background:linear-gradient(180deg,rgba(255,255,255,0.94),rgba(255,255,255,0.82));
+border-radius:36px;
+padding:34px 34px 36px;
+box-shadow:0 24px 60px rgba(34,34,34,0.08);
+backdrop-filter:blur(16px);
+border:1px solid rgba(255,255,255,0.9);
+}
+
+body[data-ui-version="v2"] .v2HeroSection{
+position:relative;
+overflow:hidden;
+padding-top:44px;
+}
+
+body[data-ui-version="v2"] .v2HeroSection::before{
+content:"";
+position:absolute;
+inset:auto -60px -100px auto;
+width:280px;
+height:280px;
+background:radial-gradient(circle,rgba(255,165,113,0.18),rgba(255,255,255,0));
+pointer-events:none;
+}
+
+body[data-ui-version="v2"] .v2HeroNav{
+display:flex;
+gap:10px;
+justify-content:flex-end;
+margin-bottom:18px;
+}
+
+body[data-ui-version="v2"] .v2NavButton{
+min-width:46px;
+height:46px;
+padding:0;
+border-radius:50%;
+background:#101820;
+color:#fff;
+box-shadow:0 12px 24px rgba(16,24,32,0.12);
+}
+
+body[data-ui-version="v2"] .v2HeroEyebrow,
+body[data-ui-version="v2"] .v2SectionLabel{
+font-size:13px;
+font-weight:600;
+letter-spacing:0.08em;
+text-transform:uppercase;
+color:#8a8378;
+margin-bottom:14px;
+}
+
+body[data-ui-version="v2"] .v2HeroMonth{
+font-size:58px;
+line-height:0.95;
+letter-spacing:-0.05em;
+font-weight:700;
+margin-bottom:18px;
+max-width:700px;
+}
+
+body[data-ui-version="v2"] .v2HeroRevenue{
+font-size:92px;
+line-height:0.95;
+letter-spacing:-0.07em;
+font-weight:700;
+margin-bottom:16px;
+}
+
+body[data-ui-version="v2"] .v2HeroExpectation{
+font-size:19px;
+line-height:1.4;
+color:#6c665e;
+max-width:720px;
+margin-bottom:28px;
+min-height:28px;
+}
+
+body[data-ui-version="v2"] .v2HeroCompareGrid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:16px;
+}
+
+body[data-ui-version="v2"] .v2HeroCompareCard,
+body[data-ui-version="v2"] .v2MetricCard{
+background:rgba(245,242,236,0.72);
+border-radius:26px;
+padding:24px;
+}
+
+body[data-ui-version="v2"] .v2HeroCompareLabel,
+body[data-ui-version="v2"] .v2MetricLabel{
+font-size:13px;
+font-weight:600;
+letter-spacing:0.04em;
+text-transform:uppercase;
+color:#8b8378;
+margin-bottom:10px;
+}
+
+body[data-ui-version="v2"] .v2HeroCompareValue{
+font-size:42px;
+line-height:1;
+letter-spacing:-0.05em;
+font-weight:700;
+margin-bottom:10px;
+}
+
+body[data-ui-version="v2"] .v2HeroCompareValue.positive{
+color:#12925d;
+}
+
+body[data-ui-version="v2"] .v2HeroCompareValue.negative{
+color:#d95045;
+}
+
+body[data-ui-version="v2"] .v2HeroCompareMeta,
+body[data-ui-version="v2"] .v2MetricMeta{
+font-size:15px;
+line-height:1.45;
+color:#6f685f;
+}
+
+body[data-ui-version="v2"] .v2MetricsGrid{
+display:grid;
+grid-template-columns:repeat(4,minmax(0,1fr));
+gap:16px;
+}
+
+body[data-ui-version="v2"] .v2MetricValue{
+font-size:48px;
+line-height:1;
+letter-spacing:-0.05em;
+font-weight:700;
+margin-bottom:12px;
+}
+
+body[data-ui-version="v2"] #v2BreakEvenContent .targetBox,
+body[data-ui-version="v2"] #v2MonthsContent .bestBox{
+background:transparent;
+box-shadow:none;
+padding:0;
+border-radius:0;
+border:none;
+max-width:none;
+min-height:0;
+}
+
+body[data-ui-version="v2"] #v2BreakEvenContent .targetTitle,
+body[data-ui-version="v2"] #v2MonthsContent .reportCardTitle{
+font-size:14px;
+letter-spacing:0.06em;
+text-transform:uppercase;
+color:#8b8378;
+}
+
+body[data-ui-version="v2"] #v2BreakEvenContent .targetValue{
+font-size:72px;
+line-height:0.95;
+margin-bottom:12px;
+}
+
+body[data-ui-version="v2"] #v2BreakEvenContent .targetMeta{
+font-size:22px;
+line-height:1.3;
+margin-bottom:10px;
+}
+
+body[data-ui-version="v2"] #v2BreakEvenContent .targetHintRow{
+margin-bottom:18px;
+}
+
+body[data-ui-version="v2"] #v2BreakEvenContent .targetHint,
+body[data-ui-version="v2"] #v2BreakEvenContent .targetAverageDelta,
+body[data-ui-version="v2"] #v2BreakEvenContent .targetPlanNeed,
+body[data-ui-version="v2"] #v2BreakEvenContent .targetPlanTitle,
+body[data-ui-version="v2"] #v2BreakEvenContent .targetPlanLabels,
+body[data-ui-version="v2"] #v2BreakEvenContent .targetLabelsWide{
+font-size:16px;
+}
+
+body[data-ui-version="v2"] #v2BreakEvenContent .targetTrack,
+body[data-ui-version="v2"] #v2BreakEvenContent .targetPlanTrack{
+height:18px;
+margin-bottom:10px;
+}
+
+body[data-ui-version="v2"] #v2BreakEvenContent .targetPlanSection{
+margin-top:26px;
+padding-top:22px;
+border-top:1px solid rgba(17,17,17,0.06);
+}
+
+body[data-ui-version="v2"] .calendarSection{
+display:block;
+}
+
+body[data-ui-version="v2"] .calendar{
+margin-top:0;
+grid-template-columns:repeat(7,minmax(0,1fr)) 220px;
+gap:14px;
+}
+
+body[data-ui-version="v2"] .weekday,
+body[data-ui-version="v2"] .weekSummaryHeader{
+font-size:14px;
+color:#8a8378;
+}
+
+body[data-ui-version="v2"] .day{
+min-height:150px;
+padding:18px 16px;
+border-radius:28px;
+background:#fff;
+border:none;
+box-shadow:none;
+}
+
+body[data-ui-version="v2"] .day.good{
+background:linear-gradient(180deg,#eef7f0 0%,#ffffff 100%);
+}
+
+body[data-ui-version="v2"] .day.medium{
+background:linear-gradient(180deg,#fff7e5 0%,#ffffff 100%);
+}
+
+body[data-ui-version="v2"] .day.low{
+background:linear-gradient(180deg,#fff0f0 0%,#ffffff 100%);
+}
+
+body[data-ui-version="v2"] .revenue{
+font-size:20px;
+font-weight:700;
+margin-bottom:10px;
+}
+
+body[data-ui-version="v2"] .cost,
+body[data-ui-version="v2"] .gross{
+font-size:13px;
+line-height:1.4;
+}
+
+body[data-ui-version="v2"] .date{
+margin-top:14px;
+font-size:28px;
+}
+
+body[data-ui-version="v2"] .weekSummary{
+min-height:150px;
+padding:18px;
+border-radius:28px;
+background:#faf8f4;
+border:none;
+box-shadow:none;
+}
+
+body[data-ui-version="v2"] #v2MonthsContent .reportCardHeader{
+margin-bottom:24px;
+}
+
+body[data-ui-version="v2"] #v2MonthsContent .monthsChart{
+height:140px;
+margin-bottom:20px;
+}
+
+body[data-ui-version="v2"] #v2MonthsContent .monthBar{
+max-width:none;
+width:100%;
+border-radius:999px;
+}
+
+body[data-ui-version="v2"] #v2MonthsContent .monthBarWrap{
+gap:10px;
+}
+
 @media (max-width: 900px){
 .stats{
 grid-template-columns:repeat(3,minmax(0,1fr));
@@ -563,11 +1278,37 @@ grid-template-columns:repeat(3,minmax(0,1fr));
 .topIndicators{
 grid-template-columns:1fr;
 }
+
+body[data-ui-version="v2"] .v2HeroMonth{
+font-size:48px;
+}
+
+body[data-ui-version="v2"] .v2HeroRevenue{
+font-size:72px;
+}
+
+body[data-ui-version="v2"] .v2MetricsGrid{
+grid-template-columns:repeat(2,minmax(0,1fr));
+}
+
+body[data-ui-version="v2"] .calendar{
+grid-template-columns:repeat(7,minmax(104px,1fr)) 220px;
+overflow-x:auto;
+}
 }
 
 @media (max-width: 640px){
 body{
 margin:14px;
+}
+
+.pageTop{
+align-items:stretch;
+flex-direction:column;
+}
+
+.uiVersionToggle{
+align-self:flex-end;
 }
 
 .monthHeader{
@@ -608,13 +1349,487 @@ font-size:12px;
 .statValue{
 font-size:18px;
 }
+
+.targetHintRow{
+flex-direction:column;
+align-items:flex-start;
+gap:6px;
+}
+
+.targetAverageDelta{
+text-align:left;
+white-space:normal;
+}
+
+.targetPlanHeader{
+flex-direction:column;
+align-items:flex-start;
+gap:4px;
+}
+
+.targetPlanNeed{
+text-align:left;
+}
+
+body[data-ui-version="v2"] .stats{
+grid-template-columns:repeat(2,minmax(0,1fr));
+}
+
+body[data-ui-version="v2"] .v2HeroSection,
+body[data-ui-version="v2"] .v2MetricsSection,
+body[data-ui-version="v2"] .v2Section,
+body[data-ui-version="v2"] .calendarSection{
+padding:22px 20px 24px;
+border-radius:28px;
+}
+
+body[data-ui-version="v2"] .v2HeroMonth{
+font-size:38px;
+}
+
+body[data-ui-version="v2"] .v2HeroRevenue{
+font-size:52px;
+}
+
+body[data-ui-version="v2"] .v2HeroCompareGrid,
+body[data-ui-version="v2"] .v2MetricsGrid{
+grid-template-columns:1fr;
+}
+
+body[data-ui-version="v2"] .v2HeroCompareCard,
+body[data-ui-version="v2"] .v2MetricCard{
+padding:18px;
+}
+
+body[data-ui-version="v2"] .calendar{
+grid-template-columns:repeat(7,minmax(98px,1fr)) 190px;
+}
 }
 
 @media (max-width: 480px){
 .stats{
 grid-template-columns:1fr;
 }
+
+body[data-ui-version="v2"] .stats{
+grid-template-columns:1fr;
 }
+
+body[data-ui-version="v2"] .v2HeroRevenue{
+font-size:42px;
+}
+
+body[data-ui-version="v2"] .v2HeroMonth{
+font-size:32px;
+}
+}
+
+/* Compact Apple-like v2 layout: keep the new style, but use the denser v1 composition. */
+body[data-ui-version="v2"] .v2Only{
+display:none !important;
+}
+
+body[data-ui-version="v2"] .header,
+body[data-ui-version="v2"] .stats,
+body[data-ui-version="v2"] .topIndicators{
+display:flex;
+}
+
+body[data-ui-version="v2"] .stats{
+display:grid;
+grid-template-columns:repeat(7,minmax(0,1fr));
+gap:12px;
+margin-bottom:18px;
+}
+
+body[data-ui-version="v2"] #monthTotalCard{order:1;}
+body[data-ui-version="v2"] #monthAverageCard{order:2;}
+body[data-ui-version="v2"] #monthGrossCard{order:3;}
+body[data-ui-version="v2"] #ndsCard{order:4;}
+body[data-ui-version="v2"] #monthCostCard{order:5;}
+body[data-ui-version="v2"] #forecastCard{order:6;}
+body[data-ui-version="v2"] #compareCard{order:7;}
+
+body[data-ui-version="v2"] .topIndicators{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:14px;
+margin-bottom:12px;
+}
+
+body[data-ui-version="v2"] .appContent{
+display:block;
+}
+
+body[data-ui-version="v2"] .pageTop{
+margin-bottom:10px;
+}
+
+body[data-ui-version="v2"] .calendarSection{
+display:contents;
+background:transparent;
+border:none;
+box-shadow:none;
+backdrop-filter:none;
+padding:0;
+}
+
+body[data-ui-version="v2"] .calendar{
+grid-template-columns:repeat(7,1fr) 190px;
+gap:10px;
+margin-top:28px;
+}
+
+body[data-ui-version="v2"] .day{
+min-height:104px;
+padding:12px;
+border-radius:24px;
+display:flex;
+flex-direction:column;
+justify-content:space-between;
+position:relative;
+overflow:hidden;
+}
+
+body[data-ui-version="v2"] .weekSummary{
+min-height:104px;
+padding:14px;
+border-radius:24px;
+}
+
+body[data-ui-version="v2"] .revenue{
+font-size:15px;
+margin-bottom:8px;
+}
+
+body[data-ui-version="v2"] .cost,
+body[data-ui-version="v2"] .gross{
+font-size:12px;
+}
+
+body[data-ui-version="v2"] .date{
+font-size:22px;
+margin-top:10px;
+}
+
+body[data-ui-version="v2"] .day.noData{
+background:rgba(255,255,255,0.52);
+border-color:rgba(225,216,205,0.65);
+box-shadow:none;
+}
+
+body[data-ui-version="v2"] .dayTop{
+display:flex;
+align-items:flex-start;
+justify-content:space-between;
+gap:8px;
+margin-bottom:10px;
+}
+
+body[data-ui-version="v2"] .dayDate{
+font-size:15px;
+font-weight:700;
+letter-spacing:-0.02em;
+color:#6d6458;
+font-variant-numeric:tabular-nums;
+font-feature-settings:"tnum" 1,"lnum" 1;
+}
+
+body[data-ui-version="v2"] .dayBadge{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+min-width:28px;
+height:28px;
+padding:0 8px;
+border-radius:999px;
+background:#f5efe6;
+font-size:13px;
+line-height:1;
+}
+
+body[data-ui-version="v2"] .dayMain{
+display:flex;
+flex-direction:column;
+gap:4px;
+}
+
+body[data-ui-version="v2"] .dayRevenue{
+font-size:18px;
+font-weight:700;
+line-height:1.1;
+letter-spacing:-0.03em;
+color:#17202c;
+font-variant-numeric:tabular-nums;
+font-feature-settings:"tnum" 1,"lnum" 1;
+white-space:nowrap;
+}
+
+body[data-ui-version="v2"] .dayMeta{
+font-size:11px;
+line-height:1.35;
+color:#7b7266;
+font-variant-numeric:tabular-nums;
+font-feature-settings:"tnum" 1,"lnum" 1;
+}
+
+body[data-ui-version="v2"] .dayMeta strong{
+font-weight:600;
+color:#5f564b;
+}
+
+body[data-ui-version="v2"] .dayStrength{
+margin-top:12px;
+height:4px;
+border-radius:999px;
+background:rgba(24,33,47,0.08);
+overflow:hidden;
+}
+
+body[data-ui-version="v2"] .dayStrengthBar{
+height:100%;
+border-radius:999px;
+background:linear-gradient(90deg,#ff8f7e,#ffb065);
+}
+
+body[data-ui-version="v2"] .day.strength-medium .dayStrengthBar{
+background:linear-gradient(90deg,#f2bc5a,#eecf72);
+}
+
+body[data-ui-version="v2"] .day.strength-strong .dayStrengthBar{
+background:linear-gradient(90deg,#59c77f,#1f9e63);
+}
+
+body[data-ui-version="v2"] .day.noData .dayStrength{
+background:rgba(24,33,47,0.04);
+}
+
+body[data-ui-version="v2"] .day.noData .dayStrengthBar{
+width:0 !important;
+}
+
+body[data-ui-version="v2"] .day.noData .dayRevenue{
+color:#bbb1a3;
+}
+
+body[data-ui-version="v2"] .day.noData .dayMeta{
+color:#c5bbae;
+}
+
+body[data-ui-version="v2"] .weekday,
+body[data-ui-version="v2"] .weekSummaryHeader{
+font-size:13px;
+}
+
+body[data-ui-version="v2"] .statValue,
+body[data-ui-version="v2"] .targetValue{
+font-size:26px;
+white-space:nowrap;
+word-break:normal;
+overflow-wrap:normal;
+}
+
+body[data-ui-version="v2"] .header{
+display:flex;
+padding:16px 20px;
+border-radius:24px;
+margin-bottom:16px;
+justify-content:flex-start;
+align-items:center;
+}
+
+body[data-ui-version="v2"] #monthTitle{
+font-size:28px;
+}
+
+body[data-ui-version="v2"] .monthHeader{
+order:1;
+margin-right:auto;
+justify-content:flex-start;
+}
+
+body[data-ui-version="v2"] .header > button:first-child{
+order:2;
+margin-left:18px;
+border-radius:16px 0 0 16px;
+}
+
+body[data-ui-version="v2"] .header > button:last-child{
+order:3;
+margin-left:2px;
+border-radius:0 16px 16px 0;
+}
+
+body[data-ui-version="v2"] .brandTitle{
+padding:8px 0;
+background:transparent;
+box-shadow:none;
+backdrop-filter:none;
+}
+
+body[data-ui-version="v2"] .bestBox,
+body[data-ui-version="v2"] .targetBox{
+padding:16px 18px;
+border-radius:24px;
+}
+
+body[data-ui-version="v2"] .monthsChart{
+height:110px;
+margin-bottom:14px;
+}
+
+body[data-ui-version="v2"] .monthBar{
+max-width:20px;
+}
+
+body[data-ui-version="v2"] .targetTrack,
+body[data-ui-version="v2"] .targetPlanTrack{
+height:18px;
+}
+
+@media (max-width: 900px){
+body[data-ui-version="v2"] .stats{
+grid-template-columns:repeat(3,minmax(0,1fr));
+}
+
+body[data-ui-version="v2"] .topIndicators{
+grid-template-columns:1fr;
+}
+}
+
+@media (max-width: 640px){
+body[data-ui-version="v2"] .header{
+padding:14px;
+border-radius:22px;
+}
+
+body[data-ui-version="v2"] .stats{
+grid-template-columns:repeat(2,minmax(0,1fr));
+}
+
+body[data-ui-version="v2"] .calendar{
+grid-template-columns:repeat(7,minmax(88px,1fr)) 180px;
+gap:6px;
+overflow-x:auto;
+}
+
+body[data-ui-version="v2"] .day,
+body[data-ui-version="v2"] .weekSummary{
+min-height:84px;
+}
+
+body[data-ui-version="v2"] #monthTitle{
+font-size:24px;
+}
+}
+
+@media (max-width: 480px){
+body[data-ui-version="v2"] .stats{
+grid-template-columns:1fr;
+}
+}
+
+/* v2 interaction layer only: soft premium hover states without affecting layout or logic. */
+body[data-ui-version="v2"] .statCard,
+body[data-ui-version="v2"] .bestBox,
+body[data-ui-version="v2"] .targetBox,
+body[data-ui-version="v2"] .day,
+body[data-ui-version="v2"] .weekSummary,
+body[data-ui-version="v2"] .header > button,
+body[data-ui-version="v2"] .reportYearButton,
+body[data-ui-version="v2"] .reportButton,
+body[data-ui-version="v2"] .uiVersionToggle,
+body[data-ui-version="v2"] .monthBar,
+body[data-ui-version="v2"] .monthBarLabel{
+transition:background-color 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease, transform 0.22s ease, color 0.22s ease, filter 0.22s ease;
+}
+
+body[data-ui-version="v2"] .statCard:hover,
+body[data-ui-version="v2"] .bestBox:hover,
+body[data-ui-version="v2"] .targetBox:hover{
+transform:translateY(-3px);
+box-shadow:0 28px 56px rgba(104,89,71,0.12);
+border-color:rgba(210,197,182,0.9);
+}
+
+body[data-ui-version="v2"] .day:hover{
+transform:translateY(-2px);
+box-shadow:0 20px 34px rgba(104,89,71,0.10);
+border-color:rgba(198,186,171,0.84);
+}
+
+body[data-ui-version="v2"] .weekSummary:hover{
+transform:translateY(-1px);
+box-shadow:0 18px 28px rgba(104,89,71,0.09);
+border-color:rgba(202,190,175,0.82);
+}
+
+body[data-ui-version="v2"] .header > button:hover,
+body[data-ui-version="v2"] .reportYearButton:hover,
+body[data-ui-version="v2"] .reportButton:hover,
+body[data-ui-version="v2"] .uiVersionToggle:hover{
+transform:translateY(-2px);
+box-shadow:0 16px 28px rgba(23,32,44,0.16);
+}
+
+body[data-ui-version="v2"] .header > button:hover,
+body[data-ui-version="v2"] .reportYearButton:hover,
+body[data-ui-version="v2"] .reportButton:hover{
+background:#0f1720;
+}
+
+body[data-ui-version="v2"] .uiVersionToggle:hover{
+background:#243141;
+color:#fff;
+}
+
+body[data-ui-version="v2"] .monthBarWrap:hover .monthBar{
+transform:translateY(-2px);
+filter:saturate(1.05);
+box-shadow:0 10px 20px rgba(64,55,45,0.10);
+}
+
+body[data-ui-version="v2"] .monthBarWrap:hover .monthBarLabel{
+color:#3e352d;
+}
+
+
+/* Calendar spacing fix: keep weekday row clear from upper cards without changing the design. */
+.calendarSection{
+position:relative;
+z-index:0;
+}
+
+.calendarSection .calendar{
+padding-top:14px;
+}
+
+.calendarSection .weekday,
+.calendarSection .weekSummaryHeader{
+position:relative;
+z-index:1;
+padding-top:4px;
+}
+
+body[data-ui-version="v2"] .calendarSection .calendar{
+padding-top:16px;
+}
+
+body[data-ui-version="v2"] .calendarSection .weekday,
+body[data-ui-version="v2"] .calendarSection .weekSummaryHeader{
+padding-top:6px;
+}
+
+@media (max-width: 640px){
+.calendarSection .calendar{
+padding-top:12px;
+}
+
+body[data-ui-version="v2"] .calendarSection .calendar{
+padding-top:14px;
+}
+}
+
 </style>
 </head>
 <body>
@@ -637,12 +1852,15 @@ grid-template-columns:1fr;
 
 <div class="appContent" id="appContent" hidden>
 
+<div class="pageTop">
 <h1 class="brandTitle">
 <a class="brandLogoLink" href="https://kaidanovicha-spec.github.io/kalyanych-calendar/zmeika.html" target="_blank" rel="noopener noreferrer" aria-label="Открыть игру Змейка">
 <img class="brandLogo" src="./k-logo.svg" alt="К">
 </a>
 Календарь Кальяныч
 </h1>
+<button class="uiVersionToggle" id="uiVersionToggle" type="button">Версия 2.0</button>
+</div>
 
 <div class="header">
 <button onclick="changeMonth(-1)">◀</button>
@@ -652,6 +1870,29 @@ grid-template-columns:1fr;
 </div>
 <button onclick="changeMonth(1)">▶</button>
 </div>
+
+<section class="v2HeroSection v2Only" id="v2HeroSection" hidden>
+<div class="v2HeroNav">
+<button class="v2NavButton" type="button" onclick="changeMonth(-1)">◀</button>
+<button class="v2NavButton" type="button" onclick="changeMonth(1)">▶</button>
+</div>
+<div class="v2HeroEyebrow">Календарь месяца</div>
+<div class="v2HeroMonth" id="v2HeroMonth"></div>
+<div class="v2HeroRevenue" id="v2HeroRevenue"></div>
+<div class="v2HeroExpectation" id="v2HeroExpectation"></div>
+<div class="v2HeroCompareGrid">
+<div class="v2HeroCompareCard">
+<div class="v2HeroCompareLabel">К прошлому месяцу</div>
+<div class="v2HeroCompareValue" id="v2HeroMonthCompare"></div>
+<div class="v2HeroCompareMeta" id="v2HeroMonthCompareMeta"></div>
+</div>
+<div class="v2HeroCompareCard">
+<div class="v2HeroCompareLabel">К прошлому году</div>
+<div class="v2HeroCompareValue" id="v2HeroYearCompare"></div>
+<div class="v2HeroCompareMeta" id="v2HeroYearCompareMeta"></div>
+</div>
+</div>
+</section>
 
 <div class="stats">
 <div class="statCard" id="monthTotalCard">
@@ -666,21 +1907,22 @@ grid-template-columns:1fr;
 <div class="statCompare" id="monthAverageCompare"></div>
 </div>
 
-<div class="statCard">
+<div class="statCard" id="ndsCard">
 <div class="statTitle" id="taxCardTitle">НДС 5%</div>
 <div class="statValue" id="monthNds"></div>
 <div class="statCompare" id="yearNds"></div>
 </div>
 
-<div class="statCard">
+<div class="statCard" id="monthCostCard">
 <div class="statTitle">Себестоимость месяца</div>
 <div class="statValue" id="monthCost"></div>
 <div class="statCompare" id="costPercentLabel"></div>
 </div>
 
-<div class="statCard">
-<div class="statTitle">Валовая выручка</div>
+<div class="statCard" id="monthGrossCard">
+<div class="statTitle" id="monthGrossTitle">Валовая выручка</div>
 <div class="statValue" id="monthGross"></div>
+<div class="statCompare" id="monthGrossCompare"></div>
 </div>
 
 <div class="statCard" id="forecastCard">
@@ -696,8 +1938,47 @@ grid-template-columns:1fr;
 </div>
 </div>
 
+<section class="v2MetricsSection v2Only" id="v2MetricsSection" hidden>
+<div class="v2MetricsGrid">
+<div class="v2MetricCard">
+<div class="v2MetricLabel">Средняя выручка</div>
+<div class="v2MetricValue" id="v2MonthAverage"></div>
+<div class="v2MetricMeta" id="v2MonthAverageMeta"></div>
+</div>
+<div class="v2MetricCard">
+<div class="v2MetricLabel">Себестоимость</div>
+<div class="v2MetricValue" id="v2MonthCost"></div>
+<div class="v2MetricMeta" id="v2MonthCostMeta"></div>
+</div>
+<div class="v2MetricCard">
+<div class="v2MetricLabel">Валовая</div>
+<div class="v2MetricValue" id="v2MonthGross"></div>
+<div class="v2MetricMeta" id="v2MonthGrossMeta"></div>
+</div>
+<div class="v2MetricCard">
+<div class="v2MetricLabel">Прогноз</div>
+<div class="v2MetricValue" id="v2Forecast"></div>
+<div class="v2MetricMeta" id="v2ForecastMeta"></div>
+</div>
+</div>
+</section>
+
 <div class="topIndicators" id="topIndicators"></div>
+
+<section class="v2Section v2Only" id="v2BreakEvenSection" hidden>
+<div class="v2SectionLabel">Точка безубыточности</div>
+<div id="v2BreakEvenContent"></div>
+</section>
+
+<section class="calendarSection">
+<div class="v2SectionLabel v2Only" id="v2CalendarLabel" hidden>Календарь месяца</div>
 <div class="calendar" id="calendar"></div>
+</section>
+
+<section class="v2Section v2Only" id="v2MonthsSection" hidden>
+<div class="v2SectionLabel">Динамика по месяцам</div>
+<div id="v2MonthsContent"></div>
+</section>
 </div>
 
 <script>
@@ -706,6 +1987,7 @@ let year = today.getFullYear();
 let month = today.getMonth();
 const accessPin = "0489";
 const accessSessionKey = "kalyanychCalendarAccessGranted";
+const uiVersionStorageKey = "kalyanychCalendarUiVersion";
 const revenueApiUrl = "https://script.google.com/macros/s/AKfycbyPoZgiulk-_qC7hKRxkoOarINnqzsQ5wtLed7rVVSW994dVC2QFxZwyQuT3Dr_hQTJ0w/exec";
 let revenueData = {};
 
@@ -726,24 +2008,138 @@ function formatMoney(value){
 return Number(value || 0).toLocaleString("ru-RU") + " ₽";
 }
 
+function getStoredUiVersion(){
+let storedVersion = localStorage.getItem(uiVersionStorageKey);
+return storedVersion === "v2" ? "v2" : "v1";
+}
+
+function updateUiVersionButton(version){
+let toggleButton = document.getElementById("uiVersionToggle");
+if (!toggleButton) return;
+toggleButton.innerText = version === "v2" ? "Версия 1.0" : "Версия 2.0";
+}
+
+function applyUiVersion(version){
+let normalizedVersion = version === "v2" ? "v2" : "v1";
+document.body.setAttribute("data-ui-version", normalizedVersion);
+localStorage.setItem(uiVersionStorageKey, normalizedVersion);
+updateUiVersionButton(normalizedVersion);
+document.querySelectorAll(".v2Only").forEach((element) => {
+element.hidden = normalizedVersion !== "v2";
+});
+}
+
+function toggleUiVersion(){
+applyUiVersion(document.body.getAttribute("data-ui-version") === "v2" ? "v1" : "v2");
+if (!document.getElementById("appContent").hidden){
+render();
+}
+}
+
 function getBreakEvenTarget(targetYear){
 if (targetYear === 2025) return 2750000;
 if (targetYear === 2026) return 2900000;
 return 2900000;
 }
 
-function getCostPercent(targetYear){
-if (targetYear === 2025) return 58.6;
-if (targetYear === 2026) return 54.6;
-return 54.6;
+function isDateKey(value){
+return /^\d{4}-\d{2}-\d{2}$/.test(value);
 }
 
-function calculateCost(value){
-return Math.round(Number(value || 0) * (getCostPercent(year) / 100));
+function getRevenueValue(entry){
+if (entry && typeof entry === "object" && !Array.isArray(entry)){
+return Number(entry.revenue || entry.value || 0);
 }
 
-function calculateGross(value){
-return Math.round(Number(value || 0) - calculateCost(value));
+if (typeof entry === "string"){
+let normalized = entry.replace(",", ".").trim();
+
+if (normalized.startsWith("{") && normalized.endsWith("}")){
+try {
+let parsed = JSON.parse(normalized);
+return Number(parsed.revenue || parsed.value || 0);
+} catch (error) {
+return Number(entry || 0);
+}
+}
+}
+
+return Number(entry || 0);
+}
+
+function getChecksValue(entry){
+if (entry && typeof entry === "object" && !Array.isArray(entry)){
+return Number(entry.checks || 0);
+}
+
+if (typeof entry === "string"){
+let normalized = entry.trim();
+
+if (normalized.startsWith("{") && normalized.endsWith("}")){
+try {
+let parsed = JSON.parse(normalized);
+return Number(parsed.checks || 0);
+} catch (error) {
+return 0;
+}
+}
+}
+
+return 0;
+}
+
+function getMonthCostConfig(targetYear, targetMonth){
+let monthKey = String(targetYear) + "-" + String(targetMonth + 1).padStart(2, "0");
+let firstDayKey = monthKey + "-01";
+let firstDayEntry = revenueData[firstDayKey];
+let directMonthKey = monthKey + "_costPercent";
+let directFirstDayKey = firstDayKey + "_costPercent";
+let candidates = [
+revenueData[directMonthKey],
+revenueData[directFirstDayKey],
+firstDayEntry && typeof firstDayEntry === "object" ? firstDayEntry.costPercent : null
+];
+
+if (typeof firstDayEntry === "string"){
+let normalized = firstDayEntry.replace(",", ".").trim();
+
+if (normalized.startsWith("{") && normalized.endsWith("}")){
+try {
+let parsed = JSON.parse(normalized);
+if (parsed && parsed.costPercent != null){
+candidates.push(parsed.costPercent);
+}
+} catch (error) {
+}
+}
+}
+
+for (let candidate of candidates){
+let value = Number(candidate);
+if (!Number.isNaN(value) && value > 0){
+return {
+percent: value,
+isCustom: true
+};
+}
+}
+
+return {
+percent: 54.6,
+isCustom: false
+};
+}
+
+function getMonthCostPercent(targetYear, targetMonth){
+return getMonthCostConfig(targetYear, targetMonth).percent;
+}
+
+function calculateCost(value, targetYear = year, targetMonth = month){
+return Math.round(Number(value || 0) * (getMonthCostPercent(targetYear, targetMonth) / 100));
+}
+
+function calculateGross(value, targetYear = year, targetMonth = month){
+return Math.round(Number(value || 0) - calculateCost(value, targetYear, targetMonth));
 }
 
 function formatDelta(current, previous){
@@ -844,8 +2240,10 @@ pinInput.focus();
 function render(){
 const calendar = document.getElementById("calendar");
 calendar.innerHTML = "";
+const isV2Ui = document.body.getAttribute("data-ui-version") === "v2";
 
 document.getElementById("monthTitle").innerText = monthNames[month] + " " + year;
+document.getElementById("v2HeroMonth").innerText = monthNames[month] + " " + year;
 
 weekdays.forEach((dayName) => {
 let el = document.createElement("div");
@@ -874,7 +2272,7 @@ let worstDay = null;
 
 for (let d = 1; d <= days; d++){
 let date = formatDate(year, month, d);
-let revenue = Number(revenueData[date] || 0);
+let revenue = getRevenueValue(revenueData[date]);
 
 if (revenue > 0){
 total += revenue;
@@ -895,10 +2293,13 @@ worstDay = d;
 let avg = count ? Math.round(total / count) : 0;
 let nds = Math.round(total * 0.05);
 let forecast = count ? Math.round(avg * days) : 0;
-let monthGross = calculateGross(total);
+let monthGross = calculateGross(total, year, month);
+let totalChecks = 0;
 let latestFilledDay = 0;
 let monthlyTotals = new Array(12).fill(0);
+let monthlyChecksTotals = new Array(12).fill(0);
 let previousYearMonthlyTotals = new Array(12).fill(0);
+let previousYearMonthlyChecksTotals = new Array(12).fill(0);
 let yearTotalRevenue = 0;
 let bestDayOfYear = null;
 let worstDayOfYear = null;
@@ -906,15 +2307,19 @@ let bestDayOfYearLabel = "";
 let worstDayOfYearLabel = "";
 
 for (let date in revenueData){
+if (!isDateKey(date)) continue;
 let parsed = new Date(date + "T00:00:00");
-let value = Number(revenueData[date] || 0);
+let value = getRevenueValue(revenueData[date]);
+let checks = getChecksValue(revenueData[date]);
 
 if (parsed.getMonth() === month && parsed.getFullYear() === year && value > 0){
 latestFilledDay = Math.max(latestFilledDay, parsed.getDate());
+totalChecks += Math.max(checks, 0);
 }
 
 if (parsed.getFullYear() === year && value > 0){
 monthlyTotals[parsed.getMonth()] += value;
+monthlyChecksTotals[parsed.getMonth()] += Math.max(checks, 0);
 yearTotalRevenue += value;
 
 if (bestDayOfYear === null || value > bestDayOfYear){
@@ -930,6 +2335,7 @@ worstDayOfYearLabel = parsed.getDate() + " " + monthNames[parsed.getMonth()];
 
 if (parsed.getFullYear() === year - 1 && value > 0){
 previousYearMonthlyTotals[parsed.getMonth()] += value;
+previousYearMonthlyChecksTotals[parsed.getMonth()] += Math.max(checks, 0);
 }
 }
 
@@ -977,9 +2383,14 @@ monthExpectation.innerText = "Ожидаем без изменений";
 document.getElementById("monthTotal").innerText = formatMoney(total);
 document.getElementById("monthAverage").innerText = formatMoney(avg);
 document.getElementById("forecast").innerText = formatMoney(forecast);
-document.getElementById("monthGross").innerText = formatMoney(monthGross);
-document.getElementById("costPercentLabel").innerText = "Процент себестоимости: " + String(getCostPercent(year)).replace(".", ",") + "%";
+let currentMonthChecks = monthlyChecksTotals[month] || totalChecks;
+let averageCheck = currentMonthChecks > 0 ? Math.round(total / currentMonthChecks) : 0;
+document.getElementById("monthGross").innerText = isV2Ui ? (averageCheck ? formatMoney(averageCheck) : "—") : formatMoney(monthGross);
+document.getElementById("costPercentLabel").innerText = "Процент себестоимости: " + String(getMonthCostPercent(year, month)).replace(".", ",") + "%";
+document.getElementById("v2HeroRevenue").innerText = formatMoney(total);
+document.getElementById("v2HeroExpectation").innerText = monthExpectation.innerText || "Все показатели месяца собраны в одном экране.";
 document.getElementById("forecastTitle").innerText = isCurrentCalendarMonth ? "Прогноз месяца" : "По итогу месяца";
+document.getElementById("monthGrossTitle").innerText = isV2Ui ? "Средний чек" : "Валовая выручка";
 if (year === 2025) {
 document.getElementById("taxCardTitle").innerText = "Итоги года";
 document.getElementById("monthNds").innerHTML =
@@ -989,6 +2400,13 @@ document.getElementById("yearNds").innerHTML = "";
 document.getElementById("taxCardTitle").innerText = "НДС 5%";
 document.getElementById("monthNds").innerText = formatMoney(nds);
 document.getElementById("yearNds").innerText = "За " + year + " год: " + formatMoney(Math.round(yearTotalRevenue * 0.05));
+}
+
+let monthCostCardTitle = document.querySelector("#monthCostCard .statTitle");
+if (monthCostCardTitle){
+monthCostCardTitle.innerText = document.body.getAttribute("data-ui-version") === "v2"
+? "Себестоимость"
+: "Себестоимость месяца";
 }
 
 let targetDiff = total - breakEvenTarget;
@@ -1010,26 +2428,100 @@ let remainingDays = Math.max(days - latestFilledDay, 0);
 let requiredPerDay = targetDiff >= 0
 ? 0
 : (remainingDays > 0 ? Math.ceil(Math.abs(targetDiff) / remainingDays) : Math.abs(targetDiff));
+let currentAverageDeltaHtml = "";
+let targetHintLabel = "Минимум в день: " + formatMoney(requiredPerDay);
+let previousYearMonthTarget = previousYearMonthlyTotals[month] || 0;
+let previousYearPlanHtml = "";
 
-document.getElementById("topIndicators").innerHTML = count
-? "<div class='bestBox'><div class='reportCardHeader'><div class='reportCardTitle'>Выручка по месяцам</div><div class='reportYearSwitcher'><button class='reportYearButton' type='button' onclick='changeChartYear(-1)'>◀</button><div class='reportYearValue'>" + year + "</div><button class='reportYearButton' type='button' onclick='changeChartYear(1)'>▶</button></div></div><div class='monthsChart'>" + monthsChartHtml + "</div><div class='reportButtonRow'><a class='reportButton' href='./Отчет_по_магазинам.html' target='_blank' rel='noopener noreferrer'>Смотреть сводный отчет по сети 2026</a></div></div>" +
-"<div class='targetBox'>" +
+if (isCurrentCalendarMonth && count > 0){
+let averageDelta = avg - requiredPerDay;
+let averageDeltaPercent = requiredPerDay > 0
+? Math.round((averageDelta / requiredPerDay) * 100)
+: 0;
+let averageDeltaClass = averageDelta >= 0 ? "positive" : "negative";
+let averageDeltaSign = averageDelta > 0 ? "+" : "";
+let averageDeltaPercentSign = averageDeltaPercent > 0 ? "+" : "";
+
+currentAverageDeltaHtml =
+"<div class='targetAverageDelta " + averageDeltaClass + "'>" +
+"Сейчас " + averageDeltaSign + formatMoney(averageDelta) + " / " + averageDeltaPercentSign + averageDeltaPercent + "%" +
+"</div>";
+
+if (previousYearMonthTarget > 0){
+let planRemaining = Math.max(previousYearMonthTarget - total, 0);
+let planNeedPerDay = planRemaining > 0 && remainingDays > 0
+? Math.ceil(planRemaining / remainingDays)
+: 0;
+let planNeedClass = planRemaining > 0 ? "negative" : "positive";
+let planNeedText = planRemaining > 0
+? "Чтобы догнать: " + formatMoney(planNeedPerDay) + "/день"
+: "Идём выше на " + formatMoney(total - previousYearMonthTarget);
+let previousYearToDate = 0;
+let currentMonthComparisonDay = latestFilledDay || Math.min(today.getDate(), days);
+
+for (let day = 1; day <= Math.min(currentMonthComparisonDay, days); day++){
+let previousYearDate = formatDate(year - 1, month, day);
+previousYearToDate += getRevenueValue(revenueData[previousYearDate]);
+}
+
+let planScaleMax = Math.max(previousYearMonthTarget, total, previousYearToDate, 1);
+let planFillWidth = Math.max(0, Math.min((total / planScaleMax) * 100, 100));
+let planMarkerLeft = Math.max(0, Math.min((previousYearToDate / planScaleMax) * 100, 100));
+let previousYearDeltaLabel = total >= previousYearToDate
+? "Больше прошлого года на: " + formatMoney(total - previousYearToDate)
+: "До прошлого года нужно: " + formatMoney(previousYearToDate - total);
+
+previousYearPlanHtml =
+"<div class='targetPlanSection'>" +
+"<div class='targetPlanHeader'>" +
+"<div class='targetPlanTitle'>В прошлом году было: " + formatMoney(previousYearToDate) + "</div>" +
+"<div class='targetPlanNeed " + planNeedClass + "'>" + planNeedText + "</div>" +
+"</div>" +
+"<div class='targetPlanTrack'>" +
+"<div class='targetPlanFill" + (planRemaining <= 0 ? " onTrack" : "") + "' style='width:" + planFillWidth + "%;'></div>" +
+"<div class='targetPlanMarker' style='left:" + planMarkerLeft + "%;'></div>" +
+"</div>" +
+"<div class='targetPlanLabels'><span>0 ₽</span><span>" + previousYearDeltaLabel + "</span><span>" + formatMoney(previousYearMonthTarget) + "</span></div>" +
+"</div>";
+}
+} else if (count > 0){
+let requiredAveragePerDay = Math.ceil(breakEvenTarget / days);
+let averageDelta = avg - requiredAveragePerDay;
+let averageDeltaClass = averageDelta >= 0 ? "positive" : "negative";
+let averageDeltaText = averageDelta >= 0
+? "Сработали на " + formatMoney(averageDelta) + " больше"
+: "Сработали на " + formatMoney(Math.abs(averageDelta)) + " меньше";
+targetHintLabel = "Необходимо было: " + formatMoney(requiredAveragePerDay);
+
+currentAverageDeltaHtml =
+"<div class='targetAverageDelta " + averageDeltaClass + "'>" +
+averageDeltaText +
+"</div>";
+}
+
+let monthsPanelHtml = "<div class='bestBox'><div class='reportCardHeader'><div class='reportCardTitle'>Выручка по месяцам</div><div class='reportYearSwitcher'><button class='reportYearButton' type='button' onclick='changeChartYear(-1)'>◀</button><div class='reportYearValue'>" + year + "</div><button class='reportYearButton' type='button' onclick='changeChartYear(1)'>▶</button></div></div><div class='monthsChart'>" + monthsChartHtml + "</div><div class='reportButtonRow'><a class='reportButton' href='./Отчет_по_магазинам.html' target='_blank' rel='noopener noreferrer'>Смотреть сводный отчет по сети 2026</a></div></div>";
+let targetPanelHtml = count
+? "<div class='targetBox'>" +
 "<div class='targetHeader'><div class='targetTitle'>Точка безубыточности</div><div class='targetState'>" + targetIcon + "</div></div>" +
 "<div class='targetValue'>" + formatMoney(total) + "</div>" +
 "<div class='targetMeta'>" + targetMessage + "</div>" +
-"<div class='targetHint'>Минимум в день: " + formatMoney(requiredPerDay) + "</div>" +
+"<div class='targetHintRow'><div class='targetHint'>" + targetHintLabel + "</div>" + currentAverageDeltaHtml + "</div>" +
 "<div class='targetTrack'><div class='targetMidpoint'></div><div class='targetFill red' style='left:0%;width:" + redFillWidth + "%;'></div><div class='targetFill green' style='left:50%;width:" + greenFillWidth + "%;'></div></div>" +
 "<div class='targetLabelsWide'><span>0 ₽</span><span>" + formatMoney(breakEvenTarget) + "</span><span>" + formatMoney(scaleMax) + "</span></div>" +
+previousYearPlanHtml +
 "</div>"
-: "<div class='bestBox'><div class='reportCardHeader'><div class='reportCardTitle'>Выручка по месяцам</div><div class='reportYearSwitcher'><button class='reportYearButton' type='button' onclick='changeChartYear(-1)'>◀</button><div class='reportYearValue'>" + year + "</div><button class='reportYearButton' type='button' onclick='changeChartYear(1)'>▶</button></div></div><div class='monthsChart'>" + monthsChartHtml + "</div><div class='reportButtonRow'><a class='reportButton' href='./Отчет_по_магазинам.html' target='_blank' rel='noopener noreferrer'>Смотреть сводный отчет по сети 2026</a></div></div>" +
-"<div class='targetBox'>" +
+: "<div class='targetBox'>" +
 "<div class='targetHeader'><div class='targetTitle'>Точка безубыточности</div><div class='targetState'>🚗</div></div>" +
 "<div class='targetValue'>0 ₽</div>" +
 "<div class='targetMeta'>До точки безубыточности осталось " + formatMoney(breakEvenTarget) + "</div>" +
-"<div class='targetHint'>Минимум в день: " + formatMoney(Math.ceil(breakEvenTarget / days)) + "</div>" +
+"<div class='targetHintRow'><div class='targetHint'>Минимум в день: " + formatMoney(Math.ceil(breakEvenTarget / days)) + "</div></div>" +
 "<div class='targetTrack'><div class='targetMidpoint'></div><div class='targetFill red' style='left:0%;width:0%;'></div></div>" +
 "<div class='targetLabelsWide'><span>0 ₽</span><span>" + formatMoney(breakEvenTarget) + "</span><span>" + formatMoney(scaleMax) + "</span></div>" +
 "</div>";
+
+document.getElementById("topIndicators").innerHTML = monthsPanelHtml + targetPanelHtml;
+document.getElementById("v2MonthsContent").innerHTML = monthsPanelHtml;
+document.getElementById("v2BreakEvenContent").innerHTML = targetPanelHtml;
 
 let prevMonth = month - 1;
 let prevYear = year;
@@ -1056,8 +2548,9 @@ let periodEnd = isCurrentView
 let prevPeriodEnd = Math.min(periodEnd, prevMonthDays);
 let weekAnchorDay = latestFilledDay || Math.min(periodEnd, days);
 for (let date in revenueData){
+if (!isDateKey(date)) continue;
 let parsed = new Date(date + "T00:00:00");
-let value = Number(revenueData[date] || 0);
+let value = getRevenueValue(revenueData[date]);
 
 if (parsed.getMonth() === prevMonth && parsed.getFullYear() === prevYear){
 prevTotal += value;
@@ -1095,9 +2588,38 @@ let hasDate = slot >= start && calendarDay <= days;
 
 if (hasDate){
 let date = formatDate(year, month, calendarDay);
-let revenue = Number(revenueData[date] || 0);
+let revenue = getRevenueValue(revenueData[date]);
 let cell = document.createElement("div");
 let isToday = calendarDay === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+let isV2 = document.body.getAttribute("data-ui-version") === "v2";
+let badge = "";
+
+if (bestDay === calendarDay) badge = "🏆";
+if (worstDay === calendarDay) badge = "😢";
+if (bestDay === calendarDay && worstDay === calendarDay) badge = "🏆";
+
+if (isV2){
+let strengthRatio = avg > 0 ? revenue / avg : 0;
+let strengthPercent = revenue > 0 ? Math.max(12, Math.min(Math.round(strengthRatio * 68), 100)) : 0;
+let strengthClass = "strength-weak";
+let dayChecks = getChecksValue(revenueData[date]);
+let dayAverageCheck = dayChecks > 0 ? Math.round(revenue / dayChecks) : 0;
+if (strengthRatio >= 1.05) strengthClass = "strength-strong";
+else if (strengthRatio >= 0.8) strengthClass = "strength-medium";
+
+cell.className = "day " + revenueClass(revenue) + (isToday ? " today" : "") + (revenue ? " " + strengthClass : " noData");
+cell.innerHTML =
+"<div class='dayTop'>" +
+"<div class='dayDate'>" + calendarDay + "</div>" +
+(badge ? "<div class='dayBadge'>" + badge + "</div>" : "<div></div>") +
+"</div>" +
+"<div class='dayMain'>" +
+"<div class='dayRevenue'>" + (revenue ? formatMoney(revenue) : "—") + "</div>" +
+"<div class='dayMeta'>" + (revenue ? "<strong>чеков:</strong> " + (dayChecks ? dayChecks.toLocaleString("ru-RU") : "—") : " ") + "</div>" +
+"<div class='dayMeta'>" + (revenue ? "<strong>средний:</strong> " + (dayAverageCheck ? formatMoney(dayAverageCheck) : "—") : " ") + "</div>" +
+"</div>" +
+"<div class='dayStrength'><div class='dayStrengthBar' style='width:" + strengthPercent + "%;'></div></div>";
+} else {
 let emoji = "";
 
 if (bestDay === calendarDay) emoji = " 🏆";
@@ -1107,9 +2629,10 @@ if (bestDay === calendarDay && worstDay === calendarDay) emoji = " 🏆";
 cell.className = "day " + revenueClass(revenue) + (isToday ? " today" : "");
 cell.innerHTML =
 "<div class='revenue'>" + (revenue ? formatMoney(revenue) : "") + "</div>" +
-"<div class='cost'>" + (revenue ? "Себестоимость: " + formatMoney(calculateCost(revenue)) : "") + "</div>" +
-"<div class='gross'>" + (revenue ? "Валовая: " + formatMoney(calculateGross(revenue)) : "") + "</div>" +
+"<div class='cost'>" + (revenue ? "Себестоимость: " + formatMoney(calculateCost(revenue, year, month)) : "") + "</div>" +
+"<div class='gross'>" + (revenue ? "Валовая: " + formatMoney(calculateGross(revenue, year, month)) : "") + "</div>" +
 "<div class='date'>" + calendarDay + emoji + "</div>";
+}
 
 calendar.appendChild(cell);
 calendarDay++;
@@ -1126,11 +2649,11 @@ let weekGross = 0;
 
 if (weekEndDay >= weekStartDay){
 for (let day = weekStartDay; day <= weekEndDay; day++){
-let revenue = Number(revenueData[formatDate(year, month, day)] || 0);
+let revenue = getRevenueValue(revenueData[formatDate(year, month, day)]);
 if (revenue > 0){
 weekRevenue += revenue;
-weekCost += calculateCost(revenue);
-weekGross += calculateGross(revenue);
+weekCost += calculateCost(revenue, year, month);
+weekGross += calculateGross(revenue, year, month);
 }
 }
 }
@@ -1168,14 +2691,30 @@ document.getElementById("compare").innerText = compare;
 document.getElementById("compareMeta").innerText = matchedWorkedDaysPreviousYear > 0
 ? matchedWorkedDaysPreviousYear + " дн.: " + formatMoney(comparableCurrentRevenue) + " vs " + formatMoney(comparablePreviousRevenue)
 : "Нет данных за " + previousYear + " год";
+document.getElementById("v2HeroYearCompare").innerText = compare;
+document.getElementById("v2HeroYearCompareMeta").innerText = document.getElementById("compareMeta").innerText;
 
 let periodLabel = isCurrentView ? "1-" + periodEnd + " число" : "полный месяц";
 let prevAverageFullMonth = prevCount ? Math.round(prevTotal / prevCount) : 0;
 let prevForecast = prevCount ? Math.round((prevTotal / prevCount) * prevMonthDays) : 0;
-let monthCost = calculateCost(total);
+let monthCost = calculateCost(total, year, month);
 let monthTotalTrend = getTrend(currentPeriodTotal, prevPeriodTotal);
 let monthAverageTrend = getTrend(avg, prevAverageFullMonth);
 let forecastTrend = getTrend(forecast, prevForecast);
+let monthHeroDeltaValue = prevPeriodTotal > 0
+? ((currentPeriodTotal - prevPeriodTotal > 0 ? "+" : "") + formatMoney(currentPeriodTotal - prevPeriodTotal))
+: "—";
+let previousMonthAverageCheck = 0;
+let previousYearAverageCheck = 0;
+
+if (monthlyChecksTotals[prevMonth] > 0 && monthlyTotals[prevMonth] > 0){
+previousMonthAverageCheck = Math.round(monthlyTotals[prevMonth] / monthlyChecksTotals[prevMonth]);
+}
+
+if (previousYearMonthlyChecksTotals[month] > 0 && previousYearMonthlyTotals[month] > 0){
+previousYearAverageCheck = Math.round(previousYearMonthlyTotals[month] / previousYearMonthlyChecksTotals[month]);
+}
+let averageCheckTrend = getTrend(averageCheck, previousMonthAverageCheck);
 
 document.getElementById("monthTotalCompare").innerText =
 periodLabel + ": " + formatDelta(currentPeriodTotal, prevPeriodTotal);
@@ -1187,10 +2726,33 @@ document.getElementById("forecastCompare").innerText =
 "полный месяц: " + formatDelta(forecast, prevForecast);
 
 document.getElementById("monthCost").innerText = formatMoney(monthCost);
+document.getElementById("monthGrossCompare").innerHTML = isV2Ui
+? [
+previousMonthAverageCheck > 0 ? "к прошлому месяцу: " + formatDelta(averageCheck, previousMonthAverageCheck) : "к прошлому месяцу: нет данных",
+previousYearAverageCheck > 0 ? "к прошлому году: " + formatDelta(averageCheck, previousYearAverageCheck) : "к прошлому году: нет данных"
+].join("<br>")
+: "";
+document.getElementById("v2HeroMonthCompare").innerText = monthHeroDeltaValue;
+document.getElementById("v2HeroMonthCompareMeta").innerText = document.getElementById("monthTotalCompare").innerText;
+document.getElementById("v2HeroMonthCompare").className = "v2HeroCompareValue" + (monthTotalTrend === "positive" || monthTotalTrend === "negative" ? " " + monthTotalTrend : "");
+document.getElementById("v2HeroYearCompare").className = "v2HeroCompareValue" + (compareTrend === "positive" || compareTrend === "negative" ? " " + compareTrend : "");
+document.getElementById("v2MonthAverage").innerText = formatMoney(avg);
+document.getElementById("v2MonthAverageMeta").innerText = document.getElementById("monthAverageCompare").innerText;
+document.getElementById("v2MonthCost").innerText = formatMoney(monthCost);
+document.getElementById("v2MonthCostMeta").innerText = document.getElementById("costPercentLabel").innerText;
+document.getElementById("v2MonthGross").innerText = formatMoney(monthGross);
+document.getElementById("v2MonthGrossMeta").innerText = "После себестоимости за месяц";
+document.getElementById("v2Forecast").innerText = formatMoney(forecast);
+document.getElementById("v2ForecastMeta").innerText = document.getElementById("forecastCompare").innerText;
 applyTrendCard("monthTotalCard", monthTotalTrend);
 applyTrendCard("monthAverageCard", monthAverageTrend);
 applyTrendCard("forecastCard", forecastTrend);
 applyTrendCard("compareCard", compareTrend);
+if (isV2Ui){
+applyTrendCard("monthGrossCard", averageCheckTrend);
+} else {
+applyTrendCard("monthGrossCard", "neutral");
+}
 }
 
 async function loadRevenueData(){
@@ -1201,6 +2763,10 @@ throw new Error("HTTP " + response.status);
 }
 
 let json = await response.json();
+if (json && typeof json === "object" && typeof json.error === "string"){
+throw new Error(json.error);
+}
+
 revenueData = json && typeof json === "object" ? json : {};
 render();
 } catch (error) {
@@ -1213,6 +2779,7 @@ document.getElementById("topIndicators").innerHTML =
 }
 
 document.getElementById("pinButton").addEventListener("click", checkPin);
+document.getElementById("uiVersionToggle").addEventListener("click", toggleUiVersion);
 document.getElementById("pinInput").addEventListener("keydown", (event) => {
 if (event.key === "Enter") checkPin();
 });
@@ -1223,6 +2790,8 @@ syncPinBoxes();
 document.getElementById("pinBoxes").addEventListener("click", () => {
 document.getElementById("pinInput").focus();
 });
+
+applyUiVersion(getStoredUiVersion());
 
 if (sessionStorage.getItem(accessSessionKey) === "1"){
 unlockApp();
