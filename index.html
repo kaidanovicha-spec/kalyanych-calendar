@@ -41,6 +41,14 @@ max-width:1100px;
 margin-bottom:8px;
 }
 
+.pageActions{
+display:flex;
+align-items:flex-start;
+justify-content:flex-end;
+gap:10px;
+flex:0 0 auto;
+}
+
 .brandTitle{
 display:flex;
 align-items:center;
@@ -110,7 +118,11 @@ cursor:pointer;
 }
 
 .uiVersionToggle{
-padding:5px 9px;
+position:fixed;
+right:16px;
+bottom:14px;
+z-index:30;
+padding:4px 8px;
 border-radius:999px;
 background:#fff;
 color:#111;
@@ -122,6 +134,103 @@ line-height:1.1;
 letter-spacing:0.01em;
 white-space:nowrap;
 opacity:0.82;
+}
+
+.topReportButton{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+position:relative;
+padding:9px 12px;
+border-radius:999px;
+background:linear-gradient(135deg,#8a6722 0%,#c89d3d 22%,#f4dc8b 48%,#bf8b22 72%,#7b5616 100%);
+color:#fffaf0;
+text-decoration:none;
+font-size:12px;
+font-weight:600;
+line-height:1;
+white-space:nowrap;
+border:1px solid rgba(255,240,184,0.55);
+text-shadow:0 1px 1px rgba(91,58,6,0.24);
+box-shadow:0 10px 26px rgba(150,110,20,0.22), inset 0 1px 0 rgba(255,247,214,0.55);
+transition:background-color 0.22s ease,box-shadow 0.22s ease,transform 0.22s ease,filter 0.22s ease;
+isolation:isolate;
+z-index:0;
+}
+
+.topReportButton::before{
+content:"";
+position:absolute;
+inset:-8px;
+border-radius:999px;
+background:
+radial-gradient(circle at 50% -8px, rgba(255,228,145,0.52), rgba(255,228,145,0) 34%),
+radial-gradient(circle at calc(100% + 2px) 50%, rgba(255,225,138,0.38), rgba(255,225,138,0) 32%),
+radial-gradient(circle at 50% calc(100% + 8px), rgba(255,226,142,0.42), rgba(255,226,142,0) 35%),
+radial-gradient(circle at -2px 50%, rgba(255,225,138,0.38), rgba(255,225,138,0) 32%);
+filter:blur(2px);
+opacity:0.72;
+animation:goldRays 3.2s ease-in-out infinite;
+pointer-events:none;
+z-index:-1;
+}
+
+.topReportButton::after{
+content:"";
+position:absolute;
+inset:-14px;
+border-radius:999px;
+background:
+linear-gradient(90deg, transparent 0%, rgba(255,236,169,0.0) 43%, rgba(255,236,169,0.55) 50%, rgba(255,236,169,0.0) 57%, transparent 100%),
+linear-gradient(0deg, transparent 0%, rgba(255,236,169,0.0) 43%, rgba(255,236,169,0.5) 50%, rgba(255,236,169,0.0) 57%, transparent 100%);
+opacity:0.5;
+filter:blur(0.4px);
+animation:goldCrossGlow 3.2s ease-in-out infinite;
+pointer-events:none;
+z-index:-1;
+}
+
+.topReportButton:hover{
+filter:saturate(1.04) brightness(1.03);
+box-shadow:0 14px 34px rgba(150,110,20,0.3), inset 0 1px 0 rgba(255,247,214,0.62);
+transform:translateY(-1px);
+}
+
+body[data-ui-version="v1"] .topReportButton{
+display:none;
+}
+
+@keyframes goldShimmer{
+0%, 100%{
+opacity:0.58;
+transform:scale(0.98);
+}
+50%{
+opacity:0.96;
+transform:scale(1.03);
+}
+}
+
+@keyframes goldRays{
+0%, 100%{
+opacity:0.56;
+transform:scale(0.98);
+}
+50%{
+opacity:0.9;
+transform:scale(1.04);
+}
+}
+
+@keyframes goldCrossGlow{
+0%, 100%{
+opacity:0.34;
+transform:scale(0.96);
+}
+50%{
+opacity:0.72;
+transform:scale(1.03);
+}
 }
 
 .stats{
@@ -726,10 +835,11 @@ height:48px;
 }
 
 body[data-ui-version="v2"] .uiVersionToggle{
-background:#1f2a37;
-color:#fff7ec;
-border-color:transparent;
-box-shadow:0 10px 22px rgba(31,42,55,0.14);
+background:rgba(255,255,255,0.92);
+color:#475569;
+border-color:rgba(148,163,184,0.22);
+box-shadow:0 10px 24px rgba(15,23,42,0.08);
+backdrop-filter:blur(12px);
 }
 
 body[data-ui-version="v2"] .header{
@@ -868,6 +978,10 @@ body[data-ui-version="v2"] .reportButton{
 border-radius:14px;
 }
 
+body[data-ui-version="v2"] .reportButtonRow{
+display:none;
+}
+
 body[data-ui-version="v2"] .monthBar{
 max-width:24px;
 border-radius:12px 12px 4px 4px;
@@ -990,7 +1104,7 @@ backdrop-filter:none;
 }
 
 body[data-ui-version="v2"] .uiVersionToggle{
-margin-top:6px;
+margin-top:0;
 }
 
 body[data-ui-version="v2"] .v2HeroSection,
@@ -1254,12 +1368,15 @@ box-shadow:none;
 }
 
 body[data-ui-version="v2"] #v2MonthsContent .reportCardHeader{
-margin-bottom:24px;
+margin-bottom:18px;
 }
 
 body[data-ui-version="v2"] #v2MonthsContent .monthsChart{
-height:140px;
-margin-bottom:20px;
+height:auto;
+margin-bottom:12px;
+align-items:flex-start;
+justify-content:space-between;
+gap:10px;
 }
 
 body[data-ui-version="v2"] #v2MonthsContent .monthBar{
@@ -1309,8 +1426,14 @@ align-items:stretch;
 flex-direction:column;
 }
 
+.pageActions{
+justify-content:space-between;
+align-items:center;
+}
+
 .uiVersionToggle{
-align-self:flex-end;
+right:12px;
+bottom:12px;
 }
 
 .monthHeader{
@@ -1676,12 +1799,89 @@ border-radius:24px;
 }
 
 body[data-ui-version="v2"] .monthsChart{
-height:110px;
-margin-bottom:14px;
+height:190px;
+margin-bottom:0;
+align-items:flex-end;
+justify-content:space-between;
+gap:10px;
+}
+
+body[data-ui-version="v2"] .monthBarWrap{
+flex:1 1 0;
+min-width:0;
+align-items:center;
+justify-content:flex-end;
+flex-direction:column;
+height:100%;
+gap:6px;
+padding:10px 4px 0;
+border-radius:16px;
 }
 
 body[data-ui-version="v2"] .monthBar{
-max-width:20px;
+max-width:none;
+width:100%;
+min-height:4px;
+height:var(--month-bar-height, 4px);
+border-radius:999px;
+background:linear-gradient(180deg,#e8dfd3 0%,#d7cab9 100%);
+}
+
+body[data-ui-version="v2"] .monthBar.red{
+background:linear-gradient(180deg,#ffb2aa 0%,#ff7f73 100%);
+}
+
+body[data-ui-version="v2"] .monthBar.green{
+background:linear-gradient(180deg,#89dfab 0%,#45b772 100%);
+}
+
+body[data-ui-version="v2"] .monthBar.active{
+outline:none;
+box-shadow:0 0 0 2px rgba(24,33,47,0.12);
+}
+
+body[data-ui-version="v2"] .monthBarLabel{
+font-size:12px;
+font-weight:600;
+color:#8a7f71;
+letter-spacing:0.01em;
+line-height:1;
+}
+
+body[data-ui-version="v2"] .monthBarWrap[title$='0 ₽'] .monthBar{
+background:linear-gradient(180deg,#efe7dc 0%,#e6dbcf 100%);
+opacity:0.72;
+}
+
+body[data-ui-version="v2"] .monthBarWrap[title$='0 ₽'] .monthBarLabel{
+color:#b4a898;
+}
+
+body[data-ui-version="v2"] .monthBarWrap:hover{
+background:rgba(246,241,233,0.74);
+}
+
+body[data-ui-version="v2"] .monthBarWrap:hover .monthBar{
+transform:none;
+filter:brightness(1.02);
+}
+
+body[data-ui-version="v2"] .monthBarWrap:hover .monthBarLabel{
+color:#5e5448;
+}
+
+body[data-ui-version="v2"] .monthBarWrap:focus-visible{
+outline:2px solid rgba(24,33,47,0.22);
+outline-offset:2px;
+}
+
+body[data-ui-version="v2"] .monthBarWrap:has(.monthBar.active){
+background:rgba(247,242,235,0.92);
+box-shadow:inset 0 0 0 1px rgba(218,206,191,0.58);
+}
+
+body[data-ui-version="v2"] .monthBarWrap:has(.monthBar.active) .monthBarLabel{
+color:#18212f;
 }
 
 body[data-ui-version="v2"] .targetTrack,
@@ -1781,8 +1981,8 @@ background:#0f1720;
 }
 
 body[data-ui-version="v2"] .uiVersionToggle:hover{
-background:#243141;
-color:#fff;
+background:#ffffff;
+color:#1e293b;
 }
 
 body[data-ui-version="v2"] .monthBarWrap:hover .monthBar{
@@ -1861,7 +2061,10 @@ padding-top:14px;
 </a>
 Календарь Кальяныч
 </h1>
-<button class="uiVersionToggle" id="uiVersionToggle" type="button">Версия 2.0</button>
+<div class="pageActions">
+<a class="topReportButton" href="./Отчет_по_магазинам.html" target="_blank" rel="noopener noreferrer">Рейтинг магазинов</a>
+<button class="uiVersionToggle" id="uiVersionToggle" type="button">v1</button>
+</div>
 </div>
 
 <div class="header">
@@ -2021,7 +2224,9 @@ return "v2";
 function updateUiVersionButton(version){
 let toggleButton = document.getElementById("uiVersionToggle");
 if (!toggleButton) return;
-toggleButton.innerText = version === "v2" ? "Вернуться на старую версию" : "Перейти на версию 2.0";
+toggleButton.innerText = version === "v2" ? "v1" : "v2";
+toggleButton.setAttribute("aria-label", version === "v2" ? "Переключиться на версию 1.0" : "Переключиться на версию 2.0");
+toggleButton.title = version === "v2" ? "Переключиться на версию 1.0" : "Переключиться на версию 2.0";
 }
 
 function applyUiVersion(version){
@@ -2345,7 +2550,9 @@ previousYearMonthlyChecksTotals[parsed.getMonth()] += Math.max(checks, 0);
 }
 
 let maxMonthlyTotal = Math.max(...monthlyTotals, 1);
-let monthShortNames = ["Я","Ф","М","А","М","И","И","А","С","О","Н","Д"];
+let monthShortNames = isV2Ui
+? ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"]
+: ["Я","Ф","М","А","М","И","И","А","С","О","Н","Д"];
 let breakEvenTarget = getBreakEvenTarget(year);
 let bestMonthValue = Math.max(...monthlyTotals);
 let worstMonthCandidates = monthlyTotals.filter((value) => value > 0);
@@ -2354,9 +2561,12 @@ let bestMonthIndex = monthlyTotals.findIndex((value) => value === bestMonthValue
 let worstMonthIndex = monthlyTotals.findIndex((value) => value === worstMonthValue);
 let monthsChartHtml = monthlyTotals.map((value, index) => {
 let barHeight = value > 0 ? Math.max(8, Math.round((value / maxMonthlyTotal) * 78)) : 6;
+if (isV2Ui){
+barHeight = value > 0 ? Math.round(barHeight * 1.3) : 8;
+}
 let barClass = value >= breakEvenTarget ? "green" : "red";
 if (index === month) barClass += " active";
-let barStyle = "height:" + barHeight + "px;";
+let barStyle = "height:" + barHeight + "px;--month-bar-height:" + barHeight + "px;";
 return "<button class='monthBarWrap' type='button' onclick='openMonth(" + index + ")' title='" + monthNames[index] + ": " + formatMoney(value) + "'><div class='monthBar " + barClass + "' style='" + barStyle + "'></div><div class='monthBarLabel'>" + monthShortNames[index] + "</div></button>";
 }).join("");
 
@@ -2504,7 +2714,7 @@ averageDeltaText +
 "</div>";
 }
 
-let monthsPanelHtml = "<div class='bestBox'><div class='reportCardHeader'><div class='reportCardTitle'>Выручка по месяцам</div><div class='reportYearSwitcher'><button class='reportYearButton' type='button' onclick='changeChartYear(-1)'>◀</button><div class='reportYearValue'>" + year + "</div><button class='reportYearButton' type='button' onclick='changeChartYear(1)'>▶</button></div></div><div class='monthsChart'>" + monthsChartHtml + "</div><div class='reportButtonRow'><a class='reportButton' href='./Отчет_по_магазинам.html' target='_blank' rel='noopener noreferrer'>Смотреть сводный отчет по сети 2026</a></div></div>";
+let monthsPanelHtml = "<div class='bestBox'><div class='reportCardHeader'><div class='reportCardTitle'>Выручка по месяцам</div><div class='reportYearSwitcher'><button class='reportYearButton' type='button' onclick='changeChartYear(-1)'>◀</button><div class='reportYearValue'>" + year + "</div><button class='reportYearButton' type='button' onclick='changeChartYear(1)'>▶</button></div></div><div class='monthsChart'>" + monthsChartHtml + "</div><div class='reportButtonRow'><a class='reportButton' href='./Отчет_по_магазинам.html' target='_blank' rel='noopener noreferrer'>Рейтинг магазинов</a></div></div>";
 let targetPanelHtml = count
 ? "<div class='targetBox'>" +
 "<div class='targetHeader'><div class='targetTitle'>Точка безубыточности</div><div class='targetState'>" + targetIcon + "</div></div>" +
