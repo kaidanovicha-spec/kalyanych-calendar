@@ -2712,14 +2712,27 @@ let monthHeroDeltaValue = prevPeriodTotal > 0
 let previousMonthAverageCheck = 0;
 let previousYearAverageCheck = 0;
 
-if (monthlyChecksTotals[prevMonth] > 0 && monthlyTotals[prevMonth] > 0){
-previousMonthAverageCheck = Math.round(monthlyTotals[prevMonth] / monthlyChecksTotals[prevMonth]);
+let previousMonthRevenueForAverageCheck = prevYear === year
+? monthlyTotals[prevMonth]
+: previousYearMonthlyTotals[prevMonth];
+let previousMonthChecksForAverageCheck = prevYear === year
+? monthlyChecksTotals[prevMonth]
+: previousYearMonthlyChecksTotals[prevMonth];
+
+if (previousMonthChecksForAverageCheck > 0 && previousMonthRevenueForAverageCheck > 0){
+previousMonthAverageCheck = Math.round(previousMonthRevenueForAverageCheck / previousMonthChecksForAverageCheck);
 }
 
 if (previousYearMonthlyChecksTotals[month] > 0 && previousYearMonthlyTotals[month] > 0){
 previousYearAverageCheck = Math.round(previousYearMonthlyTotals[month] / previousYearMonthlyChecksTotals[month]);
 }
 let averageCheckTrend = getTrend(averageCheck, previousMonthAverageCheck);
+let averageCheckMonthCompare = previousMonthAverageCheck > 0
+? formatMoney(averageCheck - previousMonthAverageCheck) + " (" + ((averageCheck - previousMonthAverageCheck) > 0 ? "+" : "") + (((averageCheck - previousMonthAverageCheck) / previousMonthAverageCheck) * 100).toFixed(1) + "%)"
+: "нет данных";
+let averageCheckYearCompare = previousYearAverageCheck > 0
+? formatMoney(averageCheck - previousYearAverageCheck) + " (" + ((averageCheck - previousYearAverageCheck) > 0 ? "+" : "") + (((averageCheck - previousYearAverageCheck) / previousYearAverageCheck) * 100).toFixed(1) + "%)"
+: "нет данных";
 
 document.getElementById("monthTotalCompare").innerText =
 periodLabel + ": " + formatDelta(currentPeriodTotal, prevPeriodTotal);
@@ -2733,8 +2746,8 @@ document.getElementById("forecastCompare").innerText =
 document.getElementById("monthCost").innerText = formatMoney(monthCost);
 document.getElementById("monthGrossCompare").innerHTML = isV2Ui
 ? [
-previousMonthAverageCheck > 0 ? "к прошлому месяцу: " + formatDelta(averageCheck, previousMonthAverageCheck) : "к прошлому месяцу: нет данных",
-previousYearAverageCheck > 0 ? "к прошлому году: " + formatDelta(averageCheck, previousYearAverageCheck) : "к прошлому году: нет данных"
+ "к прошлому месяцу: " + averageCheckMonthCompare,
+ "к прошлому году: " + averageCheckYearCompare
 ].join("<br>")
 : "";
 document.getElementById("v2HeroMonthCompare").innerText = monthHeroDeltaValue;
