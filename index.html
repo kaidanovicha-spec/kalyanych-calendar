@@ -110,16 +110,18 @@ cursor:pointer;
 }
 
 .uiVersionToggle{
-padding:8px 12px;
+padding:5px 9px;
 border-radius:999px;
 background:#fff;
 color:#111;
 border:1px solid rgba(17,17,17,0.08);
 box-shadow:0 8px 24px rgba(15,23,42,0.08);
-font-size:12px;
-font-weight:600;
+font-size:10px;
+font-weight:500;
+line-height:1.1;
 letter-spacing:0.01em;
 white-space:nowrap;
+opacity:0.82;
 }
 
 .stats{
@@ -727,7 +729,7 @@ body[data-ui-version="v2"] .uiVersionToggle{
 background:#1f2a37;
 color:#fff7ec;
 border-color:transparent;
-box-shadow:0 14px 30px rgba(31,42,55,0.18);
+box-shadow:0 10px 22px rgba(31,42,55,0.14);
 }
 
 body[data-ui-version="v2"] .header{
@@ -2010,13 +2012,16 @@ return Number(value || 0).toLocaleString("ru-RU") + " ₽";
 
 function getStoredUiVersion(){
 let storedVersion = localStorage.getItem(uiVersionStorageKey);
-return storedVersion === "v2" ? "v2" : "v1";
+if (storedVersion === "v1" || storedVersion === "v2"){
+return storedVersion;
+}
+return "v2";
 }
 
 function updateUiVersionButton(version){
 let toggleButton = document.getElementById("uiVersionToggle");
 if (!toggleButton) return;
-toggleButton.innerText = version === "v2" ? "Версия 1.0" : "Версия 2.0";
+toggleButton.innerText = version === "v2" ? "Вернуться на старую версию" : "Перейти на версию 2.0";
 }
 
 function applyUiVersion(version){
