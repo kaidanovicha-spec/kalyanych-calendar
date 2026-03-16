@@ -2639,6 +2639,9 @@ targetIcon = "💰";
 let targetMessage = total >= breakEvenTarget
 ? "Выше точки безубыточности на " + formatMoney(targetDiff)
 : "До точки безубыточности осталось " + formatMoney(Math.abs(targetDiff));
+if (!isCurrentCalendarMonth && isV2Ui){
+targetMessage = "";
+}
 let remainingDays = Math.max(days - latestFilledDay, 0);
 let requiredPerDay = targetDiff >= 0
 ? 0
@@ -2700,13 +2703,12 @@ previousYearPlanHtml =
 "</div>";
 }
 } else if (count > 0){
-let requiredAveragePerDay = Math.ceil(breakEvenTarget / days);
 let monthDelta = total - breakEvenTarget;
 let averageDeltaClass = monthDelta >= 0 ? "positive" : "negative";
 let averageDeltaText = monthDelta >= 0
 ? "Сработали на " + formatMoney(monthDelta) + " больше"
 : "Сработали на " + formatMoney(Math.abs(monthDelta)) + " меньше";
-targetHintLabel = "Необходимо было: " + formatMoney(requiredAveragePerDay);
+targetHintLabel = isV2Ui ? "" : "Необходимо было: " + formatMoney(Math.ceil(breakEvenTarget / days));
 
 currentAverageDeltaHtml =
 "<div class='targetAverageDelta " + averageDeltaClass + "'>" +
