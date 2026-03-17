@@ -677,6 +677,26 @@ background:#111;
 opacity:0.25;
 }
 
+.targetBaselineMarker{
+position:absolute;
+top:-4px;
+bottom:-4px;
+width:2px;
+background:#111;
+opacity:0.3;
+transform:translateX(-1px);
+}
+
+.targetBaselineMarker.breakEven{
+background:#111;
+opacity:0.28;
+}
+
+.targetBaselineMarker.monthBase{
+background:#1b9c4a;
+opacity:0.55;
+}
+
 .targetLabelsWide{
 display:grid;
 grid-template-columns:1fr 1fr 1fr;
@@ -686,9 +706,60 @@ align-items:center;
 margin-top:2px;
 }
 
+.targetLabelsTrack{
+position:relative;
+height:18px;
+font-size:11px;
+color:#777;
+margin-top:2px;
+}
+
+.targetLabelsTrack span{
+position:absolute;
+top:0;
+white-space:nowrap;
+}
+
+.targetLabelsTrack span:first-child{
+left:0;
+}
+
+.targetLabelsTrack span:last-child{
+right:0;
+}
+
 .targetPlanSection{
 margin-top:auto;
 padding-top:6px;
+}
+
+.targetMarkerLegend{
+display:flex;
+gap:14px;
+align-items:center;
+flex-wrap:wrap;
+margin-top:6px;
+font-size:11px;
+color:#777;
+}
+
+.targetMarkerLegendItem{
+display:flex;
+align-items:center;
+gap:6px;
+}
+
+.targetMarkerLegendSwatch{
+width:14px;
+height:2px;
+border-radius:999px;
+background:#111;
+opacity:0.4;
+}
+
+.targetMarkerLegendSwatch.monthBase{
+background:#1b9c4a;
+opacity:0.7;
 }
 
 .targetPlanHeader{
@@ -733,7 +804,7 @@ top:0;
 bottom:0;
 left:0;
 background:linear-gradient(90deg,#ff8a8a,#ff4d4d);
-border-radius:999px;
+border-radius:999px 0 0 999px;
 }
 
 .targetPlanFill.onTrack{
@@ -750,12 +821,22 @@ opacity:0.35;
 transform:translateX(-1px);
 }
 
+.targetPlanMarker.breakEven{
+opacity:0.22;
+}
+
 .targetPlanLabels{
 display:flex;
 justify-content:space-between;
 font-size:11px;
 color:#777;
 margin-top:2px;
+}
+
+.targetPlanLegend{
+margin-top:6px;
+font-size:11px;
+color:#777;
 }
 
 .targetLabelsWide span:nth-child(2){
@@ -2344,6 +2425,7 @@ let revenueData = {};
 let weatherData = {};
 let weatherModel = null;
 const revenueBaselineCache = {};
+const monthlyRevenueTotalCache = {};
 
 const monthNames = [
 "Январь","Февраль","Март","Апрель","Май","Июнь",
@@ -2352,6 +2434,62 @@ const monthNames = [
 
 const weekdays = ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
 const salaryAnchorDays = [5, 20];
+const activeStoreCountByMonth = {
+"2024-01": 1,
+"2024-02": 1,
+"2024-03": 1,
+"2024-04": 2,
+"2024-05": 3,
+"2024-06": 4,
+"2024-07": 5,
+"2024-08": 6,
+"2024-09": 6,
+"2024-10": 6,
+"2024-11": 6,
+"2024-12": 7,
+"2025-01": 6,
+"2025-02": 6,
+"2025-03": 6,
+"2025-04": 6,
+"2025-05": 6,
+"2025-06": 6,
+"2025-07": 6,
+"2025-08": 5,
+"2025-09": 5,
+"2025-10": 6,
+"2025-11": 6,
+"2025-12": 6,
+"2026-01": 5,
+"2026-02": 5
+};
+const activeStoreDaysByMonth = {
+"2024-01": 30,
+"2024-02": 29,
+"2024-03": 31,
+"2024-04": 51,
+"2024-05": 72,
+"2024-06": 101,
+"2024-07": 145,
+"2024-08": 164,
+"2024-09": 180,
+"2024-10": 186,
+"2024-11": 178,
+"2024-12": 180,
+"2025-01": 182,
+"2025-02": 168,
+"2025-03": 186,
+"2025-04": 180,
+"2025-05": 186,
+"2025-06": 180,
+"2025-07": 169,
+"2025-08": 155,
+"2025-09": 150,
+"2025-10": 157,
+"2025-11": 180,
+"2025-12": 157,
+"2026-01": 153,
+"2026-02": 140
+};
 const officialHolidayMap = {
 "2024-01-01": "Новогодние каникулы",
 "2024-01-02": "Новогодние каникулы",
@@ -2756,7 +2894,14 @@ let targetWeekday = targetDate.getDay();
 	baseline = weightedAverage(allPositive);
 	}
 
-revenueBaselineCache[dateKey] = baseline || 0;
+let adjustedBaseline = baseline || 0;
+let targetYear = targetDate.getFullYear();
+let todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+if (getDateTimestamp(dateKey) > todayStart && targetYear === today.getFullYear()){
+adjustedBaseline *= getMonthStoreAdjustedFactor(targetYear, targetMonth);
+}
+
+revenueBaselineCache[dateKey] = adjustedBaseline;
 return revenueBaselineCache[dateKey];
 }
 
@@ -2829,6 +2974,14 @@ if (!badge){
 return;
 }
 
+if (year !== today.getFullYear()){
+badge.classList.remove("positive", "negative");
+badge.classList.add("neutral");
+badge.innerText = "Точность IndexKa: —";
+badge.title = "IndexKa показываем только для текущего года";
+return;
+}
+
 let metrics = getIndexKaAccuracyMetrics();
 badge.classList.remove("positive", "negative", "neutral");
 
@@ -2881,16 +3034,16 @@ let reasons = [];
 
 if (rolling7 >= 0.12){
 score += 0.08;
-reasons.push("неделя идет выше базы");
+reasons.push("последние 7 дней выше базы");
 } else if (rolling7 >= 0.05){
 score += 0.04;
-reasons.push("последняя неделя сильнее базы");
+reasons.push("последние 7 дней сильнее базы");
 } else if (rolling7 <= -0.12){
 score -= 0.08;
-reasons.push("неделя идет ниже базы");
+reasons.push("последние 7 дней ниже базы");
 } else if (rolling7 <= -0.05){
 score -= 0.04;
-reasons.push("последняя неделя слабее базы");
+reasons.push("последние 7 дней слабее базы");
 }
 
 if (trend >= 0.08){
@@ -3108,11 +3261,11 @@ return (temperature > 0 ? "+" : "") + temperature + "°";
 }
 
 function getIndexKaImpactLabel(deltaRatio){
-if (deltaRatio >= 0.08) return "ожидаем рост";
-if (deltaRatio >= 0.02) return "скорее рост";
-if (deltaRatio <= -0.08) return "вероятно падение";
-if (deltaRatio <= -0.02) return "скорее спад";
-return "без заметного влияния";
+if (deltaRatio >= 0.08) return "заметно выше базы";
+if (deltaRatio >= 0.02) return "выше базы";
+if (deltaRatio <= -0.08) return "заметно ниже базы";
+if (deltaRatio <= -0.02) return "ниже базы";
+return "около базы";
 }
 
 function getDateInfo(dateKey){
@@ -3440,6 +3593,34 @@ adjustment -= 0.03;
 return clamp(adjustment, -0.12, 0.12);
 }
 
+function softenFutureIndexKaPart(dateKey, part){
+let targetDate = new Date(dateKey + "T00:00:00");
+if (targetDate.getFullYear() !== today.getFullYear()){
+return part;
+}
+
+let softened = { ...part };
+let factor = 1;
+
+if (softened.score < 0){
+if (softened.name === "demandMomentum"){
+factor = 0.45;
+}
+if (softened.name === "season"){
+factor = 0.6;
+}
+if (softened.name === "weatherPhase"){
+factor = 0.75;
+}
+if (softened.name === "taxWindow"){
+factor = 0.7;
+}
+}
+
+softened.score *= factor;
+return softened;
+}
+
 function getIndexKaAdjustmentBreakdown(dateKey){
 let parts = [];
 
@@ -3515,10 +3696,10 @@ reason: regulatorySignal.reason
 });
 }
 
-return parts;
+return parts.map((part) => softenFutureIndexKaPart(dateKey, part));
 }
 
-function describeIndexKaReason(dateKey){
+function describeIndexKaReason(dateKey, deltaRatio){
 let parts = getIndexKaAdjustmentBreakdown(dateKey)
   .slice()
   .sort((left, right) => Math.abs(right.score) - Math.abs(left.score))
@@ -3528,7 +3709,22 @@ if (!parts.length){
 return "базовый ритм без сильного сигнала";
 }
 
-return parts.slice(0, 2).map((item) => item.reason).join(" + ");
+let direction = deltaRatio > 0.02 ? 1 : deltaRatio < -0.02 ? -1 : 0;
+let alignedParts = direction === 0
+  ? parts
+  : parts.filter((item) => (direction > 0 ? item.score > 0 : item.score < 0));
+
+if (!alignedParts.length){
+if (direction > 0){
+return "поддерживающие факторы месяца перевешивают";
+}
+if (direction < 0){
+return "сдерживающие факторы месяца перевешивают";
+}
+alignedParts = parts;
+}
+
+return alignedParts.slice(0, 2).map((item) => item.reason).join(" + ");
 }
 
 function getWeatherIndexForDate(dateKey){
@@ -3556,7 +3752,7 @@ date: dateKey,
 baseline,
 deltaRatio,
 expectedRevenue: Math.round(baseline * (1 + deltaRatio)),
-reason: describeIndexKaReason(dateKey),
+reason: describeIndexKaReason(dateKey, deltaRatio),
 directionClass: getWeatherDirectionClass(deltaRatio),
 source: weatherData[dateKey].source || "archive"
 };
@@ -3618,10 +3814,153 @@ return null;
 let deltaRatio = (expectedTotal - baselineTotal) / baselineTotal;
 return {
 deltaRatio,
+baseline: Math.round(baselineTotal),
 consideredDays,
 directionClass: getWeatherDirectionClass(deltaRatio),
 label: getIndexKaImpactLabel(deltaRatio)
 };
+}
+
+function getMonthBaseline(targetYear, targetMonth, totalDaysInMonth){
+// Month baseline must stay consistent with day baselines:
+// the month is always the sum of daily baselines for that month.
+let baselineTotal = 0;
+for (let day = 1; day <= totalDaysInMonth; day++){
+let dateKey = formatDate(targetYear, targetMonth, day);
+baselineTotal += getRevenueBaseline(dateKey);
+}
+return Math.round(baselineTotal);
+}
+
+function getMonthKey(targetYear, targetMonth){
+return String(targetYear) + "-" + String(targetMonth + 1).padStart(2, "0");
+}
+
+function getKnownActiveStoreCount(targetYear, targetMonth){
+return activeStoreCountByMonth[getMonthKey(targetYear, targetMonth)] || 0;
+}
+
+function getProjectedActiveStoreCount(targetYear, targetMonth){
+let directCount = getKnownActiveStoreCount(targetYear, targetMonth);
+if (directCount > 0){
+return directCount;
+}
+
+if (targetYear === today.getFullYear()){
+for (let monthIndex = Math.min(targetMonth, today.getMonth()); monthIndex >= 0; monthIndex--){
+let count = getKnownActiveStoreCount(targetYear, monthIndex);
+if (count > 0 && getMonthlyRevenueTotal(targetYear, monthIndex) > 0){
+return count;
+}
+}
+}
+
+return getKnownActiveStoreCount(targetYear - 1, targetMonth);
+}
+
+function getKnownActiveStoreDayCount(targetYear, targetMonth){
+return activeStoreDaysByMonth[getMonthKey(targetYear, targetMonth)] || 0;
+}
+
+function getProjectedActiveStoreDayCount(targetYear, targetMonth){
+let directCount = getKnownActiveStoreDayCount(targetYear, targetMonth);
+if (directCount > 0){
+return directCount;
+}
+
+let projectedStores = getProjectedActiveStoreCount(targetYear, targetMonth);
+if (projectedStores > 0){
+let daysInMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+return projectedStores * daysInMonth;
+}
+
+return getKnownActiveStoreDayCount(targetYear - 1, targetMonth);
+}
+
+function getClosedMonthPerStoreFactor(targetYear, targetMonth){
+if (targetYear !== today.getFullYear()){
+return 1;
+}
+
+let compareEndMonth = Math.min(targetMonth - 1, today.getMonth() - 1);
+if (compareEndMonth < 0){
+return 1;
+}
+
+let weightedRatio = 0;
+let totalWeight = 0;
+
+for (let monthIndex = 0; monthIndex <= compareEndMonth; monthIndex++){
+let currentTotal = getMonthlyRevenueTotal(targetYear, monthIndex);
+let previousTotal = getMonthlyRevenueTotal(targetYear - 1, monthIndex);
+let currentStores = getKnownActiveStoreCount(targetYear, monthIndex);
+let previousStores = getKnownActiveStoreCount(targetYear - 1, monthIndex);
+
+if (!currentTotal || !previousTotal || !currentStores || !previousStores){
+continue;
+}
+
+let currentPerStore = currentTotal / currentStores;
+let previousPerStore = previousTotal / previousStores;
+if (!currentPerStore || !previousPerStore){
+continue;
+}
+
+let ratio = currentPerStore / previousPerStore;
+let weight = previousTotal;
+weightedRatio += ratio * weight;
+totalWeight += weight;
+}
+
+if (!totalWeight){
+return 1;
+}
+
+return clamp(weightedRatio / totalWeight, 0.8, 1.1);
+}
+
+function getComparableStoreDayCount(targetYear, targetMonth, periodDays){
+let fullMonthStoreDays = getProjectedActiveStoreDayCount(targetYear, targetMonth);
+let daysInMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+if (!fullMonthStoreDays || !daysInMonth || !periodDays){
+return 0;
+}
+return (fullMonthStoreDays / daysInMonth) * periodDays;
+}
+
+function getMonthlyRevenueTotal(targetYear, targetMonth){
+let cacheKey = getMonthKey(targetYear, targetMonth);
+if (monthlyRevenueTotalCache[cacheKey] != null){
+return monthlyRevenueTotalCache[cacheKey];
+}
+
+let total = 0;
+for (let dateKey in revenueData){
+if (!isDateKey(dateKey)) continue;
+let parsed = new Date(dateKey + "T00:00:00");
+if (parsed.getFullYear() === targetYear && parsed.getMonth() === targetMonth){
+total += getRevenueValue(revenueData[dateKey]);
+}
+}
+
+monthlyRevenueTotalCache[cacheKey] = total;
+return total;
+}
+
+function getMonthStoreAdjustedFactor(targetYear, targetMonth){
+if (targetYear !== today.getFullYear()){
+return 1;
+}
+
+let previousYearStoreDays = getKnownActiveStoreDayCount(targetYear - 1, targetMonth);
+let projectedStoreDays = getProjectedActiveStoreDayCount(targetYear, targetMonth);
+let closedMonthPerStoreFactor = getClosedMonthPerStoreFactor(targetYear, targetMonth);
+
+if (!previousYearStoreDays || !projectedStoreDays){
+return 1;
+}
+
+return clamp((projectedStoreDays / previousYearStoreDays) * closedMonthPerStoreFactor, 0.6, 1.05);
 }
 
 function getMonthCostConfig(targetYear, targetMonth){
@@ -3786,13 +4125,14 @@ return "<span class='v2HeroExpectationLine " + safeTone + "'>" + text + "</span>
 }
 
 function getMonthExpectationContent(daysInMonth, previousYearMonthlyTotals){
-let result = {
-headerHtml: "",
-heroHtml: ""
-};
-let lines = [];
+	let result = {
+	headerHtml: "",
+	heroHtml: ""
+	};
+	let lines = [];
+	let isCurrentYear = year === today.getFullYear();
 
-let isCurrentCalendarMonth = year === today.getFullYear() && month === today.getMonth();
+	let isCurrentCalendarMonth = year === today.getFullYear() && month === today.getMonth();
 if (isCurrentCalendarMonth && month > 0) {
 let previousYearCurrentMonth = previousYearMonthlyTotals[month];
 let previousYearPrevMonth = previousYearMonthlyTotals[month - 1];
@@ -3817,16 +4157,16 @@ lines.push({
 text: seasonalText,
 tone
 });
-}
-}
+	}
+	}
 
-let weatherExpectation = getMonthWeatherExpectation(year, month, daysInMonth);
-if (weatherExpectation){
-lines.push({
-text: "По IndexKa ожидаем: " + getIndexKaImpactLabel(weatherExpectation.deltaRatio),
-tone: weatherExpectation.directionClass
-});
-}
+	let weatherExpectation = getMonthWeatherExpectation(year, month, daysInMonth);
+	if (weatherExpectation && isCurrentYear){
+	lines.push({
+	text: "По IndexKa: " + getIndexKaImpactLabel(weatherExpectation.deltaRatio),
+	tone: weatherExpectation.directionClass
+	});
+	}
 
 if (!lines.length){
 return result;
@@ -3994,117 +4334,118 @@ monthCostCardTitle.innerText = document.body.getAttribute("data-ui-version") ===
 : "Себестоимость месяца";
 }
 
-let targetDiff = total - breakEvenTarget;
-let scaleMax = breakEvenTarget * 2;
-let targetPercent = Math.max(0, Math.min((total / scaleMax) * 100, 100));
-let redFillWidth = Math.min(targetPercent, 50);
-let greenFillWidth = total >= breakEvenTarget ? Math.max(0, targetPercent - 50) : 0;
-let targetIcon = "🚗";
-if (total >= breakEvenTarget && targetDiff < 500000){
-targetIcon = "😎";
-}
-if (targetDiff >= 500000){
-targetIcon = "💰";
-}
-let targetMessage = total >= breakEvenTarget
-? "Выше точки безубыточности на " + formatMoney(targetDiff)
-: "До точки безубыточности осталось " + formatMoney(Math.abs(targetDiff));
-if (!isCurrentCalendarMonth && isV2Ui){
-targetMessage = "";
-}
-let remainingDays = Math.max(days - latestFilledDay, 0);
-let requiredPerDay = targetDiff >= 0
-? 0
-: (remainingDays > 0 ? Math.ceil(Math.abs(targetDiff) / remainingDays) : Math.abs(targetDiff));
-let currentAverageDeltaHtml = "";
-let targetHintLabel = "Минимум в день: " + formatMoney(requiredPerDay);
-let previousYearMonthTarget = previousYearMonthlyTotals[month] || 0;
-let previousYearPlanHtml = "";
-
-if (isCurrentCalendarMonth && count > 0){
-let averageDelta = avg - requiredPerDay;
-let averageDeltaPercent = requiredPerDay > 0
-? Math.round((averageDelta / requiredPerDay) * 100)
-: 0;
-let averageDeltaClass = averageDelta >= 0 ? "positive" : "negative";
-let averageDeltaSign = averageDelta > 0 ? "+" : "";
-let averageDeltaPercentSign = averageDeltaPercent > 0 ? "+" : "";
-
-currentAverageDeltaHtml =
-"<div class='targetAverageDelta " + averageDeltaClass + "'>" +
-"Сейчас " + averageDeltaSign + formatMoney(averageDelta) + " / " + averageDeltaPercentSign + averageDeltaPercent + "%" +
-"</div>";
-
-if (previousYearMonthTarget > 0){
-let planRemaining = Math.max(previousYearMonthTarget - total, 0);
-let planNeedPerDay = planRemaining > 0 && remainingDays > 0
-? Math.ceil(planRemaining / remainingDays)
-: 0;
-let planNeedClass = planRemaining > 0 ? "negative" : "positive";
-let planNeedText = planRemaining > 0
-? "Чтобы догнать: " + formatMoney(planNeedPerDay) + "/день"
-: "Идём выше на " + formatMoney(total - previousYearMonthTarget);
-let previousYearToDate = 0;
-let currentMonthComparisonDay = latestFilledDay || Math.min(today.getDate(), days);
-
-for (let day = 1; day <= Math.min(currentMonthComparisonDay, days); day++){
-let previousYearDate = formatDate(year - 1, month, day);
-previousYearToDate += getRevenueValue(revenueData[previousYearDate]);
-}
-
-let planScaleMax = Math.max(previousYearMonthTarget, total, previousYearToDate, 1);
-let planFillWidth = Math.max(0, Math.min((total / planScaleMax) * 100, 100));
-let planMarkerLeft = Math.max(0, Math.min((previousYearToDate / planScaleMax) * 100, 100));
-let previousYearDeltaLabel = total >= previousYearToDate
-? "Больше прошлого года на: " + formatMoney(total - previousYearToDate)
-: "До прошлого года нужно: " + formatMoney(previousYearToDate - total);
-
-previousYearPlanHtml =
-"<div class='targetPlanSection'>" +
-"<div class='targetPlanHeader'>" +
-"<div class='targetPlanTitle'>В прошлом году было: " + formatMoney(previousYearToDate) + "</div>" +
-"<div class='targetPlanNeed " + planNeedClass + "'>" + planNeedText + "</div>" +
-"</div>" +
-"<div class='targetPlanTrack'>" +
-"<div class='targetPlanFill" + (planRemaining <= 0 ? " onTrack" : "") + "' style='width:" + planFillWidth + "%;'></div>" +
-"<div class='targetPlanMarker' style='left:" + planMarkerLeft + "%;'></div>" +
-"</div>" +
-"<div class='targetPlanLabels'><span>0 ₽</span><span>" + previousYearDeltaLabel + "</span><span>" + formatMoney(previousYearMonthTarget) + "</span></div>" +
-"</div>";
-}
-} else if (count > 0){
-let monthDelta = total - breakEvenTarget;
-let averageDeltaClass = monthDelta >= 0 ? "positive" : "negative";
-let averageDeltaText = monthDelta >= 0
-? "Сработали на " + formatMoney(monthDelta) + " больше"
-: "Сработали на " + formatMoney(Math.abs(monthDelta)) + " меньше";
-targetHintLabel = isV2Ui ? "" : "Необходимо было: " + formatMoney(Math.ceil(breakEvenTarget / days));
-
-currentAverageDeltaHtml =
-"<div class='targetAverageDelta " + averageDeltaClass + "'>" +
+	let monthBaselineTarget = getMonthBaseline(year, month, days);
+	let targetBase = monthBaselineTarget > 0 ? monthBaselineTarget : breakEvenTarget;
+	let breakEvenDiff = total - breakEvenTarget;
+	let targetIcon = "🚗";
+	if (total >= breakEvenTarget && breakEvenDiff < 500000){
+	targetIcon = "😎";
+	}
+	if (breakEvenDiff >= 500000){
+	targetIcon = "💰";
+	}
+	let targetMessage = total >= breakEvenTarget
+	? "Выше безубыточности на " + formatMoney(breakEvenDiff)
+	: "До точки безубыточности осталось " + formatMoney(Math.abs(breakEvenDiff));
+	if (!isCurrentCalendarMonth && isV2Ui){
+	targetMessage = "";
+	}
+	let remainingDays = Math.max(days - latestFilledDay, 0);
+	let requiredPerDay = breakEvenDiff >= 0
+	? 0
+	: (remainingDays > 0 ? Math.ceil(Math.abs(breakEvenDiff) / remainingDays) : Math.abs(breakEvenDiff));
+	let currentAverageDeltaHtml = "";
+	let targetHintLabel = breakEvenDiff < 0 && year === today.getFullYear()
+	? "Нужно в день: " + formatMoney(requiredPerDay)
+	: "Минимум в день: " + formatMoney(Math.ceil(breakEvenTarget / Math.max(days, 1)));
+	let monthBaseRemaining = Math.max(targetBase - total, 0);
+	let monthBaseNeedPerDay = monthBaseRemaining > 0 && remainingDays > 0
+	? Math.ceil(monthBaseRemaining / remainingDays)
+	: 0;
+	let monthBaseNeedClass = monthBaseRemaining > 0 ? "negative" : "positive";
+	let monthBaseNeedText = monthBaseRemaining > 0
+	? "Чтобы догнать: " + formatMoney(monthBaseNeedPerDay) + "/день"
+	: "Идём выше на " + formatMoney(total - targetBase);
+	let monthBaseScaleMax = Math.max(targetBase + 500000, total, 1);
+	let scaleMax = year === today.getFullYear()
+	? monthBaseScaleMax
+	: Math.max(breakEvenTarget * 2, total, 1);
+	let targetPercent = Math.max(0, Math.min((total / scaleMax) * 100, 100));
+	let breakEvenMarkerLeft = Math.max(0, Math.min((breakEvenTarget / scaleMax) * 100, 100));
+	let redFillWidth = total < breakEvenTarget ? targetPercent : breakEvenMarkerLeft;
+	let greenFillWidth = total >= breakEvenTarget ? Math.max(targetPercent - breakEvenMarkerLeft, 0) : 0;
+	let monthBaseFillWidth = Math.max(0, Math.min((total / monthBaseScaleMax) * 100, 100));
+	let monthBaseMarkerLeft = Math.max(0, Math.min((targetBase / monthBaseScaleMax) * 100, 100));
+	let monthBaseDeltaLabel = total >= targetBase
+	? "Выше базы месяца на: " + formatMoney(total - targetBase)
+	: "До базы месяца нужно: " + formatMoney(targetBase - total);
+	let previousYearPlanHtml = "";
+	
+	if (isCurrentCalendarMonth && count > 0){
+	let breakEvenPerDay = Math.ceil(breakEvenTarget / Math.max(days, 1));
+	let averageDelta = avg - breakEvenPerDay;
+	let averageDeltaPercent = breakEvenPerDay > 0
+	? Math.round((averageDelta / breakEvenPerDay) * 100)
+	: 0;
+	let averageDeltaClass = averageDelta >= 0 ? "positive" : "negative";
+	let averageDeltaSign = averageDelta > 0 ? "+" : "";
+	let averageDeltaPercentSign = averageDeltaPercent > 0 ? "+" : "";
+	
+	currentAverageDeltaHtml =
+	"<div class='targetAverageDelta " + averageDeltaClass + "'>" +
+	"Сейчас " + averageDeltaSign + formatMoney(averageDelta) + " / " + averageDeltaPercentSign + averageDeltaPercent + "%" +
+	"</div>";
+	} else if (count > 0){
+	let monthDelta = total - breakEvenTarget;
+	let averageDeltaClass = monthDelta >= 0 ? "positive" : "negative";
+	let averageDeltaText = monthDelta >= 0
+	? "Сработали на " + formatMoney(monthDelta) + " выше безубыточности"
+	: "Сработали на " + formatMoney(Math.abs(monthDelta)) + " ниже безубыточности";
+	targetHintLabel = isV2Ui ? "" : (breakEvenDiff < 0 && year === today.getFullYear()
+	? "Нужно в день: " + formatMoney(requiredPerDay)
+	: "Минимум в день: " + formatMoney(Math.ceil(breakEvenTarget / Math.max(days, 1))));
+	
+	currentAverageDeltaHtml =
+	"<div class='targetAverageDelta " + averageDeltaClass + "'>" +
 averageDeltaText +
 "</div>";
 }
 
-let monthsPanelHtml = "<div class='bestBox'><div class='reportCardHeader'><div class='reportCardTitle'>Выручка по месяцам</div><div class='reportYearSwitcher'><button class='reportYearButton' type='button' onclick='changeChartYear(-1)'>◀</button><div class='reportYearValue'>" + year + "</div><button class='reportYearButton' type='button' onclick='changeChartYear(1)'>▶</button></div></div><div class='monthsChart'>" + monthsChartHtml + "</div><div class='reportButtonRow'><a class='reportButton' href='./Отчет_по_магазинам.html' target='_blank' rel='noopener noreferrer'>Рейтинг магазинов</a></div></div>";
-let targetPanelHtml = count
-? "<div class='targetBox'>" +
-"<div class='targetHeader'><div class='targetTitle'>Точка безубыточности</div><div class='targetState'>" + targetIcon + "</div></div>" +
-"<div class='targetValue'>" + formatMoney(total) + "</div>" +
-"<div class='targetMeta'>" + targetMessage + "</div>" +
-"<div class='targetHintRow'><div class='targetHint'>" + targetHintLabel + "</div>" + currentAverageDeltaHtml + "</div>" +
-"<div class='targetTrack'><div class='targetMidpoint'></div><div class='targetFill red' style='left:0%;width:" + redFillWidth + "%;'></div><div class='targetFill green' style='left:50%;width:" + greenFillWidth + "%;'></div></div>" +
-"<div class='targetLabelsWide'><span>0 ₽</span><span>" + formatMoney(breakEvenTarget) + "</span><span>" + formatMoney(scaleMax) + "</span></div>" +
-previousYearPlanHtml +
-"</div>"
-: "<div class='targetBox'>" +
-"<div class='targetHeader'><div class='targetTitle'>Точка безубыточности</div><div class='targetState'>🚗</div></div>" +
-"<div class='targetValue'>0 ₽</div>" +
-"<div class='targetMeta'>До точки безубыточности осталось " + formatMoney(breakEvenTarget) + "</div>" +
-"<div class='targetHintRow'><div class='targetHint'>Минимум в день: " + formatMoney(Math.ceil(breakEvenTarget / days)) + "</div></div>" +
-"<div class='targetTrack'><div class='targetMidpoint'></div><div class='targetFill red' style='left:0%;width:0%;'></div></div>" +
-"<div class='targetLabelsWide'><span>0 ₽</span><span>" + formatMoney(breakEvenTarget) + "</span><span>" + formatMoney(scaleMax) + "</span></div>" +
-"</div>";
+	if (year === today.getFullYear()){
+	previousYearPlanHtml =
+	"<div class='targetPlanSection'>" +
+	"<div class='targetPlanHeader'>" +
+	"<div class='targetPlanTitle'>База месяца: " + formatMoney(targetBase) + "</div>" +
+	"<div class='targetPlanNeed " + monthBaseNeedClass + "'>" + monthBaseNeedText + "</div>" +
+	"</div>" +
+	"<div class='targetPlanTrack'>" +
+	"<div class='targetPlanFill" + (monthBaseRemaining <= 0 ? " onTrack" : "") + "' style='width:" + monthBaseFillWidth + "%;'></div>" +
+	"<div class='targetPlanMarker' style='left:" + monthBaseMarkerLeft + "%;'></div>" +
+	"</div>" +
+	"<div class='targetPlanLabels'><span>0 ₽</span><span>" + monthBaseDeltaLabel + "</span><span>" + formatMoney(monthBaseScaleMax) + "</span></div>" +
+	"</div>";
+	}
+
+	let monthsPanelHtml = "<div class='bestBox'><div class='reportCardHeader'><div class='reportCardTitle'>Выручка по месяцам</div><div class='reportYearSwitcher'><button class='reportYearButton' type='button' onclick='changeChartYear(-1)'>◀</button><div class='reportYearValue'>" + year + "</div><button class='reportYearButton' type='button' onclick='changeChartYear(1)'>▶</button></div></div><div class='monthsChart'>" + monthsChartHtml + "</div><div class='reportButtonRow'><a class='reportButton' href='./Отчет_по_магазинам.html' target='_blank' rel='noopener noreferrer'>Рейтинг магазинов</a></div></div>";
+	let targetPanelHtml = count
+	? "<div class='targetBox'>" +
+	"<div class='targetHeader'><div class='targetTitle'>Точка безубыточности</div><div class='targetState'>" + targetIcon + "</div></div>" +
+	"<div class='targetValue'>" + formatMoney(total) + "</div>" +
+	"<div class='targetMeta'>" + targetMessage + "</div>" +
+	"<div class='targetHintRow'><div class='targetHint'>" + targetHintLabel + "</div>" + currentAverageDeltaHtml + "</div>" +
+	"<div class='targetTrack'><div class='targetMidpoint' style='left:" + breakEvenMarkerLeft + "%;'></div><div class='targetFill red' style='left:0%;width:" + redFillWidth + "%;'></div><div class='targetFill green' style='left:" + breakEvenMarkerLeft + "%;width:" + greenFillWidth + "%;'></div></div>" +
+	"<div class='targetLabelsTrack'><span>0 ₽</span><span style='left:" + breakEvenMarkerLeft + "%;transform:translateX(-50%);'>" + formatMoney(breakEvenTarget) + "</span><span>" + formatMoney(scaleMax) + "</span></div>" +
+	previousYearPlanHtml +
+	"</div>"
+	: "<div class='targetBox'>" +
+	"<div class='targetHeader'><div class='targetTitle'>Точка безубыточности</div><div class='targetState'>🚗</div></div>" +
+	"<div class='targetValue'>0 ₽</div>" +
+	"<div class='targetMeta'>До точки безубыточности осталось " + formatMoney(breakEvenTarget) + "</div>" +
+	"<div class='targetHintRow'><div class='targetHint'>" + (year === today.getFullYear() ? "Нужно в день: " + formatMoney(breakEvenTarget) : "Минимум в день: " + formatMoney(Math.ceil(breakEvenTarget / Math.max(days, 1)))) + "</div></div>" +
+	"<div class='targetTrack'><div class='targetMidpoint' style='left:" + breakEvenMarkerLeft + "%;'></div><div class='targetFill red' style='left:0%;width:0%;'></div></div>" +
+	"<div class='targetLabelsTrack'><span>0 ₽</span><span style='left:" + breakEvenMarkerLeft + "%;transform:translateX(-50%);'>" + formatMoney(breakEvenTarget) + "</span><span>" + formatMoney(scaleMax) + "</span></div>" +
+	previousYearPlanHtml +
+	"</div>";
 
 document.getElementById("topIndicators").innerHTML = monthsPanelHtml + targetPanelHtml;
 document.getElementById("v2MonthsContent").innerHTML = monthsPanelHtml;
@@ -4179,11 +4520,12 @@ let hasDate = slot >= start && calendarDay <= days;
 		let cell = document.createElement("div");
 		let isToday = calendarDay === today.getDate() && month === today.getMonth() && year === today.getFullYear();
 		let isV2 = document.body.getAttribute("data-ui-version") === "v2";
-			let weatherIndex = getWeatherIndexForDate(date);
-			let weatherReason = weatherIndex ? weatherIndex.reason : "нет погодных данных";
-			let weatherLineClass = weatherIndex ? weatherIndex.directionClass : "";
-			let weatherImpactLabel = weatherIndex ? getIndexKaImpactLabel(weatherIndex.deltaRatio) : "нет прогноза";
-			let weatherEntry = weatherData[date];
+	let weatherIndex = getWeatherIndexForDate(date);
+	let weatherReason = weatherIndex ? weatherIndex.reason : "нет погодных данных";
+	let weatherLineClass = weatherIndex ? weatherIndex.directionClass : "";
+	let weatherImpactLabel = weatherIndex ? getIndexKaImpactLabel(weatherIndex.deltaRatio) : "нет прогноза";
+	let weatherEntry = weatherData[date];
+	let showIndexKaDetails = year === today.getFullYear();
 	let weatherChipHtml = weatherEntry
 	? "<div class='dayWeatherChip'><span class='dayWeatherIcon'>" + getWeatherIcon(weatherEntry) + "</span><span class='dayWeatherTemp'>" + formatTemperature(weatherEntry.apparentTemperatureMax ?? weatherEntry.temperatureMax) + "</span></div>"
 	: "";
@@ -4209,21 +4551,23 @@ else if (strengthRatio >= 0.8) strengthClass = "strength-medium";
 	weatherChipHtml +
 	"</div>" +
 	"</div>" +
-"<div class='dayMain'>" +
-"<div class='dayRevenue'>" + (revenue ? formatMoney(revenue) : "—") + "</div>" +
-"<div class='dayMeta'>" + (revenue ? "<strong>чеков:</strong> " + (dayChecks ? dayChecks.toLocaleString("ru-RU") : "—") : " ") + "</div>" +
-"<div class='dayMeta'>" + (revenue ? "<strong>средний:</strong> " + (dayAverageCheck ? formatMoney(dayAverageCheck) : "—") : " ") + "</div>" +
-"<div class='dayWeather " + weatherLineClass + "'>" + (weatherIndex ? "<strong>IndexKa:</strong>" + weatherImpactLabel + " · " + weatherReason : "<strong>IndexKa:</strong>нет данных") + "</div>" +
-"</div>" +
-"<div class='dayStrength'><div class='dayStrengthBar' style='width:" + strengthPercent + "%;'></div></div>";
-} else {
+	"<div class='dayMain'>" +
+	"<div class='dayRevenue'>" + (revenue ? formatMoney(revenue) : "—") + "</div>" +
+	"<div class='dayMeta'>" + (revenue ? "<strong>чеков:</strong> " + (dayChecks ? dayChecks.toLocaleString("ru-RU") : "—") : " ") + "</div>" +
+	"<div class='dayMeta'>" + (revenue ? "<strong>средний:</strong> " + (dayAverageCheck ? formatMoney(dayAverageCheck) : "—") : " ") + "</div>" +
+	"<div class='dayMeta'>" + (showIndexKaDetails && weatherIndex ? "<strong>база:</strong> " + formatMoney(weatherIndex.baseline) : " ") + "</div>" +
+	"<div class='dayWeather " + weatherLineClass + "'>" + (showIndexKaDetails ? (weatherIndex ? "<strong>IndexKa:</strong>" + weatherImpactLabel + " · " + weatherReason : "<strong>IndexKa:</strong>нет данных") : "") + "</div>" +
+	"</div>" +
+	"<div class='dayStrength'><div class='dayStrengthBar' style='width:" + strengthPercent + "%;'></div></div>";
+	} else {
 	cell.className = "day " + revenueClass(revenue) + bestWorstClass + (isToday ? " today" : "");
 	cell.innerHTML =
-	"<div class='revenue'>" + (revenue ? formatMoney(revenue) : "") + "</div>" +
-	"<div class='cost'>" + (revenue ? "Себестоимость: " + formatMoney(calculateCost(revenue, year, month)) : "") + "</div>" +
-	"<div class='gross'>" + (revenue ? "Валовая: " + formatMoney(calculateGross(revenue, year, month)) : "") + "</div>" +
-	"<div class='gross'>" + (weatherIndex ? "IndexKa: " + weatherImpactLabel + " (" + weatherReason + ")" : "IndexKa: нет данных") + "</div>" +
-	"<div class='date'>" + calendarDay + "</div>";
+		"<div class='revenue'>" + (revenue ? formatMoney(revenue) : "") + "</div>" +
+		"<div class='cost'>" + (revenue ? "Себестоимость: " + formatMoney(calculateCost(revenue, year, month)) : "") + "</div>" +
+		"<div class='gross'>" + (revenue ? "Валовая: " + formatMoney(calculateGross(revenue, year, month)) : "") + "</div>" +
+		"<div class='gross'>" + (showIndexKaDetails && weatherIndex ? "База дня: " + formatMoney(weatherIndex.baseline) : "") + "</div>" +
+		"<div class='gross'>" + (showIndexKaDetails ? (weatherIndex ? "IndexKa: " + weatherImpactLabel + " (" + weatherReason + ")" : "IndexKa: нет данных") : "") + "</div>" +
+		"<div class='date'>" + calendarDay + "</div>";
 	}
 
 calendar.appendChild(cell);
@@ -4250,14 +4594,16 @@ weekCost += calculateCost(revenue, year, month);
 	}
 	}
 
+	if (year === today.getFullYear()){
 	weekIndexKa = getWeekIndexKaExpectation(year, month, weekStartDay, weekEndDay);
 	}
+	}
 
-	let weekSummary = document.createElement("div");
-	let isAnchorWeek = weekAnchorDay > 0 && weekAnchorDay >= weekStartDay && weekAnchorDay <= weekEndDay;
-	let weekIndexKaHtml = weekIndexKa
-	? "<br>" + buildExpectationLine("IndexKa: " + weekIndexKa.label, weekIndexKa.directionClass)
-	: "";
+		let weekSummary = document.createElement("div");
+		let isAnchorWeek = weekAnchorDay > 0 && weekAnchorDay >= weekStartDay && weekAnchorDay <= weekEndDay;
+		let weekIndexKaHtml = weekIndexKa
+		? "<br>База недели: " + formatMoney(weekIndexKa.baseline) + "<br>" + buildExpectationLine("IndexKa: " + weekIndexKa.label, weekIndexKa.directionClass)
+		: "";
 	weekSummary.className = "weekSummary" + (isAnchorWeek ? " today" : "");
 	weekSummary.innerHTML =
 	"<div class='weekSummaryTitle'>Неделя " + weekStartDay + "-" + weekEndDay + "</div>" +
@@ -4278,16 +4624,20 @@ let comparableCurrentRevenue = workedEntriesCurrentYear
 let comparablePreviousRevenue = workedEntriesPreviousYear
   .slice(0, matchedWorkedDaysPreviousYear)
   .reduce((sum, entry) => sum + Number(entry.value || 0), 0);
-let compareTrend = getTrend(comparableCurrentRevenue, comparablePreviousRevenue);
+let comparableCurrentStoreDays = getComparableStoreDayCount(year, month, matchedWorkedDaysPreviousYear);
+let comparablePreviousStoreDays = getComparableStoreDayCount(previousYear, month, matchedWorkedDaysPreviousYear);
+let comparableCurrentPerStoreDay = comparableCurrentStoreDays > 0 ? comparableCurrentRevenue / comparableCurrentStoreDays : 0;
+let comparablePreviousPerStoreDay = comparablePreviousStoreDays > 0 ? comparablePreviousRevenue / comparablePreviousStoreDays : 0;
+let compareTrend = getTrend(comparableCurrentPerStoreDay, comparablePreviousPerStoreDay);
 
-if (comparablePreviousRevenue > 0 && matchedWorkedDaysPreviousYear > 0){
-let diff = ((comparableCurrentRevenue - comparablePreviousRevenue) / comparablePreviousRevenue * 100).toFixed(1);
+if (comparablePreviousPerStoreDay > 0 && matchedWorkedDaysPreviousYear > 0){
+let diff = ((comparableCurrentPerStoreDay - comparablePreviousPerStoreDay) / comparablePreviousPerStoreDay * 100).toFixed(1);
 compare = (Number(diff) > 0 ? "+" : "") + diff + "%";
 }
 
 document.getElementById("compare").innerText = compare;
 document.getElementById("compareMeta").innerText = matchedWorkedDaysPreviousYear > 0
-? matchedWorkedDaysPreviousYear + " дн.: " + formatMoney(comparableCurrentRevenue) + " vs " + formatMoney(comparablePreviousRevenue)
+? matchedWorkedDaysPreviousYear + " дн.: на магазин " + formatMoney(Math.round(comparableCurrentPerStoreDay)) + " vs " + formatMoney(Math.round(comparablePreviousPerStoreDay))
 : "Нет данных за " + previousYear + " год";
 document.getElementById("v2HeroYearCompare").innerText = compare;
 document.getElementById("v2HeroYearCompareMeta").innerText = document.getElementById("compareMeta").innerText;
@@ -4378,16 +4728,18 @@ if (json && typeof json === "object" && typeof json.error === "string"){
 throw new Error(json.error);
 }
 
-revenueData = json && typeof json === "object" ? json : {};
-Object.keys(revenueBaselineCache).forEach((key) => delete revenueBaselineCache[key]);
-weatherModel = buildWeatherModel();
-render();
-} catch (error) {
-console.error("Не удалось загрузить данные календаря:", error);
-revenueData = {};
-Object.keys(revenueBaselineCache).forEach((key) => delete revenueBaselineCache[key]);
-weatherModel = buildWeatherModel();
-render();
+	revenueData = json && typeof json === "object" ? json : {};
+	Object.keys(revenueBaselineCache).forEach((key) => delete revenueBaselineCache[key]);
+	Object.keys(monthlyRevenueTotalCache).forEach((key) => delete monthlyRevenueTotalCache[key]);
+	weatherModel = buildWeatherModel();
+	render();
+	} catch (error) {
+	console.error("Не удалось загрузить данные календаря:", error);
+	revenueData = {};
+	Object.keys(revenueBaselineCache).forEach((key) => delete revenueBaselineCache[key]);
+	Object.keys(monthlyRevenueTotalCache).forEach((key) => delete monthlyRevenueTotalCache[key]);
+	weatherModel = buildWeatherModel();
+	render();
 document.getElementById("topIndicators").innerHTML =
 "<div class='bestBox'>Не удалось загрузить данные из Google Sheets. Проверь ссылку Apps Script и доступ к веб-приложению.</div>";
 }
@@ -4440,18 +4792,18 @@ archiveJson._source = "archive";
 let forecastJson = await forecastResponse.json();
 forecastJson._source = "forecast";
 
-weatherData = Object.assign(
-{},
-buildWeatherMap(archiveJson),
-buildWeatherMap(forecastJson)
-);
-weatherModel = buildWeatherModel();
-render();
-} catch (error) {
-console.error("Не удалось загрузить данные погоды:", error);
-weatherData = {};
-weatherModel = buildWeatherModel();
-render();
+	weatherData = Object.assign(
+	{},
+	buildWeatherMap(archiveJson),
+	buildWeatherMap(forecastJson)
+	);
+	weatherModel = buildWeatherModel();
+	render();
+	} catch (error) {
+	console.error("Не удалось загрузить данные погоды:", error);
+	weatherData = {};
+	weatherModel = buildWeatherModel();
+	render();
 }
 }
 
