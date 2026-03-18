@@ -148,6 +148,8 @@ line-height:1.1;
 letter-spacing:0.01em;
 white-space:nowrap;
 opacity:0.82;
+cursor:default;
+user-select:none;
 }
 
 .topReportButton{
@@ -2284,7 +2286,7 @@ padding-top:14px;
 <div class="pageActions">
 <div class="indexKaAccuracyBadge neutral" id="indexKaAccuracyBadge">Точность IndexKa: —</div>
 <a class="topReportButton" href="./Отчет_по_магазинам.html" target="_blank" rel="noopener noreferrer">Рейтинг магазинов</a>
-<button class="uiVersionToggle" id="uiVersionToggle" type="button">v1</button>
+<div class="uiVersionToggle" id="uiVersionToggle" aria-label="Версия интерфейса">v2.000</div>
 </div>
 </div>
 
@@ -2586,36 +2588,25 @@ return Math.min(Math.max(value, min), max);
 }
 
 function getStoredUiVersion(){
-let storedVersion = localStorage.getItem(uiVersionStorageKey);
-if (storedVersion === "v1" || storedVersion === "v2"){
-return storedVersion;
-}
 return "v2";
 }
 
 function updateUiVersionButton(version){
 let toggleButton = document.getElementById("uiVersionToggle");
 if (!toggleButton) return;
-toggleButton.innerText = version === "v2" ? "v1" : "v2";
-toggleButton.setAttribute("aria-label", version === "v2" ? "Переключиться на версию 1.0" : "Переключиться на версию 2.0");
-toggleButton.title = version === "v2" ? "Переключиться на версию 1.0" : "Переключиться на версию 2.0";
+toggleButton.innerText = "v2.000";
+toggleButton.setAttribute("aria-label", "Версия интерфейса v2.000");
+toggleButton.title = "Версия интерфейса v2.000";
 }
 
 function applyUiVersion(version){
-let normalizedVersion = version === "v2" ? "v2" : "v1";
+let normalizedVersion = "v2";
 document.body.setAttribute("data-ui-version", normalizedVersion);
 localStorage.setItem(uiVersionStorageKey, normalizedVersion);
 updateUiVersionButton(normalizedVersion);
 document.querySelectorAll(".v2Only").forEach((element) => {
-element.hidden = normalizedVersion !== "v2";
+element.hidden = false;
 });
-}
-
-function toggleUiVersion(){
-applyUiVersion(document.body.getAttribute("data-ui-version") === "v2" ? "v1" : "v2");
-if (!document.getElementById("appContent").hidden){
-render();
-}
 }
 
 function getBreakEvenTarget(targetYear){
@@ -2907,6 +2898,10 @@ return revenueBaselineCache[dateKey];
 
 function getDateTimestamp(dateKey){
 return new Date(dateKey + "T00:00:00").getTime();
+}
+
+function isPastDateKey(dateKey){
+return getDateTimestamp(dateKey) < new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
 }
 
 function getIndexKaAccuracyMetrics(){
@@ -4521,11 +4516,12 @@ let hasDate = slot >= start && calendarDay <= days;
 		let isToday = calendarDay === today.getDate() && month === today.getMonth() && year === today.getFullYear();
 		let isV2 = document.body.getAttribute("data-ui-version") === "v2";
 	let weatherIndex = getWeatherIndexForDate(date);
-	let weatherReason = weatherIndex ? weatherIndex.reason : "нет погодных данных";
-	let weatherLineClass = weatherIndex ? weatherIndex.directionClass : "";
-	let weatherImpactLabel = weatherIndex ? getIndexKaImpactLabel(weatherIndex.deltaRatio) : "нет прогноза";
-	let weatherEntry = weatherData[date];
+		let weatherReason = weatherIndex ? weatherIndex.reason : "нет погодных данных";
+		let weatherLineClass = weatherIndex ? weatherIndex.directionClass : "";
+		let weatherImpactLabel = weatherIndex ? getIndexKaImpactLabel(weatherIndex.deltaRatio) : "нет прогноза";
+		let weatherEntry = weatherData[date];
 	let showIndexKaDetails = year === today.getFullYear();
+	let showIndexKaForecast = showIndexKaDetails && !isPastDateKey(date);
 	let weatherChipHtml = weatherEntry
 	? "<div class='dayWeatherChip'><span class='dayWeatherIcon'>" + getWeatherIcon(weatherEntry) + "</span><span class='dayWeatherTemp'>" + formatTemperature(weatherEntry.apparentTemperatureMax ?? weatherEntry.temperatureMax) + "</span></div>"
 	: "";
@@ -4556,7 +4552,7 @@ else if (strengthRatio >= 0.8) strengthClass = "strength-medium";
 	"<div class='dayMeta'>" + (revenue ? "<strong>чеков:</strong> " + (dayChecks ? dayChecks.toLocaleString("ru-RU") : "—") : " ") + "</div>" +
 	"<div class='dayMeta'>" + (revenue ? "<strong>средний:</strong> " + (dayAverageCheck ? formatMoney(dayAverageCheck) : "—") : " ") + "</div>" +
 	"<div class='dayMeta'>" + (showIndexKaDetails && weatherIndex ? "<strong>база:</strong> " + formatMoney(weatherIndex.baseline) : " ") + "</div>" +
-	"<div class='dayWeather " + weatherLineClass + "'>" + (showIndexKaDetails ? (weatherIndex ? "<strong>IndexKa:</strong>" + weatherImpactLabel + " · " + weatherReason : "<strong>IndexKa:</strong>нет данных") : "") + "</div>" +
+	"<div class='dayWeather " + weatherLineClass + "'>" + (showIndexKaForecast ? (weatherIndex ? "<strong>IndexKa:</strong>" + weatherImpactLabel + " · " + weatherReason : "<strong>IndexKa:</strong>нет данных") : "") + "</div>" +
 	"</div>" +
 	"<div class='dayStrength'><div class='dayStrengthBar' style='width:" + strengthPercent + "%;'></div></div>";
 	} else {
@@ -4566,7 +4562,7 @@ else if (strengthRatio >= 0.8) strengthClass = "strength-medium";
 		"<div class='cost'>" + (revenue ? "Себестоимость: " + formatMoney(calculateCost(revenue, year, month)) : "") + "</div>" +
 		"<div class='gross'>" + (revenue ? "Валовая: " + formatMoney(calculateGross(revenue, year, month)) : "") + "</div>" +
 		"<div class='gross'>" + (showIndexKaDetails && weatherIndex ? "База дня: " + formatMoney(weatherIndex.baseline) : "") + "</div>" +
-		"<div class='gross'>" + (showIndexKaDetails ? (weatherIndex ? "IndexKa: " + weatherImpactLabel + " (" + weatherReason + ")" : "IndexKa: нет данных") : "") + "</div>" +
+		"<div class='gross'>" + (showIndexKaForecast ? (weatherIndex ? "IndexKa: " + weatherImpactLabel + " (" + weatherReason + ")" : "IndexKa: нет данных") : "") + "</div>" +
 		"<div class='date'>" + calendarDay + "</div>";
 	}
 
@@ -4595,7 +4591,10 @@ weekCost += calculateCost(revenue, year, month);
 	}
 
 	if (year === today.getFullYear()){
+	let weekEndDateKey = formatDate(year, month, weekEndDay);
+	if (year === today.getFullYear() && !isPastDateKey(weekEndDateKey)){
 	weekIndexKa = getWeekIndexKaExpectation(year, month, weekStartDay, weekEndDay);
+	}
 	}
 	}
 
@@ -4808,7 +4807,6 @@ forecastJson._source = "forecast";
 }
 
 document.getElementById("pinButton").addEventListener("click", checkPin);
-document.getElementById("uiVersionToggle").addEventListener("click", toggleUiVersion);
 document.getElementById("pinInput").addEventListener("keydown", (event) => {
 if (event.key === "Enter") checkPin();
 });
