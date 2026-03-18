@@ -1764,7 +1764,7 @@ font-size:32px;
 }
 
 body[data-ui-version="v2"] .calendar{
-grid-template-columns:repeat(7,minmax(92px,1fr)) 172px;
+grid-template-columns:repeat(7,minmax(112px,1fr)) 164px;
 }
 
 body[data-ui-version="v2"] .day{
@@ -1788,9 +1788,24 @@ font-size:10px;
 line-height:1.3;
 }
 
+body[data-ui-version="v2"] .dayMeta{
+line-height:1.2;
+}
+
 body[data-ui-version="v2"] .dayWeatherChip{
 padding:4px 8px;
 font-size:11px;
+}
+
+body[data-ui-version="v2"] .dayWeather{
+margin-top:4px;
+}
+
+body[data-ui-version="v2"] .dayWeatherReason{
+display:-webkit-box;
+-webkit-box-orient:vertical;
+-webkit-line-clamp:3;
+overflow:hidden;
 }
 
 body[data-ui-version="v2"] .weekSummary{
@@ -2010,6 +2025,10 @@ font-weight:600;
 color:#5f564b;
 }
 
+body[data-ui-version="v2"] .dayMetaValue{
+white-space:nowrap;
+}
+
 body[data-ui-version="v2"] .dayWeather{
 margin-top:6px;
 font-size:11px;
@@ -2024,6 +2043,16 @@ font-weight:600;
 color:#5f564b;
 display:block;
 margin-bottom:2px;
+}
+
+body[data-ui-version="v2"] .dayWeatherLabel{
+display:block;
+font-weight:600;
+margin-bottom:2px;
+}
+
+body[data-ui-version="v2"] .dayWeatherReason{
+display:block;
 }
 
 body[data-ui-version="v2"] .dayWeather.positive{
@@ -2399,7 +2428,7 @@ padding-top:14px;
 <div class="pageActions">
 <div class="indexKaAccuracyBadge neutral" id="indexKaAccuracyBadge">Точность IndexKa: —</div>
 <a class="topReportButton" href="./Отчет_по_магазинам.html" target="_blank" rel="noopener noreferrer">Рейтинг магазинов</a>
-<div class="uiVersionToggle" id="uiVersionToggle" aria-label="Версия интерфейса">v2.000</div>
+<div class="uiVersionToggle" id="uiVersionToggle" aria-label="Версия интерфейса">v2.001</div>
 </div>
 </div>
 
@@ -2707,9 +2736,9 @@ return "v2";
 function updateUiVersionButton(version){
 let toggleButton = document.getElementById("uiVersionToggle");
 if (!toggleButton) return;
-toggleButton.innerText = "v2.000";
-toggleButton.setAttribute("aria-label", "Версия интерфейса v2.000");
-toggleButton.title = "Версия интерфейса v2.000";
+	toggleButton.innerText = "v2.001";
+	toggleButton.setAttribute("aria-label", "Версия интерфейса v2.001");
+	toggleButton.title = "Версия интерфейса v2.001";
 }
 
 function applyUiVersion(version){
@@ -4664,8 +4693,8 @@ else if (strengthRatio >= 0.8) strengthClass = "strength-medium";
 	"<div class='dayRevenue'>" + (revenue ? formatMoney(revenue) : "—") + "</div>" +
 	"<div class='dayMeta'>" + (revenue ? "<strong>чеков:</strong> " + (dayChecks ? dayChecks.toLocaleString("ru-RU") : "—") : " ") + "</div>" +
 	"<div class='dayMeta'>" + (revenue ? "<strong>средний:</strong> " + (dayAverageCheck ? formatMoney(dayAverageCheck) : "—") : " ") + "</div>" +
-	"<div class='dayMeta'>" + (showIndexKaDetails && weatherIndex ? "<strong>база:</strong> " + formatMoney(weatherIndex.baseline) : " ") + "</div>" +
-	"<div class='dayWeather " + weatherLineClass + "'>" + (showIndexKaForecast ? (weatherIndex ? "<strong>IndexKa:</strong>" + weatherImpactLabel + " · " + weatherReason : "<strong>IndexKa:</strong>нет данных") : "") + "</div>" +
+	"<div class='dayMeta'>" + (showIndexKaDetails && weatherIndex ? "<strong>база:</strong> <span class='dayMetaValue'>" + formatMoney(Math.round(weatherIndex.baseline || 0)) + "</span>" : " ") + "</div>" +
+	"<div class='dayWeather " + weatherLineClass + "'>" + (showIndexKaForecast ? (weatherIndex ? "<span class='dayWeatherLabel'><strong>IndexKa:</strong> " + weatherImpactLabel + "</span><span class='dayWeatherReason'>" + weatherReason + "</span>" : "<span class='dayWeatherLabel'><strong>IndexKa:</strong> нет данных</span>") : "") + "</div>" +
 	"</div>" +
 	"<div class='dayStrength'><div class='dayStrengthBar' style='width:" + strengthPercent + "%;'></div></div>";
 	} else {
