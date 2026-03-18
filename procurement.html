@@ -856,8 +856,8 @@ width:100%;
 <section class="procurementSection screenHidden" id="procurementSection">
 <div class="sectionHeader">
 <div>
-<h2 class="sectionTitle">Блоки закупа по неделям</h2>
-<p class="sectionSubtext" id="sectionSubtext">Показываем активные недели, бюджет, счета, оплату и просрочки в одном экране.</p>
+<h2 class="sectionTitle">Общий список закупа</h2>
+<p class="sectionSubtext" id="sectionSubtext">Один список всех заказов без разбивки по неделям: поставщики, даты, счета, оплата и просрочки.</p>
 </div>
 <div class="sectionTools">
 <div class="legend">
@@ -872,10 +872,10 @@ width:100%;
 </section>
 </div>
 
-<div class="uiVersionToggle">v2.005</div>
+<div class="uiVersionToggle">v2.007</div>
 
 <script>
-const PROCUREMENT_VERSION = "v2.005";
+const PROCUREMENT_VERSION = "v2.007";
 const procurementConfig = {
 googleClientId: "462958236662-4jml8gljkbk0tddja2cktktgdvubiat9.apps.googleusercontent.com",
 apiUrl: "https://script.google.com/macros/s/AKfycbxUp-7LEYL0Sj_J4Ck7QgMiNVziLmxxseLGk4ottNTfkBAktrAcgSwk0r7k1ESVW56kwQ/exec",
@@ -896,14 +896,16 @@ loading: false
 const saveTimers = {};
 
 function formatDateKey(date){
-let year = date.getFullYear();
-let month = String(date.getMonth() + 1).padStart(2, "0");
-let day = String(date.getDate()).padStart(2, "0");
+let year = date.getUTCFullYear();
+let month = String(date.getUTCMonth() + 1).padStart(2, "0");
+let day = String(date.getUTCDate()).padStart(2, "0");
 return year + "-" + month + "-" + day;
 }
 
 function parseDateKey(dateKey){
-return new Date(dateKey + "T00:00:00");
+if (!dateKey || !/^\d{4}-\d{2}-\d{2}$/.test(String(dateKey).trim())) return new Date(NaN);
+let [year, month, day] = String(dateKey).split("-").map(Number);
+return new Date(Date.UTC(year, month - 1, day));
 }
 
 function normalizeDateValue(value){
@@ -939,7 +941,7 @@ function formatDateLabel(dateKey){
 if (!dateKey) return "—";
 let date = parseDateKey(dateKey);
 if (Number.isNaN(date.getTime())) return "—";
-return date.toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
+return date.toLocaleDateString("ru-RU", { day: "numeric", month: "long", timeZone: "UTC" });
 }
 
 function escapeHtml(value){
@@ -952,16 +954,16 @@ return String(value ?? "")
 
 function addDays(date, amount){
 let copy = new Date(date);
-copy.setDate(copy.getDate() + amount);
+copy.setUTCDate(copy.getUTCDate() + amount);
 return copy;
 }
 
 function getMonday(date){
 let copy = new Date(date);
-let day = copy.getDay();
+let day = copy.getUTCDay();
 let diff = day === 0 ? -6 : 1 - day;
-copy.setDate(copy.getDate() + diff);
-copy.setHours(0, 0, 0, 0);
+copy.setUTCDate(copy.getUTCDate() + diff);
+copy.setUTCHours(0, 0, 0, 0);
 return copy;
 }
 
@@ -969,8 +971,8 @@ function getWeekLabel(weekStartKey){
 let weekStart = parseDateKey(weekStartKey);
 if (Number.isNaN(weekStart.getTime())) return "—";
 let weekEnd = addDays(weekStart, 6);
-let startLabel = weekStart.toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
-let endLabel = weekEnd.toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
+let startLabel = weekStart.toLocaleDateString("ru-RU", { day: "numeric", month: "long", timeZone: "UTC" });
+let endLabel = weekEnd.toLocaleDateString("ru-RU", { day: "numeric", month: "long", timeZone: "UTC" });
 return startLabel + " - " + endLabel;
 }
 
@@ -1182,7 +1184,7 @@ function getWeekBaseBudget(weekStartKey){
 let currentWeekStart = parseDateKey(weekStartKey);
 let previousWeekStart = addDays(currentWeekStart, -7);
 let previousWeekEnd = addDays(previousWeekStart, 6);
-let todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+ let todayDate = parseDateKey(formatDateKey(today));
 if (previousWeekEnd >= todayDate){
 return 0;
 }
@@ -1296,35 +1298,16 @@ return result.sort();
 
 function renderWeeks(){
 let container = document.getElementById("weeksList");
-let visibleWeekKeys = buildVisibleWeekKeys();
-if (!visibleWeekKeys.length){
-container.innerHTML = "<div class='emptyWeek'>Пока нет ни одной недели закупа.</div>";
-return;
-}
-
-container.innerHTML = visibleWeekKeys.map((weekStartKey) => {
-let baseBudget = getWeekBaseBudget(weekStartKey);
-let effectiveBudget = getEffectiveBudget(weekStartKey);
-let spent = getWeekSpentTotal(weekStartKey);
-let remaining = effectiveBudget - spent;
-let usageMax = Math.max(effectiveBudget, spent, 1);
-let usagePercent = Math.max(0, Math.min((spent / usageMax) * 100, 100));
-let overrideMeta = getWeekOverrideMeta(weekStartKey);
-let weekOrders = getOrdersForWeek(weekStartKey)
-  .sort((left, right) => {
-    let leftDue = left.payment_due_date || "9999-12-31";
-    let rightDue = right.payment_due_date || "9999-12-31";
-    return leftDue.localeCompare(rightDue);
-  });
-let activeOrders = weekOrders.filter((order) => !isArchivedPaid(order));
-let archivedOrders = weekOrders.filter((order) => isArchivedPaid(order));
-let previousRange = getWeekRangeMeta(formatDateKey(addDays(parseDateKey(weekStartKey), -7)));
-let previousWeekLabel = previousRange.start
-  ? formatDateLabel(formatDateKey(previousRange.start)) + " - " + formatDateLabel(previousRange.endKey)
-  : "предыдущей недели";
-let budgetHint = baseBudget > 0
-  ? "База недели из себестоимости " + previousWeekLabel
-  : "Бюджет появится после закрытия предыдущей недели";
+let allOrders = [...procurementState.orders].sort((left, right) => {
+  let leftDue = left.payment_due_date || left.order_date || "9999-12-31";
+  let rightDue = right.payment_due_date || right.order_date || "9999-12-31";
+  return leftDue.localeCompare(rightDue);
+});
+let activeOrders = allOrders.filter((order) => !isArchivedPaid(order));
+let archivedOrders = allOrders.filter((order) => isArchivedPaid(order));
+let spent = activeOrders.reduce((sum, order) => sum + Number(order.order_amount || 0), 0);
+let overdueCount = activeOrders.filter((order) => getComputedStatus(order).key === "overdue").length;
+let waitingCount = activeOrders.filter((order) => getComputedStatus(order).key === "waiting").length;
 
 let ordersHead = `
 <div class="ordersHead">
@@ -1339,76 +1322,59 @@ let ordersHead = `
 
 let rowsHtml = activeOrders.length
   ? activeOrders.map((order) => renderOrderRow(order)).join("")
-  : "<div class='emptyWeek'>В этой неделе ещё нет строк закупа. Добавь поставщика, и строка сохранится в общей таблице.</div>";
+  : "<div class='emptyWeek'>Пока нет ни одной строки закупа. Добавь поставщика, и запись сохранится в общей таблице.</div>";
 
 let archivedHtml = archivedOrders.length
   ? `<div class="archivedOrders"><details><summary>Недавно оплачено: ${archivedOrders.length}</summary><div class="ordersTable">${archivedOrders.map((order) => renderOrderRow(order, true)).join("")}</div></details></div>`
   : "";
 
-let weekClass = remaining < 0 ? "weekCard overBudget" : "weekCard";
-let overrideValue = Number(overrideMeta && overrideMeta.budget_override || 0);
-let overrideMetaText = overrideValue > baseBudget
-  ? "Увеличен вручную до " + formatMoney(overrideValue)
-  : budgetHint;
-
-return `
-<article class="${weekClass}" data-week-start="${weekStartKey}">
+container.innerHTML = `
+<article class="weekCard">
   <div class="weekHeader">
     <div class="weekTitleWrap">
-      <h3 class="weekTitle">Неделя ${escapeHtml(getWeekLabel(weekStartKey))}</h3>
+      <h3 class="weekTitle">Все заказы</h3>
       <div class="weekMeta">
-        <div class="weekMetaChip">Старт закупа: ${escapeHtml(formatDateLabel(weekStartKey))}</div>
-        <div class="weekMetaChip">${escapeHtml(overrideMetaText)}</div>
+        <div class="weekMetaChip">Без разбивки по неделям</div>
+        <div class="weekMetaChip">Список можно спокойно заполнить вручную</div>
       </div>
     </div>
     <div class="weekBudgetGrid">
       <div class="budgetStat">
-        <div class="budgetStatLabel">Бюджет закупа</div>
-        <div class="budgetStatValue">${formatMoney(effectiveBudget)}</div>
-        <div class="budgetStatMeta">Авто-база: ${formatMoney(baseBudget)}</div>
-      </div>
-      <div class="budgetStat">
         <div class="budgetStatLabel">Уже заказано</div>
         <div class="budgetStatValue">${formatMoney(spent)}</div>
-        <div class="budgetStatMeta">${weekOrders.length ? "Строк закупа: " + weekOrders.length : "Пока без заказов"}</div>
+        <div class="budgetStatMeta">Сумма всех активных заказов</div>
       </div>
       <div class="budgetStat">
-        <div class="budgetStatLabel">Остаток</div>
-        <div class="budgetStatValue ${remaining < 0 ? "negative" : "positive"}">${formatMoney(remaining)}</div>
-        <div class="budgetStatMeta">${remaining < 0 ? "Перерасход недели" : "Можно ещё заказать"}</div>
+        <div class="budgetStatLabel">Строк закупа</div>
+        <div class="budgetStatValue">${activeOrders.length}</div>
+        <div class="budgetStatMeta">${activeOrders.length ? "Активные строки списка" : "Пока без заказов"}</div>
       </div>
       <div class="budgetStat">
         <div class="budgetStatLabel">Просрочки</div>
-        <div class="budgetStatValue ${activeOrders.some((order) => getComputedStatus(order).key === "overdue") ? "negative" : ""}">${activeOrders.filter((order) => getComputedStatus(order).key === "overdue").length}</div>
+        <div class="budgetStatValue ${overdueCount ? "negative" : ""}">${overdueCount}</div>
         <div class="budgetStatMeta">Поставщики с просрочкой по оплате</div>
+      </div>
+      <div class="budgetStat">
+        <div class="budgetStatLabel">Ждут счет</div>
+        <div class="budgetStatValue">${waitingCount}</div>
+        <div class="budgetStatMeta">Строки без загруженного счета</div>
       </div>
     </div>
   </div>
-  <div class="weekBar">
-    <div class="weekBarFill ${spent >= effectiveBudget ? "done" : "safe"}" style="width:${usagePercent}%;"></div>
-    <div class="weekBarMarker" style="left:${Math.max(0, Math.min((effectiveBudget / usageMax) * 100, 100))}%;"></div>
-  </div>
-  ${canManageBudget() ? `
-  <div class="budgetOverrideRow">
-    <div class="budgetOverrideLabel">Увеличить бюджет недели:</div>
-    <input class="fieldNumber budgetOverrideInput" data-role="budget-override-input" data-week-start="${weekStartKey}" type="number" min="${Math.round(baseBudget)}" step="1" value="${overrideValue > 0 ? Math.round(overrideValue) : ""}" placeholder="${Math.round(baseBudget)}">
-    <button class="plainButton" data-role="save-budget-override" data-week-start="${weekStartKey}" type="button">Сохранить бюджет</button>
-  </div>` : ""}
   <div class="ordersTable">
     ${ordersHead}
     ${rowsHtml}
   </div>
   <div class="addOrderRow">
-    <button class="plainButton secondary" data-role="add-order" data-week-start="${weekStartKey}" type="button">+ Добавить поставщика</button>
+    <button class="plainButton secondary" data-role="add-order-global" type="button">+ Добавить поставщика</button>
   </div>
   ${archivedHtml}
 </article>`;
-}).join("");
 }
 
 function renderOrderRow(order, isArchived = false){
 let status = getComputedStatus(order);
-let paidDateLabel = order.paid_at ? new Date(order.paid_at).toLocaleDateString("ru-RU") : "—";
+let paidDateLabel = order.paid_at ? new Date(order.paid_at).toLocaleDateString("ru-RU", { timeZone: "UTC" }) : "—";
 let invoiceHtml = order.invoice_file_url
   ? `<a class="invoiceLink" href="${escapeHtml(order.invoice_file_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(order.invoice_file_name || "Открыть счет")}</a>`
   : `<div class="invoiceLink muted">Счет не загружен</div>`;
@@ -1636,6 +1602,11 @@ procurementState.orders.push(order);
 renderWeeks();
 }
 
+function addOrderGlobal(){
+let currentMondayKey = formatDateKey(getMonday(today));
+addOrderForWeek(currentMondayKey);
+}
+
 function handleOrderFieldChange(orderId, field, value){
 let order = getOrderById(orderId);
 if (!order) return;
@@ -1657,6 +1628,10 @@ if (!actionTrigger) return;
 let role = actionTrigger.getAttribute("data-role");
 if (role === "add-order"){
 addOrderForWeek(actionTrigger.getAttribute("data-week-start"));
+return;
+}
+if (role === "add-order-global"){
+addOrderGlobal();
 return;
 }
 if (role === "save-budget-override"){
