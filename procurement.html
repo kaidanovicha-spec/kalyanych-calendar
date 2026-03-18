@@ -1,0 +1,1742 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Закуп Кальяныч</title>
+<meta property="og:type" content="website">
+<meta property="og:title" content="Закуп Кальяныч">
+<meta property="og:description" content="Недельный план закупок, бюджеты, счета и оплата.">
+<meta property="og:url" content="https://kaidanovicha-spec.github.io/kalyanych-calendar/procurement.html">
+<meta property="og:image" content="https://kaidanovicha-spec.github.io/kalyanych-calendar/k-logo.svg">
+<link rel="icon" type="image/svg+xml" href="./k-logo.svg">
+<link rel="apple-touch-icon" href="./k-logo.svg">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+:root{
+--bg:#f7f2eb;
+--panel:#ffffff;
+--ink:#1a2433;
+--muted:#72685d;
+--line:rgba(26,36,51,0.08);
+--shadow:0 18px 54px rgba(110,89,52,0.12);
+--green:#1b9c4a;
+--red:#d94848;
+--gold:#8a6f2a;
+--blue:#1e617c;
+--sand:#ede5d8;
+--sand-strong:#e1d5c2;
+--warm:#fff6e8;
+}
+
+*{
+box-sizing:border-box;
+}
+
+body{
+margin:20px;
+font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+background:
+radial-gradient(circle at top left, rgba(255,221,188,0.35), rgba(255,221,188,0) 34%),
+radial-gradient(circle at top right, rgba(214,245,235,0.28), rgba(214,245,235,0) 32%),
+linear-gradient(180deg, #fffdf9 0%, var(--bg) 100%);
+color:var(--ink);
+}
+
+a{
+color:inherit;
+}
+
+.app{
+max-width:1240px;
+margin:0 auto;
+}
+
+.pageTop{
+display:flex;
+align-items:flex-start;
+justify-content:space-between;
+gap:16px;
+margin-bottom:16px;
+}
+
+.brandTitle{
+display:flex;
+align-items:center;
+gap:14px;
+margin:0;
+font-size:56px;
+line-height:0.98;
+letter-spacing:-0.04em;
+}
+
+.brandLogo{
+width:42px;
+height:42px;
+flex:0 0 auto;
+}
+
+.brandLogoLink{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+text-decoration:none;
+}
+
+.pageActions{
+display:flex;
+align-items:flex-start;
+justify-content:flex-end;
+gap:10px;
+flex-wrap:wrap;
+}
+
+.topAction{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+min-height:42px;
+padding:10px 14px;
+border-radius:999px;
+text-decoration:none;
+font-size:13px;
+font-weight:600;
+line-height:1;
+border:1px solid rgba(17,17,17,0.08);
+background:rgba(255,255,255,0.82);
+box-shadow:0 10px 26px rgba(15,23,42,0.08);
+backdrop-filter:blur(8px);
+color:var(--ink);
+}
+
+.topAction.primary{
+background:linear-gradient(135deg,#8a6722 0%,#c89d3d 22%,#f4dc8b 48%,#bf8b22 72%,#7b5616 100%);
+border-color:rgba(255,240,184,0.55);
+color:#fffaf0;
+text-shadow:0 1px 1px rgba(91,58,6,0.24);
+}
+
+.userChip{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+min-height:42px;
+padding:10px 14px;
+border-radius:999px;
+background:rgba(255,255,255,0.82);
+border:1px solid rgba(17,17,17,0.08);
+box-shadow:0 10px 26px rgba(15,23,42,0.08);
+font-size:13px;
+font-weight:600;
+color:var(--muted);
+max-width:240px;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+}
+
+.heroCard,
+.procurementSection{
+background:rgba(255,255,255,0.9);
+border:1px solid rgba(224,205,178,0.8);
+border-radius:34px;
+box-shadow:var(--shadow);
+padding:28px 28px 30px;
+}
+
+.heroCard{
+margin-bottom:18px;
+}
+
+.heroEyebrow{
+font-size:12px;
+font-weight:700;
+letter-spacing:0.18em;
+text-transform:uppercase;
+color:#a08869;
+margin-bottom:12px;
+}
+
+.heroTitle{
+font-size:42px;
+line-height:0.98;
+letter-spacing:-0.04em;
+margin:0 0 10px;
+}
+
+.heroText{
+margin:0;
+font-size:16px;
+line-height:1.5;
+color:var(--muted);
+max-width:860px;
+}
+
+.heroMeta{
+margin-top:18px;
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+}
+
+.heroMetaChip{
+display:inline-flex;
+align-items:center;
+gap:8px;
+padding:10px 14px;
+border-radius:999px;
+background:#f6efe5;
+font-size:13px;
+font-weight:600;
+color:#5f564b;
+}
+
+.authNotice,
+.setupNotice,
+.loadingNotice{
+margin-top:18px;
+padding:16px 18px;
+border-radius:22px;
+background:#fff7eb;
+border:1px solid rgba(200,157,61,0.22);
+color:#7b5a21;
+font-size:14px;
+line-height:1.45;
+}
+
+.authNotice.error{
+background:#fff0ee;
+border-color:rgba(217,72,72,0.2);
+color:#a63f3f;
+}
+
+.loadingNotice{
+background:#eef7fb;
+border-color:rgba(30,97,124,0.14);
+color:#1e617c;
+}
+
+.authActions{
+margin-top:18px;
+display:flex;
+align-items:center;
+gap:12px;
+flex-wrap:wrap;
+}
+
+.googleButtonWrap{
+min-height:40px;
+}
+
+.plainButton{
+appearance:none;
+border:none;
+border-radius:16px;
+padding:11px 15px;
+font-size:13px;
+font-weight:700;
+cursor:pointer;
+background:var(--ink);
+color:#fff;
+}
+
+.plainButton.secondary{
+background:#f5efe6;
+color:#5f564b;
+}
+
+.plainButton.ghost{
+background:transparent;
+color:#5f564b;
+border:1px solid rgba(17,17,17,0.08);
+}
+
+.plainButton[disabled]{
+opacity:0.55;
+cursor:not-allowed;
+}
+
+.procurementSection{
+display:block;
+}
+
+.sectionHeader{
+display:flex;
+align-items:flex-end;
+justify-content:space-between;
+gap:12px;
+margin-bottom:18px;
+}
+
+.sectionTitle{
+margin:0;
+font-size:34px;
+line-height:1;
+letter-spacing:-0.04em;
+}
+
+.sectionSubtext{
+margin:6px 0 0;
+color:var(--muted);
+font-size:14px;
+line-height:1.4;
+}
+
+.sectionTools{
+display:flex;
+align-items:center;
+gap:10px;
+flex-wrap:wrap;
+}
+
+.legend{
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+}
+
+.legendChip{
+display:inline-flex;
+align-items:center;
+gap:8px;
+padding:8px 12px;
+border-radius:999px;
+background:#f8f3ea;
+font-size:12px;
+font-weight:600;
+color:#665c51;
+}
+
+.legendDot{
+width:10px;
+height:10px;
+border-radius:999px;
+display:inline-block;
+}
+
+.legendDot.overdue{
+background:var(--red);
+}
+
+.legendDot.payable{
+background:var(--gold);
+}
+
+.legendDot.paid{
+background:var(--green);
+}
+
+.legendDot.waiting{
+background:#9aa0a7;
+}
+
+.weeksList{
+display:flex;
+flex-direction:column;
+gap:16px;
+}
+
+.weekCard{
+background:linear-gradient(180deg, rgba(255,255,255,0.95), rgba(250,246,238,0.98));
+border:1px solid rgba(224,205,178,0.78);
+border-radius:28px;
+padding:22px;
+box-shadow:0 14px 32px rgba(110,89,52,0.08);
+}
+
+.weekCard.overBudget{
+border-color:rgba(217,72,72,0.24);
+box-shadow:0 14px 32px rgba(217,72,72,0.1);
+}
+
+.weekHeader{
+display:flex;
+align-items:flex-start;
+justify-content:space-between;
+gap:18px;
+margin-bottom:18px;
+}
+
+.weekTitleWrap{
+display:flex;
+flex-direction:column;
+gap:8px;
+}
+
+.weekTitle{
+margin:0;
+font-size:28px;
+line-height:1;
+letter-spacing:-0.03em;
+}
+
+.weekMeta{
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+}
+
+.weekMetaChip{
+display:inline-flex;
+align-items:center;
+gap:8px;
+padding:8px 12px;
+border-radius:999px;
+background:#f8f1e7;
+font-size:12px;
+font-weight:700;
+color:#645849;
+}
+
+.weekBudgetGrid{
+display:grid;
+grid-template-columns:repeat(4,minmax(0,1fr));
+gap:12px;
+min-width:min(620px, 100%);
+}
+
+.budgetStat{
+padding:14px 16px;
+border-radius:20px;
+background:#fff;
+border:1px solid rgba(17,17,17,0.06);
+box-shadow:0 8px 18px rgba(15,23,42,0.04);
+}
+
+.budgetStatLabel{
+font-size:12px;
+font-weight:700;
+letter-spacing:0.08em;
+text-transform:uppercase;
+color:#958474;
+margin-bottom:8px;
+}
+
+.budgetStatValue{
+font-size:28px;
+line-height:1;
+letter-spacing:-0.03em;
+font-weight:800;
+color:var(--ink);
+}
+
+.budgetStatValue.negative{
+color:var(--red);
+}
+
+.budgetStatValue.positive{
+color:var(--green);
+}
+
+.budgetStatMeta{
+margin-top:8px;
+font-size:12px;
+line-height:1.35;
+color:var(--muted);
+}
+
+.weekBar{
+position:relative;
+height:10px;
+border-radius:999px;
+background:#ece5d8;
+overflow:hidden;
+margin:0 0 18px;
+}
+
+.weekBarFill{
+position:absolute;
+left:0;
+top:0;
+bottom:0;
+border-radius:999px 0 0 999px;
+background:linear-gradient(90deg,#ff8b80,#ffcc75);
+}
+
+.weekBarFill.safe{
+background:linear-gradient(90deg,#ff8b80,#ffcc75);
+}
+
+.weekBarFill.done{
+background:linear-gradient(90deg,#6fd094,#37b96c);
+}
+
+.weekBarMarker{
+position:absolute;
+top:-3px;
+bottom:-3px;
+width:3px;
+border-radius:999px;
+background:rgba(26,36,51,0.22);
+}
+
+.budgetOverrideRow{
+display:flex;
+align-items:center;
+gap:10px;
+flex-wrap:wrap;
+margin:0 0 16px;
+}
+
+.budgetOverrideLabel{
+font-size:13px;
+font-weight:700;
+color:#65594a;
+}
+
+.fieldInput,
+.fieldDate,
+.fieldNumber{
+width:100%;
+min-height:40px;
+padding:10px 12px;
+border-radius:14px;
+border:1px solid rgba(17,17,17,0.1);
+background:#fff;
+font:inherit;
+color:var(--ink);
+}
+
+.fieldInput:focus,
+.fieldDate:focus,
+.fieldNumber:focus{
+outline:none;
+border-color:rgba(30,97,124,0.4);
+box-shadow:0 0 0 4px rgba(30,97,124,0.08);
+}
+
+.budgetOverrideInput{
+width:200px;
+}
+
+.ordersTable{
+display:flex;
+flex-direction:column;
+gap:10px;
+}
+
+.ordersHead,
+.orderRow{
+display:grid;
+grid-template-columns:minmax(160px,1.55fr) minmax(120px,0.9fr) minmax(120px,0.95fr) minmax(132px,0.95fr) minmax(160px,1.1fr) minmax(128px,0.9fr) minmax(120px,0.8fr);
+gap:10px;
+align-items:start;
+}
+
+.ordersHead{
+padding:0 4px;
+font-size:12px;
+font-weight:800;
+letter-spacing:0.08em;
+text-transform:uppercase;
+color:#9a8774;
+}
+
+.orderRow{
+padding:14px;
+border-radius:22px;
+background:#fff;
+border:1px solid rgba(17,17,17,0.06);
+box-shadow:0 8px 18px rgba(15,23,42,0.04);
+}
+
+.orderRow.overdue{
+background:#fff1ef;
+border-color:rgba(217,72,72,0.2);
+}
+
+.orderRow.paid{
+background:#eff9f1;
+border-color:rgba(27,156,74,0.16);
+}
+
+.orderRow.waiting{
+background:#fcfaf6;
+}
+
+.orderField{
+display:flex;
+flex-direction:column;
+gap:6px;
+min-width:0;
+}
+
+.orderFieldLabel{
+display:none;
+font-size:11px;
+font-weight:800;
+letter-spacing:0.06em;
+text-transform:uppercase;
+color:#9a8774;
+}
+
+.invoiceCell{
+display:flex;
+flex-direction:column;
+gap:8px;
+}
+
+.invoiceLink{
+display:inline-flex;
+align-items:center;
+gap:8px;
+min-height:40px;
+padding:10px 12px;
+border-radius:14px;
+background:#f8f2e8;
+border:1px solid rgba(17,17,17,0.06);
+text-decoration:none;
+font-size:13px;
+font-weight:600;
+color:#5f564b;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+}
+
+.invoiceLink.muted{
+color:#9b8f82;
+}
+
+.invoiceInput{
+display:none;
+}
+
+.statusPill{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+min-height:40px;
+padding:10px 12px;
+border-radius:14px;
+font-size:12px;
+font-weight:800;
+letter-spacing:0.04em;
+text-transform:uppercase;
+background:#f5efe6;
+color:#675b4b;
+text-align:center;
+}
+
+.statusPill.waiting{
+background:#f2f0ed;
+color:#70757c;
+}
+
+.statusPill.payable{
+background:#fff3d9;
+color:#8a6f2a;
+}
+
+.statusPill.overdue{
+background:#ffe0dc;
+color:#b64040;
+}
+
+.statusPill.paid{
+background:#dcf4e5;
+color:#1b9c4a;
+}
+
+.rowActions{
+display:flex;
+flex-direction:column;
+gap:8px;
+}
+
+.rowHint{
+font-size:12px;
+line-height:1.35;
+color:var(--muted);
+}
+
+.addOrderRow{
+margin-top:14px;
+display:flex;
+justify-content:flex-start;
+}
+
+.archivedOrders{
+margin-top:14px;
+border-top:1px solid rgba(17,17,17,0.06);
+padding-top:14px;
+}
+
+.archivedOrders details{
+border-radius:18px;
+background:#faf7f1;
+padding:10px 12px;
+}
+
+.archivedOrders summary{
+cursor:pointer;
+font-size:13px;
+font-weight:700;
+color:#665c51;
+}
+
+.emptyWeek{
+padding:14px 16px;
+border-radius:18px;
+background:#faf7f1;
+font-size:14px;
+line-height:1.45;
+color:var(--muted);
+}
+
+.screenHidden{
+display:none !important;
+}
+
+.uiVersionToggle{
+position:fixed;
+right:16px;
+bottom:14px;
+z-index:30;
+padding:4px 8px;
+border-radius:999px;
+background:#fff;
+color:#111;
+border:1px solid rgba(17,17,17,0.08);
+box-shadow:0 8px 24px rgba(15,23,42,0.08);
+font-size:10px;
+font-weight:500;
+line-height:1.1;
+opacity:0.82;
+}
+
+@media (max-width: 1100px){
+.weekHeader{
+flex-direction:column;
+}
+
+.weekBudgetGrid{
+grid-template-columns:repeat(2,minmax(0,1fr));
+width:100%;
+}
+
+.ordersHead,
+.orderRow{
+grid-template-columns:minmax(150px,1.4fr) minmax(110px,0.85fr) minmax(116px,0.9fr) minmax(124px,0.9fr) minmax(150px,1fr) minmax(120px,0.85fr) minmax(114px,0.8fr);
+}
+}
+
+@media (max-width: 900px){
+body{
+margin:14px;
+}
+
+.pageTop{
+flex-direction:column;
+align-items:stretch;
+gap:10px;
+}
+
+.pageActions{
+justify-content:space-between;
+}
+
+.brandTitle{
+font-size:42px;
+}
+
+.heroCard,
+.procurementSection{
+padding:22px 20px 24px;
+border-radius:28px;
+}
+
+.weekCard{
+padding:18px;
+border-radius:24px;
+}
+
+.weekBudgetGrid{
+grid-template-columns:1fr 1fr;
+}
+
+.ordersHead{
+display:none;
+}
+
+.orderRow{
+grid-template-columns:1fr 1fr;
+}
+
+.orderFieldLabel{
+display:block;
+}
+}
+
+@media (max-width: 640px){
+.brandTitle{
+font-size:34px;
+gap:10px;
+}
+
+.brandLogo{
+width:38px;
+height:38px;
+}
+
+.pageActions{
+flex-direction:column;
+align-items:stretch;
+}
+
+.topAction,
+.userChip{
+width:100%;
+max-width:none;
+}
+
+.heroTitle{
+font-size:34px;
+}
+
+.weekTitle{
+font-size:24px;
+}
+
+.weekBudgetGrid{
+grid-template-columns:1fr;
+}
+
+.budgetStatValue{
+font-size:24px;
+}
+
+.orderRow{
+grid-template-columns:1fr;
+}
+
+.budgetOverrideInput{
+width:100%;
+}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="pageTop">
+<h1 class="brandTitle">
+<a class="brandLogoLink" href="./index.html" aria-label="Вернуться к календарю">
+<img class="brandLogo" src="./k-logo.svg" alt="К">
+</a>
+Закуп Кальяныч
+</h1>
+<div class="pageActions">
+<a class="topAction secondary" href="./index.html">Календарь</a>
+<a class="topAction primary screenHidden" id="driveFolderButton" href="#" target="_blank" rel="noopener noreferrer">Папка счетов</a>
+<button class="plainButton secondary screenHidden" id="signOutButton" type="button">Выйти</button>
+<div class="userChip" id="userChip">Не вошли</div>
+</div>
+</div>
+
+<section class="heroCard">
+<div class="heroEyebrow">Weekly Procurement</div>
+<h2 class="heroTitle">Недельный закуп, счета и сроки оплаты</h2>
+<p class="heroText">
+Бюджет недели автоматически берётся из себестоимости предыдущей закрытой недели календаря.
+Закупщик и управляющий ведут поставщиков и счета, а оплату и увеличение бюджета подтверждаешь только Алексей.
+</p>
+<div class="heroMeta">
+<div class="heroMetaChip">Google-вход по whitelist</div>
+<div class="heroMetaChip">Бюджет = себестоимость прошлой недели</div>
+<div class="heroMetaChip">Просрочка красным</div>
+</div>
+<div class="setupNotice screenHidden" id="setupNotice"></div>
+<div class="authNotice screenHidden" id="authNotice"></div>
+<div class="loadingNotice screenHidden" id="loadingNotice">Загружаю данные закупа и календаря…</div>
+<div class="authActions" id="authActions">
+<div class="googleButtonWrap" id="googleButtonWrap"></div>
+</div>
+</section>
+
+<section class="procurementSection screenHidden" id="procurementSection">
+<div class="sectionHeader">
+<div>
+<h2 class="sectionTitle">Блоки закупа по неделям</h2>
+<p class="sectionSubtext" id="sectionSubtext">Показываем активные недели, бюджет, счета, оплату и просрочки в одном экране.</p>
+</div>
+<div class="sectionTools">
+<div class="legend">
+<div class="legendChip"><span class="legendDot waiting"></span>Ожидает счет</div>
+<div class="legendChip"><span class="legendDot payable"></span>К оплате</div>
+<div class="legendChip"><span class="legendDot overdue"></span>Просрочено</div>
+<div class="legendChip"><span class="legendDot paid"></span>Оплачено</div>
+</div>
+</div>
+</div>
+<div class="weeksList" id="weeksList"></div>
+</section>
+</div>
+
+<div class="uiVersionToggle">v2.003</div>
+
+<script>
+const PROCUREMENT_VERSION = "v2.003";
+const procurementConfig = {
+googleClientId: "462958236662-4jml8gljkbk0tddja2cktktgdvubiat9.apps.googleusercontent.com",
+apiUrl: "https://script.google.com/macros/s/AKfycbyMAKBuE7G_hRc34l1aWVAzVjX6vEogRPmOXv2U2ytcSN2aR2BpGJqR4fzj1_wt_3e3bw/exec",
+revenueApiUrl: "https://script.google.com/macros/s/AKfycbyPoZgiulk-_qC7hKRxkoOarINnqzsQ5wtLed7rVVSW994dVC2QFxZwyQuT3Dr_hQTJ0w/exec"
+};
+
+const procurementSessionKey = "kalyanychProcurementSession";
+let today = new Date();
+let revenueData = {};
+let procurementState = {
+user: null,
+idToken: "",
+weeks: [],
+orders: [],
+driveFolderUrl: "",
+loading: false
+};
+const saveTimers = {};
+
+function formatDateKey(date){
+let year = date.getFullYear();
+let month = String(date.getMonth() + 1).padStart(2, "0");
+let day = String(date.getDate()).padStart(2, "0");
+return year + "-" + month + "-" + day;
+}
+
+function parseDateKey(dateKey){
+return new Date(dateKey + "T00:00:00");
+}
+
+function formatMoney(value){
+return Number(value || 0).toLocaleString("ru-RU") + " ₽";
+}
+
+function formatDateLabel(dateKey){
+if (!dateKey) return "—";
+let date = parseDateKey(dateKey);
+return date.toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
+}
+
+function escapeHtml(value){
+return String(value ?? "")
+  .replaceAll("&", "&amp;")
+  .replaceAll("<", "&lt;")
+  .replaceAll(">", "&gt;")
+  .replaceAll('"', "&quot;");
+}
+
+function addDays(date, amount){
+let copy = new Date(date);
+copy.setDate(copy.getDate() + amount);
+return copy;
+}
+
+function getMonday(date){
+let copy = new Date(date);
+let day = copy.getDay();
+let diff = day === 0 ? -6 : 1 - day;
+copy.setDate(copy.getDate() + diff);
+copy.setHours(0, 0, 0, 0);
+return copy;
+}
+
+function getWeekLabel(weekStartKey){
+let weekStart = parseDateKey(weekStartKey);
+let weekEnd = addDays(weekStart, 6);
+let startLabel = weekStart.toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
+let endLabel = weekEnd.toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
+return startLabel + " - " + endLabel;
+}
+
+function getWeekRangeMeta(weekStartKey){
+let weekStart = parseDateKey(weekStartKey);
+let weekEnd = addDays(weekStart, 6);
+return {
+start: weekStart,
+end: weekEnd,
+endKey: formatDateKey(weekEnd)
+};
+}
+
+function decodeJwt(token){
+try {
+let payload = token.split(".")[1];
+let base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+let normalized = decodeURIComponent(
+atob(base64)
+  .split("")
+  .map((character) => "%" + ("00" + character.charCodeAt(0).toString(16)).slice(-2))
+  .join("")
+);
+return JSON.parse(normalized);
+} catch (error){
+return null;
+}
+}
+
+function isConfigReady(){
+return !procurementConfig.googleClientId.includes("YOUR_") && !procurementConfig.apiUrl.includes("YOUR_");
+}
+
+function getStoredSession(){
+try {
+let raw = sessionStorage.getItem(procurementSessionKey);
+return raw ? JSON.parse(raw) : null;
+} catch (error){
+return null;
+}
+}
+
+function saveSession(){
+if (!procurementState.idToken || !procurementState.user){
+sessionStorage.removeItem(procurementSessionKey);
+return;
+}
+sessionStorage.setItem(procurementSessionKey, JSON.stringify({
+idToken: procurementState.idToken,
+user: procurementState.user
+}));
+}
+
+function clearSession(){
+procurementState.idToken = "";
+procurementState.user = null;
+procurementState.weeks = [];
+procurementState.orders = [];
+procurementState.driveFolderUrl = "";
+sessionStorage.removeItem(procurementSessionKey);
+}
+
+function showSetupNotice(message){
+let el = document.getElementById("setupNotice");
+el.textContent = message;
+el.classList.remove("screenHidden");
+}
+
+function showAuthNotice(message, tone = "info"){
+let el = document.getElementById("authNotice");
+el.textContent = message;
+el.classList.remove("screenHidden");
+el.classList.toggle("error", tone === "error");
+}
+
+function hideNotices(){
+document.getElementById("setupNotice").classList.add("screenHidden");
+document.getElementById("authNotice").classList.add("screenHidden");
+}
+
+function setLoading(isLoading, message = "Загружаю данные закупа и календаря…"){
+procurementState.loading = isLoading;
+let el = document.getElementById("loadingNotice");
+if (isLoading){
+el.textContent = message;
+el.classList.remove("screenHidden");
+} else {
+el.classList.add("screenHidden");
+}
+}
+
+function renderAuthState(){
+let userChip = document.getElementById("userChip");
+let signOutButton = document.getElementById("signOutButton");
+let driveFolderButton = document.getElementById("driveFolderButton");
+let procurementSection = document.getElementById("procurementSection");
+let googleWrap = document.getElementById("googleButtonWrap");
+
+if (procurementState.user){
+let roleLabel = procurementState.user.role === "owner"
+  ? "Владелец"
+  : (procurementState.user.role === "manager" ? "Управляющий" : "Закупщик");
+userChip.textContent = procurementState.user.email + " · " + roleLabel;
+signOutButton.classList.remove("screenHidden");
+procurementSection.classList.remove("screenHidden");
+if (procurementState.driveFolderUrl){
+driveFolderButton.href = procurementState.driveFolderUrl;
+driveFolderButton.classList.remove("screenHidden");
+} else {
+driveFolderButton.classList.add("screenHidden");
+}
+googleWrap.classList.add("screenHidden");
+} else {
+userChip.textContent = "Не вошли";
+signOutButton.classList.add("screenHidden");
+driveFolderButton.classList.add("screenHidden");
+procurementSection.classList.add("screenHidden");
+googleWrap.classList.remove("screenHidden");
+}
+}
+
+function getMonthCostConfig(targetYear, targetMonth){
+let monthKey = String(targetYear) + "-" + String(targetMonth + 1).padStart(2, "0");
+let firstDayKey = monthKey + "-01";
+let firstDayEntry = revenueData[firstDayKey];
+let directMonthKey = monthKey + "_costPercent";
+let directFirstDayKey = firstDayKey + "_costPercent";
+let candidates = [
+revenueData[directMonthKey],
+revenueData[directFirstDayKey],
+firstDayEntry && typeof firstDayEntry === "object" ? firstDayEntry.costPercent : null
+];
+
+if (typeof firstDayEntry === "string"){
+let normalized = firstDayEntry.replace(",", ".").trim();
+if (normalized.startsWith("{") && normalized.endsWith("}")){
+try {
+let parsed = JSON.parse(normalized);
+if (parsed && parsed.costPercent != null){
+candidates.push(parsed.costPercent);
+}
+} catch (error){}
+}
+}
+
+for (let candidate of candidates){
+let value = Number(candidate);
+if (!Number.isNaN(value) && value > 0){
+return value;
+}
+}
+
+return 54.6;
+}
+
+function getRevenueValue(entry){
+if (entry && typeof entry === "object" && !Array.isArray(entry)){
+return Number(entry.revenue || entry.value || 0);
+}
+
+if (typeof entry === "string"){
+let normalized = entry.replace(",", ".").trim();
+if (normalized.startsWith("{") && normalized.endsWith("}")){
+try {
+let parsed = JSON.parse(normalized);
+return Number(parsed.revenue || parsed.value || 0);
+} catch (error){
+return Number(entry || 0);
+}
+}
+}
+
+return Number(entry || 0);
+}
+
+function calculateCost(value, targetYear, targetMonth){
+return Math.round(Number(value || 0) * (getMonthCostConfig(targetYear, targetMonth) / 100));
+}
+
+async function loadRevenueData(){
+let response = await fetch(procurementConfig.revenueApiUrl, { cache: "no-store" });
+if (!response.ok){
+throw new Error("Не удалось загрузить выручку: HTTP " + response.status);
+}
+let json = await response.json();
+revenueData = json && typeof json === "object" ? json : {};
+}
+
+function getOrdersForWeek(weekStartKey){
+return procurementState.orders.filter((order) => order.week_start === weekStartKey);
+}
+
+function getWeekSpentTotal(weekStartKey){
+return getOrdersForWeek(weekStartKey).reduce((sum, order) => sum + Number(order.order_amount || 0), 0);
+}
+
+function getWeekOverrideMeta(weekStartKey){
+return procurementState.weeks.find((entry) => entry.week_start === weekStartKey) || null;
+}
+
+function getWeekBaseBudget(weekStartKey){
+let currentWeekStart = parseDateKey(weekStartKey);
+let previousWeekStart = addDays(currentWeekStart, -7);
+let previousWeekEnd = addDays(previousWeekStart, 6);
+let todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+if (previousWeekEnd >= todayDate){
+return 0;
+}
+
+let totalCost = 0;
+for (let step = 0; step < 7; step++){
+let current = addDays(previousWeekStart, step);
+let dateKey = formatDateKey(current);
+let revenue = getRevenueValue(revenueData[dateKey]);
+if (revenue <= 0) continue;
+totalCost += calculateCost(revenue, current.getFullYear(), current.getMonth());
+}
+return totalCost;
+}
+
+function getEffectiveBudget(weekStartKey){
+let base = getWeekBaseBudget(weekStartKey);
+let meta = getWeekOverrideMeta(weekStartKey);
+let override = Number(meta && meta.budget_override || 0);
+return Math.max(base, override);
+}
+
+function isArchivedPaid(order){
+if (!order.paid_at) return false;
+let paidAt = new Date(order.paid_at);
+let hideAt = addDays(paidAt, 3);
+return hideAt < today;
+}
+
+function getComputedStatus(order){
+if (order.paid_at){
+return {
+key: "paid",
+label: "Оплачено"
+};
+}
+
+let dueDate = order.payment_due_date ? parseDateKey(order.payment_due_date) : null;
+if (dueDate && dueDate < today){
+return {
+key: "overdue",
+label: "Просрочено"
+};
+}
+
+if (!order.invoice_file_url){
+return {
+key: "waiting",
+label: "Ожидает счет"
+};
+}
+
+return {
+key: "payable",
+label: "К оплате"
+};
+}
+
+function canManageBudget(){
+return procurementState.user && procurementState.user.role === "owner";
+}
+
+function canMarkPaid(){
+return procurementState.user && procurementState.user.role === "owner";
+}
+
+function getDefaultDueDate(orderDateKey){
+if (!orderDateKey) return "";
+return formatDateKey(addDays(parseDateKey(orderDateKey), 14));
+}
+
+function normalizeOrder(order, weekStartKey = ""){
+let orderDate = order.order_date || weekStartKey || formatDateKey(today);
+let defaultDue = getDefaultDueDate(orderDate);
+return {
+id: order.id || ("local-" + Date.now() + "-" + Math.random().toString(16).slice(2, 8)),
+week_start: order.week_start || weekStartKey,
+supplier_name: order.supplier_name || "",
+order_amount: Number(order.order_amount || 0),
+order_date: orderDate,
+payment_due_date: order.payment_due_date || defaultDue,
+invoice_file_url: order.invoice_file_url || "",
+invoice_file_name: order.invoice_file_name || "",
+paid_at: order.paid_at || "",
+status: order.status || "",
+notes: order.notes || "",
+created_at: order.created_at || "",
+updated_at: order.updated_at || "",
+isLocalOnly: !order.id
+};
+}
+
+function buildVisibleWeekKeys(){
+let currentMonday = getMonday(today);
+let start = addDays(currentMonday, -28);
+let end = addDays(currentMonday, 77);
+let result = [];
+for (let cursor = new Date(start); cursor <= end; cursor = addDays(cursor, 7)){
+result.push(formatDateKey(cursor));
+}
+for (let order of procurementState.orders){
+if (!order.week_start) continue;
+if (!result.includes(order.week_start)){
+result.push(order.week_start);
+}
+}
+return result.sort();
+}
+
+function renderWeeks(){
+let container = document.getElementById("weeksList");
+let visibleWeekKeys = buildVisibleWeekKeys();
+if (!visibleWeekKeys.length){
+container.innerHTML = "<div class='emptyWeek'>Пока нет ни одной недели закупа.</div>";
+return;
+}
+
+container.innerHTML = visibleWeekKeys.map((weekStartKey) => {
+let baseBudget = getWeekBaseBudget(weekStartKey);
+let effectiveBudget = getEffectiveBudget(weekStartKey);
+let spent = getWeekSpentTotal(weekStartKey);
+let remaining = effectiveBudget - spent;
+let usageMax = Math.max(effectiveBudget, spent, 1);
+let usagePercent = Math.max(0, Math.min((spent / usageMax) * 100, 100));
+let overrideMeta = getWeekOverrideMeta(weekStartKey);
+let weekOrders = getOrdersForWeek(weekStartKey)
+  .sort((left, right) => {
+    let leftDue = left.payment_due_date || "9999-12-31";
+    let rightDue = right.payment_due_date || "9999-12-31";
+    return leftDue.localeCompare(rightDue);
+  });
+let activeOrders = weekOrders.filter((order) => !isArchivedPaid(order));
+let archivedOrders = weekOrders.filter((order) => isArchivedPaid(order));
+let previousRange = getWeekRangeMeta(formatDateKey(addDays(parseDateKey(weekStartKey), -7)));
+let previousWeekLabel = formatDateLabel(formatDateKey(previousRange.start)) + " - " + formatDateLabel(previousRange.endKey);
+let budgetHint = baseBudget > 0
+  ? "База недели из себестоимости " + previousWeekLabel
+  : "Бюджет появится после закрытия предыдущей недели";
+
+let ordersHead = `
+<div class="ordersHead">
+<div>Поставщик</div>
+<div>Сумма</div>
+<div>Дата заказа</div>
+<div>Дата оплаты</div>
+<div>Счет</div>
+<div>Статус</div>
+<div>Оплачено</div>
+</div>`;
+
+let rowsHtml = activeOrders.length
+  ? activeOrders.map((order) => renderOrderRow(order)).join("")
+  : "<div class='emptyWeek'>В этой неделе ещё нет строк закупа. Добавь поставщика, и строка сохранится в общей таблице.</div>";
+
+let archivedHtml = archivedOrders.length
+  ? `<div class="archivedOrders"><details><summary>Недавно оплачено: ${archivedOrders.length}</summary><div class="ordersTable">${archivedOrders.map((order) => renderOrderRow(order, true)).join("")}</div></details></div>`
+  : "";
+
+let weekClass = remaining < 0 ? "weekCard overBudget" : "weekCard";
+let overrideValue = Number(overrideMeta && overrideMeta.budget_override || 0);
+let overrideMetaText = overrideValue > baseBudget
+  ? "Увеличен вручную до " + formatMoney(overrideValue)
+  : budgetHint;
+
+return `
+<article class="${weekClass}" data-week-start="${weekStartKey}">
+  <div class="weekHeader">
+    <div class="weekTitleWrap">
+      <h3 class="weekTitle">Неделя ${escapeHtml(getWeekLabel(weekStartKey))}</h3>
+      <div class="weekMeta">
+        <div class="weekMetaChip">Старт закупа: ${escapeHtml(formatDateLabel(weekStartKey))}</div>
+        <div class="weekMetaChip">${escapeHtml(overrideMetaText)}</div>
+      </div>
+    </div>
+    <div class="weekBudgetGrid">
+      <div class="budgetStat">
+        <div class="budgetStatLabel">Бюджет закупа</div>
+        <div class="budgetStatValue">${formatMoney(effectiveBudget)}</div>
+        <div class="budgetStatMeta">Авто-база: ${formatMoney(baseBudget)}</div>
+      </div>
+      <div class="budgetStat">
+        <div class="budgetStatLabel">Уже заказано</div>
+        <div class="budgetStatValue">${formatMoney(spent)}</div>
+        <div class="budgetStatMeta">${weekOrders.length ? "Строк закупа: " + weekOrders.length : "Пока без заказов"}</div>
+      </div>
+      <div class="budgetStat">
+        <div class="budgetStatLabel">Остаток</div>
+        <div class="budgetStatValue ${remaining < 0 ? "negative" : "positive"}">${formatMoney(remaining)}</div>
+        <div class="budgetStatMeta">${remaining < 0 ? "Перерасход недели" : "Можно ещё заказать"}</div>
+      </div>
+      <div class="budgetStat">
+        <div class="budgetStatLabel">Просрочки</div>
+        <div class="budgetStatValue ${activeOrders.some((order) => getComputedStatus(order).key === "overdue") ? "negative" : ""}">${activeOrders.filter((order) => getComputedStatus(order).key === "overdue").length}</div>
+        <div class="budgetStatMeta">Поставщики с просрочкой по оплате</div>
+      </div>
+    </div>
+  </div>
+  <div class="weekBar">
+    <div class="weekBarFill ${spent >= effectiveBudget ? "done" : "safe"}" style="width:${usagePercent}%;"></div>
+    <div class="weekBarMarker" style="left:${Math.max(0, Math.min((effectiveBudget / usageMax) * 100, 100))}%;"></div>
+  </div>
+  ${canManageBudget() ? `
+  <div class="budgetOverrideRow">
+    <div class="budgetOverrideLabel">Увеличить бюджет недели:</div>
+    <input class="fieldNumber budgetOverrideInput" data-role="budget-override-input" data-week-start="${weekStartKey}" type="number" min="${Math.round(baseBudget)}" step="1" value="${overrideValue > 0 ? Math.round(overrideValue) : ""}" placeholder="${Math.round(baseBudget)}">
+    <button class="plainButton" data-role="save-budget-override" data-week-start="${weekStartKey}" type="button">Сохранить бюджет</button>
+  </div>` : ""}
+  <div class="ordersTable">
+    ${ordersHead}
+    ${rowsHtml}
+  </div>
+  <div class="addOrderRow">
+    <button class="plainButton secondary" data-role="add-order" data-week-start="${weekStartKey}" type="button">+ Добавить поставщика</button>
+  </div>
+  ${archivedHtml}
+</article>`;
+}).join("");
+}
+
+function renderOrderRow(order, isArchived = false){
+let status = getComputedStatus(order);
+let paidDateLabel = order.paid_at ? new Date(order.paid_at).toLocaleDateString("ru-RU") : "—";
+let invoiceHtml = order.invoice_file_url
+  ? `<a class="invoiceLink" href="${escapeHtml(order.invoice_file_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(order.invoice_file_name || "Открыть счет")}</a>`
+  : `<div class="invoiceLink muted">Счет не загружен</div>`;
+let paidButtonHtml = order.paid_at
+  ? `<div class="rowHint">Оплачено ${escapeHtml(paidDateLabel)}</div>`
+  : (canMarkPaid() && !isArchived
+    ? `<button class="plainButton" data-role="mark-paid" data-order-id="${escapeHtml(order.id)}" type="button">Оплачено</button>`
+    : `<div class="rowHint">Только владелец подтверждает оплату</div>`);
+
+return `
+<div class="orderRow ${status.key}" data-order-id="${escapeHtml(order.id)}">
+  <label class="orderField">
+    <span class="orderFieldLabel">Поставщик</span>
+    <input class="fieldInput order-input" data-field="supplier_name" data-order-id="${escapeHtml(order.id)}" type="text" value="${escapeHtml(order.supplier_name)}" placeholder="Например, Урал Табак" ${isArchived ? "disabled" : ""}>
+  </label>
+  <label class="orderField">
+    <span class="orderFieldLabel">Сумма</span>
+    <input class="fieldNumber order-input" data-field="order_amount" data-order-id="${escapeHtml(order.id)}" type="number" min="0" step="1" value="${order.order_amount ? Math.round(order.order_amount) : ""}" placeholder="0" ${isArchived ? "disabled" : ""}>
+  </label>
+  <label class="orderField">
+    <span class="orderFieldLabel">Дата заказа</span>
+    <input class="fieldDate order-input" data-field="order_date" data-order-id="${escapeHtml(order.id)}" type="date" value="${escapeHtml(order.order_date || "")}" ${isArchived ? "disabled" : ""}>
+  </label>
+  <label class="orderField">
+    <span class="orderFieldLabel">Дата оплаты</span>
+    <input class="fieldDate order-input" data-field="payment_due_date" data-order-id="${escapeHtml(order.id)}" type="date" value="${escapeHtml(order.payment_due_date || "")}" ${isArchived ? "disabled" : ""}>
+  </label>
+  <div class="orderField invoiceCell">
+    <span class="orderFieldLabel">Счет</span>
+    ${invoiceHtml}
+    ${isArchived ? "" : `
+    <input class="invoiceInput" id="invoice-${escapeHtml(order.id)}" data-order-id="${escapeHtml(order.id)}" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.heic">
+    <button class="plainButton ghost" data-role="pick-invoice" data-order-id="${escapeHtml(order.id)}" type="button">Загрузить счет</button>`}
+  </div>
+  <div class="orderField">
+    <span class="orderFieldLabel">Статус</span>
+    <div class="statusPill ${status.key}">${status.label}</div>
+  </div>
+  <div class="orderField rowActions">
+    <span class="orderFieldLabel">Оплачено</span>
+    ${paidButtonHtml}
+  </div>
+</div>`;
+}
+
+async function callProcurementApi(action, payload = {}){
+if (!isConfigReady()){
+throw new Error("Сначала укажи googleClientId и apiUrl в procurement.html");
+}
+let body = new URLSearchParams();
+body.set("payload", JSON.stringify(Object.assign({
+action,
+idToken: procurementState.idToken
+}, payload)));
+let response = await fetch(procurementConfig.apiUrl, {
+method: "POST",
+body,
+cache: "no-store"
+});
+if (!response.ok){
+throw new Error("API HTTP " + response.status);
+}
+let json = await response.json();
+if (!json || json.ok === false){
+throw new Error(json && json.error ? json.error : "Не удалось выполнить запрос");
+}
+return json;
+}
+
+async function bootstrapProcurement(){
+setLoading(true, "Проверяю доступ и загружаю закуп…");
+hideNotices();
+try {
+await loadRevenueData();
+let result = await callProcurementApi("bootstrap", {
+today: formatDateKey(today)
+});
+procurementState.user = result.user || procurementState.user;
+procurementState.weeks = Array.isArray(result.weeks) ? result.weeks : [];
+procurementState.orders = Array.isArray(result.orders) ? result.orders.map((order) => normalizeOrder(order, order.week_start)) : [];
+procurementState.driveFolderUrl = result.driveFolderUrl || "";
+saveSession();
+renderAuthState();
+renderWeeks();
+document.getElementById("sectionSubtext").textContent = "Пользователь: " + procurementState.user.email + ". Роль: " + procurementState.user.role + ".";
+} catch (error){
+showAuthNotice(error.message, "error");
+clearSession();
+renderAuthState();
+} finally {
+setLoading(false);
+}
+}
+
+function upsertLocalOrder(order){
+let normalized = normalizeOrder(order, order.week_start);
+let index = procurementState.orders.findIndex((entry) => {
+return entry.id === normalized.id || (order.client_id && entry.isLocalOnly && entry.id === order.client_id);
+});
+if (index >= 0){
+procurementState.orders[index] = Object.assign({}, procurementState.orders[index], normalized, { isLocalOnly: false });
+} else {
+procurementState.orders.push(normalized);
+}
+renderWeeks();
+}
+
+function getOrderById(orderId){
+return procurementState.orders.find((order) => order.id === orderId);
+}
+
+function queueOrderSave(orderId){
+window.clearTimeout(saveTimers[orderId]);
+saveTimers[orderId] = window.setTimeout(() => {
+saveOrder(orderId);
+}, 450);
+}
+
+async function saveOrder(orderId){
+let order = getOrderById(orderId);
+if (!order) return;
+if (!order.supplier_name.trim() && !order.order_amount){
+renderWeeks();
+return;
+}
+try {
+let result = await callProcurementApi("saveOrder", {
+order: {
+id: order.isLocalOnly ? "" : order.id,
+client_id: order.id,
+week_start: order.week_start,
+supplier_name: order.supplier_name,
+order_amount: Number(order.order_amount || 0),
+order_date: order.order_date,
+payment_due_date: order.payment_due_date,
+invoice_file_url: order.invoice_file_url,
+invoice_file_name: order.invoice_file_name,
+paid_at: order.paid_at,
+notes: order.notes || ""
+}
+});
+if (result.order && order.isLocalOnly){
+result.order.client_id = order.id;
+}
+upsertLocalOrder(result.order || order);
+} catch (error){
+showAuthNotice("Не удалось сохранить строку закупа: " + error.message, "error");
+}
+}
+
+async function saveBudgetOverride(weekStartKey, overrideValue){
+try {
+let baseBudget = getWeekBaseBudget(weekStartKey);
+let numericValue = Math.max(Number(overrideValue || 0), baseBudget);
+let result = await callProcurementApi("setBudgetOverride", {
+week_start: weekStartKey,
+budget_override: numericValue,
+budget_base: baseBudget
+});
+let index = procurementState.weeks.findIndex((entry) => entry.week_start === weekStartKey);
+if (index >= 0){
+procurementState.weeks[index] = result.week;
+} else {
+procurementState.weeks.push(result.week);
+}
+renderWeeks();
+} catch (error){
+showAuthNotice("Не удалось обновить бюджет недели: " + error.message, "error");
+}
+}
+
+async function uploadInvoice(orderId, file){
+if (!file) return;
+let order = getOrderById(orderId);
+if (!order) return;
+showAuthNotice("Загружаю счет " + file.name + "…");
+try {
+let base64 = await new Promise((resolve, reject) => {
+let reader = new FileReader();
+reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
+reader.onerror = reject;
+reader.readAsDataURL(file);
+});
+let result = await callProcurementApi("uploadInvoice", {
+order_id: order.isLocalOnly ? "" : order.id,
+client_id: order.id,
+week_start: order.week_start,
+file_name: file.name,
+mime_type: file.type || "application/octet-stream",
+file_base64: base64
+});
+order.invoice_file_url = result.fileUrl || "";
+order.invoice_file_name = result.fileName || file.name;
+if (result.order){
+upsertLocalOrder(result.order);
+} else {
+queueOrderSave(orderId);
+renderWeeks();
+}
+hideNotices();
+} catch (error){
+showAuthNotice("Не удалось загрузить счет: " + error.message, "error");
+}
+}
+
+async function markOrderPaid(orderId){
+try {
+let result = await callProcurementApi("markPaid", {
+order_id: orderId
+});
+upsertLocalOrder(result.order);
+} catch (error){
+showAuthNotice("Не удалось отметить оплату: " + error.message, "error");
+}
+}
+
+function addOrderForWeek(weekStartKey){
+let order = normalizeOrder({
+week_start: weekStartKey,
+order_date: weekStartKey,
+payment_due_date: getDefaultDueDate(weekStartKey)
+}, weekStartKey);
+order.isLocalOnly = true;
+procurementState.orders.push(order);
+renderWeeks();
+}
+
+function handleOrderFieldChange(orderId, field, value){
+let order = getOrderById(orderId);
+if (!order) return;
+let previousOrderDate = order.order_date;
+order[field] = field === "order_amount" ? Number(value || 0) : value;
+if (field === "order_date"){
+let previousDefaultDue = getDefaultDueDate(previousOrderDate);
+if (!order.payment_due_date || order.payment_due_date === previousDefaultDue){
+order.payment_due_date = getDefaultDueDate(order.order_date);
+}
+}
+renderWeeks();
+queueOrderSave(orderId);
+}
+
+function handleWeeksClick(event){
+let actionTrigger = event.target.closest("[data-role]");
+if (!actionTrigger) return;
+let role = actionTrigger.getAttribute("data-role");
+if (role === "add-order"){
+addOrderForWeek(actionTrigger.getAttribute("data-week-start"));
+return;
+}
+if (role === "save-budget-override"){
+let weekStartKey = actionTrigger.getAttribute("data-week-start");
+let input = document.querySelector(`[data-role="budget-override-input"][data-week-start="${weekStartKey}"]`);
+saveBudgetOverride(weekStartKey, input ? input.value : "");
+return;
+}
+if (role === "pick-invoice"){
+let orderId = actionTrigger.getAttribute("data-order-id");
+let input = document.getElementById("invoice-" + orderId);
+if (input) input.click();
+return;
+}
+if (role === "mark-paid"){
+markOrderPaid(actionTrigger.getAttribute("data-order-id"));
+}
+}
+
+function handleWeeksChange(event){
+let input = event.target;
+if (input.classList.contains("order-input")){
+handleOrderFieldChange(
+  input.getAttribute("data-order-id"),
+  input.getAttribute("data-field"),
+  input.value
+);
+return;
+}
+if (input.classList.contains("invoiceInput")){
+uploadInvoice(input.getAttribute("data-order-id"), input.files && input.files[0]);
+}
+}
+
+function handleGoogleCredential(response){
+let profile = decodeJwt(response.credential);
+if (!profile || !profile.email){
+showAuthNotice("Не удалось прочитать Google-профиль. Попробуй войти снова.", "error");
+return;
+}
+procurementState.idToken = response.credential;
+procurementState.user = {
+email: profile.email,
+name: profile.name || profile.email,
+role: "viewer"
+};
+saveSession();
+renderAuthState();
+bootstrapProcurement();
+}
+
+function initGoogleAuth(){
+if (!window.google || !google.accounts || !google.accounts.id){
+showSetupNotice("Google Identity Services ещё не загрузился. Обнови страницу.");
+return;
+}
+google.accounts.id.initialize({
+client_id: procurementConfig.googleClientId,
+callback: handleGoogleCredential,
+auto_select: false,
+cancel_on_tap_outside: true
+});
+google.accounts.id.renderButton(
+document.getElementById("googleButtonWrap"),
+{
+theme: "outline",
+size: "large",
+shape: "pill",
+text: "signin_with",
+width: 280
+}
+);
+}
+
+function signOut(){
+if (window.google && google.accounts && google.accounts.id){
+google.accounts.id.disableAutoSelect();
+}
+clearSession();
+hideNotices();
+renderAuthState();
+}
+
+document.getElementById("signOutButton").addEventListener("click", signOut);
+document.getElementById("weeksList").addEventListener("click", handleWeeksClick);
+document.getElementById("weeksList").addEventListener("change", handleWeeksChange);
+
+window.addEventListener("load", async () => {
+if (!isConfigReady()){
+showSetupNotice("Для запуска укажи в procurement.html Google Client ID и Apps Script Web App URL. После этого вход и синхронизация закупа заработают на всех устройствах.");
+}
+
+renderAuthState();
+
+let stored = getStoredSession();
+if (stored && stored.idToken && stored.user){
+procurementState.idToken = stored.idToken;
+procurementState.user = stored.user;
+renderAuthState();
+bootstrapProcurement();
+}
+
+let tryInit = () => {
+if (window.google && google.accounts && google.accounts.id && isConfigReady()){
+initGoogleAuth();
+return true;
+}
+return false;
+};
+
+if (!tryInit()){
+let guard = window.setInterval(() => {
+if (tryInit()){
+window.clearInterval(guard);
+}
+}, 400);
+}
+});
+</script>
+</body>
+</html>

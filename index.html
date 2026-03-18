@@ -212,6 +212,27 @@ box-shadow:0 14px 34px rgba(150,110,20,0.3), inset 0 1px 0 rgba(255,247,214,0.62
 transform:translateY(-1px);
 }
 
+.topReportButton.secondary{
+background:rgba(255,255,255,0.82);
+color:#2d3a2f;
+border:1px solid rgba(17,17,17,0.08);
+text-shadow:none;
+box-shadow:0 10px 26px rgba(15,23,42,0.08);
+backdrop-filter:blur(8px);
+}
+
+.topReportButton.secondary::before,
+.topReportButton.secondary::after{
+display:none;
+}
+
+.topReportButton.secondary:hover{
+filter:saturate(1.03) brightness(1.02);
+box-shadow:0 14px 34px rgba(15,23,42,0.12);
+border-color:rgba(17,17,17,0.12);
+transform:translateY(-1px);
+}
+
 .indexKaAccuracyBadge{
 display:inline-flex;
 align-items:center;
@@ -2427,8 +2448,9 @@ padding-top:14px;
 </h1>
 <div class="pageActions">
 <div class="indexKaAccuracyBadge neutral" id="indexKaAccuracyBadge">Точность IndexKa: —</div>
+<a class="topReportButton secondary" href="./procurement.html">Закуп</a>
 <a class="topReportButton" href="./Отчет_по_магазинам.html" target="_blank" rel="noopener noreferrer">Рейтинг магазинов</a>
-<div class="uiVersionToggle" id="uiVersionToggle" aria-label="Версия интерфейса">v2.001</div>
+<div class="uiVersionToggle" id="uiVersionToggle" aria-label="Версия интерфейса">v2.003</div>
 </div>
 </div>
 
@@ -2736,9 +2758,9 @@ return "v2";
 function updateUiVersionButton(version){
 let toggleButton = document.getElementById("uiVersionToggle");
 if (!toggleButton) return;
-	toggleButton.innerText = "v2.001";
-	toggleButton.setAttribute("aria-label", "Версия интерфейса v2.001");
-	toggleButton.title = "Версия интерфейса v2.001";
+	toggleButton.innerText = "v2.003";
+	toggleButton.setAttribute("aria-label", "Версия интерфейса v2.003");
+	toggleButton.title = "Версия интерфейса v2.003";
 }
 
 function applyUiVersion(version){
