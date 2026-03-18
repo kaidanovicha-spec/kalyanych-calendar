@@ -872,10 +872,10 @@ width:100%;
 </section>
 </div>
 
-<div class="uiVersionToggle">v2.004</div>
+<div class="uiVersionToggle">v2.005</div>
 
 <script>
-const PROCUREMENT_VERSION = "v2.004";
+const PROCUREMENT_VERSION = "v2.005";
 const procurementConfig = {
 googleClientId: "462958236662-4jml8gljkbk0tddja2cktktgdvubiat9.apps.googleusercontent.com",
 apiUrl: "https://script.google.com/macros/s/AKfycbxUp-7LEYL0Sj_J4Ck7QgMiNVziLmxxseLGk4ottNTfkBAktrAcgSwk0r7k1ESVW56kwQ/exec",
@@ -906,6 +906,31 @@ function parseDateKey(dateKey){
 return new Date(dateKey + "T00:00:00");
 }
 
+function normalizeDateValue(value){
+if (!value) return "";
+if (value instanceof Date && !Number.isNaN(value.getTime())){
+  return formatDateKey(value);
+}
+let raw = String(value).trim();
+if (!raw) return "";
+if (/^\d{4}-\d{2}-\d{2}$/.test(raw)){
+  return raw;
+}
+let isoMatch = raw.match(/^(\d{4}-\d{2}-\d{2})T/);
+if (isoMatch){
+  return isoMatch[1];
+}
+let ruMatch = raw.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+if (ruMatch){
+  return `${ruMatch[3]}-${ruMatch[2]}-${ruMatch[1]}`;
+}
+let parsed = new Date(raw);
+if (!Number.isNaN(parsed.getTime())){
+  return formatDateKey(parsed);
+}
+return "";
+}
+
 function formatMoney(value){
 return Number(value || 0).toLocaleString("ru-RU") + " ₽";
 }
@@ -913,6 +938,7 @@ return Number(value || 0).toLocaleString("ru-RU") + " ₽";
 function formatDateLabel(dateKey){
 if (!dateKey) return "—";
 let date = parseDateKey(dateKey);
+if (Number.isNaN(date.getTime())) return "—";
 return date.toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
 }
 
@@ -941,6 +967,7 @@ return copy;
 
 function getWeekLabel(weekStartKey){
 let weekStart = parseDateKey(weekStartKey);
+if (Number.isNaN(weekStart.getTime())) return "—";
 let weekEnd = addDays(weekStart, 6);
 let startLabel = weekStart.toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
 let endLabel = weekEnd.toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
@@ -949,6 +976,13 @@ return startLabel + " - " + endLabel;
 
 function getWeekRangeMeta(weekStartKey){
 let weekStart = parseDateKey(weekStartKey);
+if (Number.isNaN(weekStart.getTime())){
+return {
+start: null,
+end: null,
+endKey: ""
+};
+}
 let weekEnd = addDays(weekStart, 6);
 return {
 start: weekStart,
@@ -1187,7 +1221,7 @@ label: "Оплачено"
 }
 
 let dueDate = order.payment_due_date ? parseDateKey(order.payment_due_date) : null;
-if (dueDate && dueDate < today){
+if (dueDate && !Number.isNaN(dueDate.getTime()) && dueDate < today){
 return {
 key: "overdue",
 label: "Просрочено"
@@ -1221,15 +1255,17 @@ return formatDateKey(addDays(parseDateKey(orderDateKey), 14));
 }
 
 function normalizeOrder(order, weekStartKey = ""){
-let orderDate = order.order_date || weekStartKey || formatDateKey(today);
+let normalizedWeekStart = normalizeDateValue(order.week_start || weekStartKey);
+let orderDate = normalizeDateValue(order.order_date) || normalizedWeekStart || formatDateKey(today);
 let defaultDue = getDefaultDueDate(orderDate);
+let paymentDueDate = normalizeDateValue(order.payment_due_date) || defaultDue;
 return {
 id: order.id || ("local-" + Date.now() + "-" + Math.random().toString(16).slice(2, 8)),
-week_start: order.week_start || weekStartKey,
+week_start: normalizedWeekStart,
 supplier_name: order.supplier_name || "",
 order_amount: Number(order.order_amount || 0),
 order_date: orderDate,
-payment_due_date: order.payment_due_date || defaultDue,
+payment_due_date: paymentDueDate,
 invoice_file_url: order.invoice_file_url || "",
 invoice_file_name: order.invoice_file_name || "",
 paid_at: order.paid_at || "",
@@ -1283,7 +1319,9 @@ let weekOrders = getOrdersForWeek(weekStartKey)
 let activeOrders = weekOrders.filter((order) => !isArchivedPaid(order));
 let archivedOrders = weekOrders.filter((order) => isArchivedPaid(order));
 let previousRange = getWeekRangeMeta(formatDateKey(addDays(parseDateKey(weekStartKey), -7)));
-let previousWeekLabel = formatDateLabel(formatDateKey(previousRange.start)) + " - " + formatDateLabel(previousRange.endKey);
+let previousWeekLabel = previousRange.start
+  ? formatDateLabel(formatDateKey(previousRange.start)) + " - " + formatDateLabel(previousRange.endKey)
+  : "предыдущей недели";
 let budgetHint = baseBudget > 0
   ? "База недели из себестоимости " + previousWeekLabel
   : "Бюджет появится после закрытия предыдущей недели";
@@ -1401,7 +1439,7 @@ return `
   <div class="orderField invoiceCell">
     <span class="orderFieldLabel">Счет</span>
     ${invoiceHtml}
-    ${isArchived ? "" : `
+    ${isArchived || order.invoice_file_url ? "" : `
     <input class="invoiceInput" id="invoice-${escapeHtml(order.id)}" data-order-id="${escapeHtml(order.id)}" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.heic">
     <button class="plainButton ghost" data-role="pick-invoice" data-order-id="${escapeHtml(order.id)}" type="button">Загрузить счет</button>`}
   </div>
