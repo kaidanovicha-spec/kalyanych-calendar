@@ -572,6 +572,28 @@ gap:6px;
 min-width:0;
 }
 
+.supplierFieldWrap{
+display:flex;
+flex-direction:column;
+gap:8px;
+}
+
+.inlineCheckbox{
+display:inline-flex;
+align-items:center;
+gap:8px;
+font-size:12px;
+font-weight:700;
+color:#6c6153;
+}
+
+.inlineCheckbox input{
+width:16px;
+height:16px;
+margin:0;
+accent-color:#1b9c4a;
+}
+
 .orderFieldLabel{
 display:none;
 font-size:11px;
@@ -621,9 +643,9 @@ min-width:0;
 }
 
 .iconButton{
-width:40px;
-min-width:40px;
-height:40px;
+width:36px;
+min-width:36px;
+height:36px;
 padding:0;
 border-radius:14px;
 font-size:18px;
@@ -634,15 +656,6 @@ line-height:1;
 display:flex;
 align-items:center;
 gap:6px;
-}
-
-.dateToggleButton{
-min-width:40px;
-height:40px;
-padding:0 10px;
-border-radius:14px;
-font-size:12px;
-font-weight:800;
 }
 
 .dateModePill{
@@ -666,7 +679,12 @@ white-space:nowrap;
 display:flex;
 align-items:center;
 gap:8px;
-flex-wrap:wrap;
+justify-content:flex-end;
+flex-wrap:nowrap;
+padding:6px;
+border-radius:18px;
+background:#f7f1e8;
+border:1px solid rgba(17,17,17,0.06);
 }
 
 .statusPill{
@@ -709,6 +727,17 @@ color:#1b9c4a;
 display:flex;
 flex-direction:column;
 gap:8px;
+align-items:flex-end;
+}
+
+.rowActionsStack .plainButton{
+margin:0;
+}
+
+.rowActionsStack .plainButton:not(.iconButton){
+min-height:42px;
+padding:10px 16px;
+border-radius:14px;
 }
 
 .rowHint{
@@ -786,6 +815,14 @@ flex-wrap:wrap;
 gap:8px;
 }
 
+.planBudgetTools{
+margin-top:14px;
+display:flex;
+align-items:center;
+gap:10px;
+flex-wrap:wrap;
+}
+
 .groupList{
 display:flex;
 flex-direction:column;
@@ -802,6 +839,12 @@ background:rgba(255,255,255,0.84);
 .dueGroup.overdue{
 border-color:rgba(217,72,72,0.18);
 background:#fff7f6;
+}
+
+.dueGroup.currentWindow{
+border-color:rgba(27,156,74,0.18);
+background:linear-gradient(180deg, rgba(237,250,241,0.96), rgba(255,255,255,0.88));
+box-shadow:0 12px 28px rgba(27,156,74,0.08);
 }
 
 .dueGroupHead{
@@ -1009,10 +1052,10 @@ width:100%;
 </section>
 </div>
 
-<div class="uiVersionToggle">v2.014</div>
+<div class="uiVersionToggle">v2.021</div>
 
 <script>
-const PROCUREMENT_VERSION = "v2.014";
+const PROCUREMENT_VERSION = "v2.021";
 const procurementConfig = {
 googleClientId: "462958236662-4jml8gljkbk0tddja2cktktgdvubiat9.apps.googleusercontent.com",
 apiUrl: "https://script.google.com/macros/s/AKfycbxUp-7LEYL0Sj_J4Ck7QgMiNVziLmxxseLGk4ottNTfkBAktrAcgSwk0r7k1ESVW56kwQ/exec",
@@ -1020,6 +1063,7 @@ revenueApiUrl: "https://script.google.com/macros/s/AKfycbyPoZgiulk-_qC7hKRxkoOar
 };
 
 const procurementSessionKey = "kalyanychProcurementSession";
+const PREPAYMENT_MARKER = "[prepayment]";
 let today = new Date();
 let revenueData = {};
 let procurementState = {
@@ -1376,6 +1420,28 @@ if (mondayKey <= todayKey){
 return formatDateKey(monday);
 }
 
+function getPlanBudgetMeta(weekStartKey){
+let base = getWeekBaseBudget(weekStartKey);
+let effective = getEffectiveBudget(weekStartKey);
+let spent = procurementState.orders
+  .filter((order) => !order.paid_at && !isArchivedPaid(order) && order.week_start === weekStartKey)
+  .reduce((sum, order) => sum + Number(order.order_amount || 0), 0);
+return {
+  base,
+  effective,
+  spent,
+  remaining: effective - spent
+};
+}
+
+function canFitIntoPlanBudget(orderId, nextValue, weekStartKey){
+let meta = getPlanBudgetMeta(weekStartKey);
+let otherSpent = procurementState.orders
+  .filter((order) => !order.paid_at && !isArchivedPaid(order) && order.week_start === weekStartKey && order.id !== orderId)
+  .reduce((sum, order) => sum + Number(order.order_amount || 0), 0);
+return otherSpent + Number(nextValue || 0) <= meta.effective;
+}
+
 function getDueGroupMeta(order){
 let status = getComputedStatus(order);
 if (status.key === "overdue"){
@@ -1384,14 +1450,6 @@ if (status.key === "overdue"){
     title: "Просроченные оплаты",
     meta: "Счета, у которых дата оплаты уже прошла",
     className: "dueGroup overdue"
-  };
-}
-if (order.payment_due_date === "prepayment"){
-  return {
-    key: "prepayment",
-    title: "Предоплата",
-    meta: "Поставщики, которых нужно оплачивать сразу",
-    className: "dueGroup"
   };
 }
 let dueKey = normalizeDateValue(order.payment_due_date);
@@ -1404,11 +1462,12 @@ if (!dueKey){
   };
 }
 let mondayKey = formatDateKey(getMonday(parseDateKey(dueKey)));
+let currentMondayKey = formatDateKey(getMonday(today));
 return {
   key: mondayKey,
   title: getWeekLabel(mondayKey),
   meta: "Оплаты, попадающие в это окно недели",
-  className: "dueGroup"
+  className: mondayKey === currentMondayKey ? "dueGroup currentWindow" : "dueGroup"
 };
 }
 
@@ -1417,19 +1476,6 @@ if (order.paid_at){
 return {
 key: "paid",
 label: "Оплачено"
-};
-}
-
-if (order.payment_due_date === "prepayment"){
-if (!order.invoice_file_url){
-return {
-key: "waiting",
-label: "Ожидает счет"
-};
-}
-return {
-key: "payable",
-label: "К оплате"
 };
 }
 
@@ -1467,17 +1513,33 @@ if (!orderDateKey) return "";
 return formatDateKey(addDays(parseDateKey(orderDateKey), 14));
 }
 
+function isPrepayment(order){
+return String(order.notes || "").includes(PREPAYMENT_MARKER);
+}
+
+function setPrepaymentFlag(order, enabled){
+let rawNotes = String(order.notes || "").trim();
+let cleaned = rawNotes
+  .replace(PREPAYMENT_MARKER, "")
+  .replace(/\s{2,}/g, " ")
+  .trim();
+order.notes = enabled
+  ? [PREPAYMENT_MARKER, cleaned].filter(Boolean).join(" ").trim()
+  : cleaned;
+}
+
 function normalizeOrder(order, weekStartKey = ""){
 let normalizedWeekStart = normalizeDateValue(order.week_start || weekStartKey);
 let explicitEmptyOrderDate = Object.prototype.hasOwnProperty.call(order, "order_date") && order.order_date === "";
-let orderDate = explicitEmptyOrderDate
+let prepayment = isPrepayment(order);
+let orderDate = prepayment
   ? ""
-  : (normalizeDateValue(order.order_date) || normalizedWeekStart || formatDateKey(today));
+  : (explicitEmptyOrderDate
+  ? ""
+  : (normalizeDateValue(order.order_date) || normalizedWeekStart || formatDateKey(today)));
 let defaultDue = getDefaultDueDate(orderDate);
 let explicitEmptyDueDate = Object.prototype.hasOwnProperty.call(order, "payment_due_date") && order.payment_due_date === "";
-let paymentDueDate = order.payment_due_date === "prepayment"
-  ? "prepayment"
-  : (explicitEmptyDueDate ? "" : (normalizeDateValue(order.payment_due_date) || defaultDue));
+let paymentDueDate = explicitEmptyDueDate ? "" : (normalizeDateValue(order.payment_due_date) || (prepayment ? "" : defaultDue));
 return {
 id: order.id || ("local-" + Date.now() + "-" + Math.random().toString(16).slice(2, 8)),
 week_start: normalizedWeekStart,
@@ -1523,12 +1585,12 @@ let allOrders = [...procurementState.orders].sort((left, right) => {
 let activeOrders = allOrders.filter((order) => !order.paid_at && !isArchivedPaid(order));
 let paidOrders = allOrders.filter((order) => order.paid_at && !isArchivedPaid(order));
 let nextMondayKey = getNextMondayKey();
-let planOrders = activeOrders.filter((order) => order.week_start === nextMondayKey);
-let groupedOrders = activeOrders.filter((order) => order.week_start !== nextMondayKey);
-let spent = activeOrders.reduce((sum, order) => sum + Number(order.order_amount || 0), 0);
+let planOrders = activeOrders.filter((order) => order.week_start === nextMondayKey && !isPrepayment(order));
+let groupedOrders = activeOrders.filter((order) => order.week_start !== nextMondayKey || isPrepayment(order));
+let spent = groupedOrders.reduce((sum, order) => sum + Number(order.order_amount || 0), 0);
 let overdueCount = activeOrders.filter((order) => getComputedStatus(order).key === "overdue").length;
 let waitingCount = activeOrders.filter((order) => !order.invoice_file_url).length;
- let nextMondayBudget = getBudgetForPreviousSevenDays(nextMondayKey);
+ let nextMondayBudgetMeta = getPlanBudgetMeta(nextMondayKey);
  let previousPlanRangeStart = formatDateLabel(formatDateKey(addDays(parseDateKey(nextMondayKey), -7)));
  let previousPlanRangeEnd = formatDateLabel(formatDateKey(addDays(parseDateKey(nextMondayKey), -1)));
  let groupMap = new Map();
@@ -1545,8 +1607,6 @@ let waitingCount = activeOrders.filter((order) => !order.invoice_file_url).lengt
  let groups = Array.from(groupMap.values()).sort((left, right) => {
    if (left.meta.key === "overdue") return -1;
    if (right.meta.key === "overdue") return 1;
-   if (left.meta.key === "prepayment") return -1;
-   if (right.meta.key === "prepayment") return 1;
    if (left.meta.key === "no-date") return 1;
    if (right.meta.key === "no-date") return -1;
    return left.meta.key.localeCompare(right.meta.key);
@@ -1592,10 +1652,17 @@ container.innerHTML = `
       <h3 class="planTitle">План закупа на ${escapeHtml(formatDateLabel(nextMondayKey))}</h3>
       <p class="planText">Бюджет на ближайший понедельник считается по себестоимости за предыдущие 7 дней: ${escapeHtml(previousPlanRangeStart)} - ${escapeHtml(previousPlanRangeEnd)}.</p>
       <div class="planMeta">
-        <div class="heroMetaChip">Плановый бюджет: ${formatMoney(nextMondayBudget)}</div>
+        <div class="heroMetaChip">Плановый бюджет: ${formatMoney(nextMondayBudgetMeta.effective)}</div>
         <div class="heroMetaChip">Дата старта: ${escapeHtml(formatDateLabel(nextMondayKey))}</div>
-        <div class="heroMetaChip">Запланировано: ${formatMoney(planOrders.reduce((sum, order) => sum + Number(order.order_amount || 0), 0))}</div>
+        <div class="heroMetaChip">Запланировано: ${formatMoney(nextMondayBudgetMeta.spent)}</div>
+        <div class="heroMetaChip">Свободный остаток: ${formatMoney(nextMondayBudgetMeta.remaining)}</div>
       </div>
+      ${canManageBudget() ? `
+      <div class="planBudgetTools">
+        <span class="budgetOverrideLabel">Увеличить бюджет на:</span>
+        <input class="fieldNumber budgetOverrideInput" data-role="budget-override-input" data-week-start="${nextMondayKey}" type="number" min="0" step="1" value="${Math.max(0, nextMondayBudgetMeta.effective - nextMondayBudgetMeta.base)}">
+        <button class="plainButton secondary" data-role="save-budget-override" data-week-start="${nextMondayKey}" type="button">Сохранить бюджет</button>
+      </div>` : ""}
     </div>
   </div>
   <section class="dueGroup">
@@ -1657,16 +1724,11 @@ function renderOrderRow(order, isArchived = false, options = {}){
 let isPlanned = Boolean(options.planned);
 let planStartKey = options.planStartKey || "";
 let canEditPlannedDates = !isPlanned || formatDateKey(today) >= planStartKey;
+let prepayment = isPrepayment(order);
 let status = getComputedStatus(order);
 let paidDateLabel = order.paid_at ? new Date(order.paid_at).toLocaleDateString("ru-RU", { timeZone: "UTC" }) : "—";
-let dueDateHtml = order.payment_due_date === "prepayment"
-  ? `<div class="dateFieldWrap">
-      <div class="dateModePill">Предоплата</div>
-      ${isArchived ? "" : `<button class="plainButton ghost dateToggleButton" data-role="toggle-prepayment" data-order-id="${escapeHtml(order.id)}" type="button">Дата</button>`}
-    </div>`
-  : `<div class="dateFieldWrap">
+let dueDateHtml = `<div class="dateFieldWrap">
       <input class="fieldDate order-input" data-field="payment_due_date" data-order-id="${escapeHtml(order.id)}" type="date" value="${escapeHtml(order.payment_due_date || "")}" ${(isArchived || !canEditPlannedDates) ? "disabled" : ""}>
-      ${isArchived || !canEditPlannedDates ? "" : `<button class="plainButton ghost dateToggleButton" data-role="toggle-prepayment" data-order-id="${escapeHtml(order.id)}" type="button">Пред</button>`}
     </div>`;
 let invoiceHtml = order.invoice_file_url
   ? `<a class="invoiceLink" href="${escapeHtml(order.invoice_file_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(order.invoice_file_name || "Открыть счет")}</a>`
@@ -1681,7 +1743,10 @@ return `
 <div class="orderRow ${status.key}" data-order-id="${escapeHtml(order.id)}">
   <label class="orderField">
     <span class="orderFieldLabel">Поставщик</span>
-    <input class="fieldInput order-input" data-field="supplier_name" data-order-id="${escapeHtml(order.id)}" type="text" value="${escapeHtml(order.supplier_name)}" placeholder="Например, Урал Табак" ${isArchived ? "disabled" : ""}>
+    <div class="supplierFieldWrap">
+      <input class="fieldInput order-input" data-field="supplier_name" data-order-id="${escapeHtml(order.id)}" type="text" value="${escapeHtml(order.supplier_name)}" placeholder="Например, Урал Табак" ${isArchived ? "disabled" : ""}>
+      ${isArchived ? "" : `<label class="inlineCheckbox"><input type="checkbox" data-role="toggle-prepayment-check" data-order-id="${escapeHtml(order.id)}" ${prepayment ? "checked" : ""}>Предоплата</label>`}
+    </div>
   </label>
   <label class="orderField">
     <span class="orderFieldLabel">Сумма</span>
@@ -1689,7 +1754,9 @@ return `
   </label>
   <label class="orderField">
     <span class="orderFieldLabel">Дата заказа</span>
-    <input class="fieldDate order-input" data-field="order_date" data-order-id="${escapeHtml(order.id)}" type="date" value="${escapeHtml(order.order_date || "")}" ${(isArchived || !canEditPlannedDates) ? "disabled" : ""} placeholder="${isPlanned ? "В день закупа" : ""}">
+    ${prepayment
+      ? `<div class="dateModePill">Не требуется</div>`
+      : `<input class="fieldDate order-input" data-field="order_date" data-order-id="${escapeHtml(order.id)}" type="date" value="${escapeHtml(order.order_date || "")}" ${(isArchived || !canEditPlannedDates) ? "disabled" : ""} placeholder="${isPlanned ? "В день закупа" : ""}">`}
   </label>
   <label class="orderField">
     <span class="orderFieldLabel">Дата оплаты</span>
@@ -1931,6 +1998,11 @@ addOrderForWeek(currentMondayKey);
 }
 
 function addPlannedOrder(weekStartKey){
+let budgetMeta = getPlanBudgetMeta(weekStartKey);
+if (budgetMeta.remaining <= 0){
+showAuthNotice("План закупа упёрся в доступный бюджет. Сначала увеличь бюджет или уменьши суммы строк.", "error");
+return;
+}
 let order = normalizeOrder({
 week_start: weekStartKey,
 order_date: "",
@@ -1944,9 +2016,16 @@ renderWeeks();
 function handleOrderFieldChange(orderId, field, value){
 let order = getOrderById(orderId);
 if (!order) return;
+let prepayment = isPrepayment(order);
 let previousOrderDate = order.order_date;
-order[field] = field === "order_amount" ? Number(value || 0) : value;
-if (field === "order_date"){
+let nextValue = field === "order_amount" ? Number(value || 0) : value;
+if (field === "order_amount" && order.week_start === getNextMondayKey() && !canFitIntoPlanBudget(orderId, nextValue, order.week_start)){
+showAuthNotice("Нельзя превысить бюджет плана закупа. Увеличь бюджет или уменьши суммы строк.", "error");
+renderWeeks();
+return;
+}
+order[field] = nextValue;
+if (field === "order_date" && !prepayment){
 let previousDefaultDue = getDefaultDueDate(previousOrderDate);
 if (!order.payment_due_date || order.payment_due_date === previousDefaultDue){
 order.payment_due_date = getDefaultDueDate(order.order_date);
@@ -1959,10 +2038,15 @@ queueOrderSave(orderId);
 function togglePrepayment(orderId){
 let order = getOrderById(orderId);
 if (!order) return;
-if (order.payment_due_date === "prepayment"){
-order.payment_due_date = getDefaultDueDate(order.order_date || formatDateKey(today));
-} else {
-order.payment_due_date = "prepayment";
+let enabled = !isPrepayment(order);
+setPrepaymentFlag(order, enabled);
+if (enabled){
+  order.order_date = "";
+} else if (!order.order_date) {
+  order.order_date = order.week_start || formatDateKey(today);
+  if (!order.payment_due_date){
+    order.payment_due_date = getDefaultDueDate(order.order_date);
+  }
 }
 renderWeeks();
 queueOrderSave(orderId);
@@ -1984,14 +2068,16 @@ if (role === "add-plan-order"){
 addPlannedOrder(actionTrigger.getAttribute("data-week-start"));
 return;
 }
-if (role === "toggle-prepayment"){
+if (role === "toggle-prepayment-check"){
 togglePrepayment(actionTrigger.getAttribute("data-order-id"));
 return;
 }
 if (role === "save-budget-override"){
 let weekStartKey = actionTrigger.getAttribute("data-week-start");
 let input = document.querySelector(`[data-role="budget-override-input"][data-week-start="${weekStartKey}"]`);
-saveBudgetOverride(weekStartKey, input ? input.value : "");
+let extraValue = Number(input ? input.value : 0);
+let baseBudget = getWeekBaseBudget(weekStartKey);
+saveBudgetOverride(weekStartKey, baseBudget + Math.max(0, extraValue));
 return;
 }
 if (role === "pick-invoice"){
