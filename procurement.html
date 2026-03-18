@@ -1052,10 +1052,10 @@ width:100%;
 </section>
 </div>
 
-<div class="uiVersionToggle">v2.022</div>
+<div class="uiVersionToggle">v2.023</div>
 
 <script>
-const PROCUREMENT_VERSION = "v2.022";
+const PROCUREMENT_VERSION = "v2.023";
 const procurementConfig = {
 googleClientId: "462958236662-4jml8gljkbk0tddja2cktktgdvubiat9.apps.googleusercontent.com",
 apiUrl: "https://script.google.com/macros/s/AKfycbxUp-7LEYL0Sj_J4Ck7QgMiNVziLmxxseLGk4ottNTfkBAktrAcgSwk0r7k1ESVW56kwQ/exec",
@@ -1396,8 +1396,15 @@ totalCost += calculateCost(revenue, current.getUTCFullYear(), current.getUTCMont
 return totalCost;
 }
 
+function getAutoBudgetForWeek(weekStartKey){
+if (weekStartKey === getNextMondayKey()){
+return getBudgetForPreviousSevenDays(weekStartKey);
+}
+return getWeekBaseBudget(weekStartKey);
+}
+
 function getEffectiveBudget(weekStartKey){
-let base = getWeekBaseBudget(weekStartKey);
+let base = getAutoBudgetForWeek(weekStartKey);
 let meta = getWeekOverrideMeta(weekStartKey);
 let override = Number(meta && meta.budget_override || 0);
 return Math.max(base, override);
@@ -1421,7 +1428,7 @@ return formatDateKey(monday);
 }
 
 function getPlanBudgetMeta(weekStartKey){
-let base = getWeekBaseBudget(weekStartKey);
+let base = getAutoBudgetForWeek(weekStartKey);
 let effective = getEffectiveBudget(weekStartKey);
 let spent = procurementState.orders
   .filter((order) => !order.paid_at && !isArchivedPaid(order) && order.week_start === weekStartKey)
@@ -1517,6 +1524,14 @@ function isPrepayment(order){
 return String(order.notes || "").includes(PREPAYMENT_MARKER);
 }
 
+function isPlanPending(order, weekStartKey){
+if (order.week_start !== weekStartKey) return false;
+if (isPrepayment(order)){
+  return !normalizeDateValue(order.payment_due_date);
+}
+return !normalizeDateValue(order.order_date);
+}
+
 function isOrdered(order){
 return Boolean(isPrepayment(order) || normalizeDateValue(order.order_date));
 }
@@ -1589,9 +1604,9 @@ let allOrders = [...procurementState.orders].sort((left, right) => {
 let activeOrders = allOrders.filter((order) => !order.paid_at && !isArchivedPaid(order));
 let paidOrders = allOrders.filter((order) => order.paid_at && !isArchivedPaid(order));
 let nextMondayKey = getNextMondayKey();
-let planOrders = activeOrders.filter((order) => order.week_start === nextMondayKey && !isPrepayment(order));
-let groupedOrders = activeOrders.filter((order) => order.week_start !== nextMondayKey || isPrepayment(order));
-let spent = groupedOrders
+let planOrders = activeOrders.filter((order) => isPlanPending(order, nextMondayKey));
+let groupedOrders = activeOrders.filter((order) => !isPlanPending(order, nextMondayKey));
+let spent = activeOrders
   .filter((order) => isOrdered(order))
   .reduce((sum, order) => sum + Number(order.order_amount || 0), 0);
 let overdueCount = activeOrders.filter((order) => getComputedStatus(order).key === "overdue").length;
@@ -1675,7 +1690,7 @@ container.innerHTML = `
     <div class="dueGroupHead">
       <div>
         <h3 class="dueGroupTitle">План закупа · ${planOrders.length}</h3>
-        <div class="dueGroupMeta">Поставщики на ближайший понедельник. В заказанное попадут только строки с датой заказа или с галочкой предоплаты.</div>
+        <div class="dueGroupMeta">Поставщики на ближайший понедельник. Обычная строка остаётся в плане до даты заказа. Предоплата остаётся в плане, пока не указана дата оплаты.</div>
       </div>
       <div class="heroMetaChip">К оплате: ${formatMoney(planOrders.reduce((sum, order) => sum + Number(order.order_amount || 0), 0))}</div>
     </div>
@@ -1751,7 +1766,7 @@ return `
     <span class="orderFieldLabel">Поставщик</span>
     <div class="supplierFieldWrap">
       <input class="fieldInput order-input" data-field="supplier_name" data-order-id="${escapeHtml(order.id)}" type="text" value="${escapeHtml(order.supplier_name)}" placeholder="Например, Урал Табак" ${isArchived ? "disabled" : ""}>
-      ${isArchived ? "" : `<label class="inlineCheckbox"><input type="checkbox" data-role="toggle-prepayment-check" data-order-id="${escapeHtml(order.id)}" ${prepayment ? "checked" : ""}>Предоплата</label>`}
+      ${isArchived || !isPlanned ? "" : `<label class="inlineCheckbox"><input type="checkbox" data-role="toggle-prepayment-check" data-order-id="${escapeHtml(order.id)}" ${prepayment ? "checked" : ""}>Предоплата</label>`}
     </div>
   </label>
   <label class="orderField">
@@ -1906,7 +1921,7 @@ showAuthNotice("Не удалось сохранить строку закупа
 
 async function saveBudgetOverride(weekStartKey, overrideValue){
 try {
-let baseBudget = getWeekBaseBudget(weekStartKey);
+let baseBudget = getAutoBudgetForWeek(weekStartKey);
 let numericValue = Math.max(Number(overrideValue || 0), baseBudget);
 let result = await callProcurementApi("setBudgetOverride", {
 week_start: weekStartKey,
