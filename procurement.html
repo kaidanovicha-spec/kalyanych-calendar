@@ -1111,10 +1111,10 @@ width:100%;
 </section>
 </div>
 
-<div class="uiVersionToggle">v2.038</div>
+<div class="uiVersionToggle">v2.039</div>
 
 <script>
-const PROCUREMENT_VERSION = "v2.038";
+const PROCUREMENT_VERSION = "v2.039";
 const procurementConfig = {
 googleClientId: "462958236662-4jml8gljkbk0tddja2cktktgdvubiat9.apps.googleusercontent.com",
 apiUrl: "https://script.google.com/macros/s/AKfycbxUp-7LEYL0Sj_J4Ck7QgMiNVziLmxxseLGk4ottNTfkBAktrAcgSwk0r7k1ESVW56kwQ/exec",
@@ -1134,6 +1134,9 @@ loading: false
 };
 let selectedPlanWeekKey = "";
 const saveTimers = {};
+const saveInFlight = {};
+const saveQueued = {};
+const lastSavedSnapshots = {};
 
 function formatDateKey(date){
 let year = date.getUTCFullYear();
@@ -2024,7 +2027,7 @@ function queueOrderSave(orderId){
 window.clearTimeout(saveTimers[orderId]);
 saveTimers[orderId] = window.setTimeout(() => {
 saveOrder(orderId);
-}, 450);
+}, 800);
 }
 
 async function saveOrder(orderId){
@@ -2034,9 +2037,7 @@ if (!order.supplier_name.trim() && !order.order_amount){
 renderWeeks();
 return;
 }
-try {
-let result = await callProcurementApi("saveOrder", {
-order: {
+let payload = {
 id: order.isLocalOnly ? "" : order.id,
 client_id: order.id,
 week_start: order.week_start,
@@ -2048,14 +2049,36 @@ invoice_file_url: order.invoice_file_url,
 invoice_file_name: order.invoice_file_name,
 paid_at: order.paid_at,
 notes: order.notes || ""
+};
+let snapshotKey = (order.isLocalOnly ? "local:" : "remote:") + order.id;
+let snapshot = JSON.stringify(payload);
+if (!order.isLocalOnly && lastSavedSnapshots[snapshotKey] === snapshot){
+return;
 }
+if (saveInFlight[orderId]){
+saveQueued[orderId] = true;
+return;
+}
+saveInFlight[orderId] = true;
+try {
+let result = await callProcurementApi("saveOrder", {
+order: payload
 });
 if (result.order && order.isLocalOnly){
 result.order.client_id = order.id;
 }
+let persistedId = result.order && result.order.id ? result.order.id : order.id;
+lastSavedSnapshots["remote:" + persistedId] = snapshot;
+delete lastSavedSnapshots[snapshotKey];
 upsertLocalOrder(result.order || order);
 } catch (error){
 showAuthNotice("Не удалось сохранить строку закупа: " + error.message, "error");
+} finally {
+saveInFlight[orderId] = false;
+if (saveQueued[orderId]){
+  delete saveQueued[orderId];
+  queueOrderSave(orderId);
+}
 }
 }
 
