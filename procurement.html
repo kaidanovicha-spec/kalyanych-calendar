@@ -638,7 +638,14 @@ display:none;
 .invoiceInline{
 display:flex;
 align-items:center;
-gap:8px;
+gap:6px;
+min-width:0;
+}
+
+.invoiceActions{
+display:flex;
+align-items:center;
+gap:6px;
 min-width:0;
 }
 
@@ -691,37 +698,27 @@ border:1px solid rgba(17,17,17,0.06);
 display:inline-flex;
 align-items:center;
 justify-content:center;
-min-height:40px;
-padding:10px 10px;
-border-radius:14px;
-font-size:11px;
-font-weight:800;
-letter-spacing:0.03em;
-text-transform:uppercase;
-background:#f5efe6;
-color:#675b4b;
-text-align:center;
-line-height:1.1;
+width:16px;
+height:16px;
+border-radius:999px;
+background:#d7cec1;
+box-shadow:inset 0 0 0 1px rgba(17,17,17,0.05);
 }
 
 .statusPill.waiting{
-background:#f2f0ed;
-color:#70757c;
+background:#9aa3af;
 }
 
 .statusPill.payable{
-background:#fff3d9;
-color:#8a6f2a;
+background:#b9931f;
 }
 
 .statusPill.overdue{
-background:#ffe0dc;
-color:#b64040;
+background:#e25555;
 }
 
 .statusPill.paid{
-background:#dcf4e5;
-color:#1b9c4a;
+background:#25a857;
 }
 
 .rowActions{
@@ -793,6 +790,50 @@ display:flex;
 align-items:flex-start;
 justify-content:space-between;
 gap:18px;
+}
+
+.planUnifiedCard{
+margin-bottom:18px;
+padding:18px 20px 20px;
+border-radius:28px;
+background:linear-gradient(180deg,#fffdf8 0%,#f9f3e8 100%);
+border:1px solid rgba(200,157,61,0.22);
+box-shadow:0 12px 28px rgba(110,89,52,0.08);
+}
+
+.planUnifiedCard .planCard{
+margin-bottom:16px;
+padding:0;
+border:none;
+background:transparent;
+box-shadow:none;
+border-radius:0;
+}
+
+.planUnifiedBody{
+padding:18px 18px 16px;
+border-radius:24px;
+background:rgba(255,252,246,0.62);
+border:1px solid rgba(224,205,178,0.58);
+box-shadow:inset 0 1px 0 rgba(255,255,255,0.55);
+}
+
+.planUnifiedBody .dueGroupHead{
+margin-bottom:10px;
+padding-bottom:12px;
+border-bottom:1px solid rgba(224,205,178,0.55);
+}
+
+.planUnifiedBody .ordersTable{
+margin-top:0;
+}
+
+.planUnifiedBody .emptyWeek{
+background:rgba(250,247,241,0.82);
+}
+
+.planUnifiedBody .addOrderRow{
+margin-top:14px;
 }
 
 .planTitle{
@@ -1073,10 +1114,10 @@ width:100%;
 </section>
 </div>
 
-<div class="uiVersionToggle">v2.032</div>
+<div class="uiVersionToggle">v2.035</div>
 
 <script>
-const PROCUREMENT_VERSION = "v2.032";
+const PROCUREMENT_VERSION = "v2.035";
 const procurementConfig = {
 googleClientId: "462958236662-4jml8gljkbk0tddja2cktktgdvubiat9.apps.googleusercontent.com",
 apiUrl: "https://script.google.com/macros/s/AKfycbxUp-7LEYL0Sj_J4Ck7QgMiNVziLmxxseLGk4ottNTfkBAktrAcgSwk0r7k1ESVW56kwQ/exec",
@@ -1137,6 +1178,18 @@ return "";
 
 function formatMoney(value){
 return Number(value || 0).toLocaleString("ru-RU") + " ₽";
+}
+
+function formatMoneyField(value){
+let numeric = Number(value || 0);
+if (!numeric) return "";
+return numeric.toLocaleString("ru-RU") + " ₽";
+}
+
+function parseMoneyField(value){
+if (typeof value === "number") return value;
+let normalized = String(value || "").replace(/[^\d]/g, "");
+return Number(normalized || 0);
 }
 
 function formatDateLabel(dateKey){
@@ -1753,6 +1806,7 @@ let archivedHtml = paidOrders.length
 
 container.innerHTML = `
 <article class="weekCard">
+  <section class="planUnifiedCard">
   <div class="planCard">
     <div>
       <h3 class="planTitle">План закупа на ${escapeHtml(formatDateLabel(activePlanWeekKey))}</h3>
@@ -1776,7 +1830,7 @@ container.innerHTML = `
       </div>` : ""}
     </div>
   </div>
-  <section class="dueGroup">
+  <div class="planUnifiedBody">
     <div class="dueGroupHead">
       <div>
         <h3 class="dueGroupTitle">План закупа · ${planOrders.length}</h3>
@@ -1792,6 +1846,7 @@ container.innerHTML = `
     <div class="addOrderRow">
       ${planIsDone ? "" : `<button class="plainButton secondary" data-role="add-plan-order" data-week-start="${activePlanWeekKey}" type="button">+ Добавить в план закупа</button>`}
     </div>
+  </div>
   </section>
   <div class="weekHeader">
     <div class="weekTitleWrap">
@@ -1842,7 +1897,10 @@ let dueDateHtml = `<div class="dateFieldWrap">
       <input class="fieldDate order-input" data-field="payment_due_date" data-order-id="${escapeHtml(order.id)}" type="date" value="${escapeHtml(order.payment_due_date || "")}" ${(isArchived || !canEditPlannedDates) ? "disabled" : ""}>
     </div>`;
 let invoiceHtml = order.invoice_file_url
-  ? `<a class="invoiceLink" href="${escapeHtml(order.invoice_file_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(order.invoice_file_name || "Открыть счет")}</a>`
+  ? `<div class="invoiceActions">
+      <a class="invoiceLink" href="${escapeHtml(order.invoice_file_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(order.invoice_file_name || "Открыть счет")}</a>
+      ${isArchived ? "" : `<button class="plainButton ghost iconButton" title="Удалить счет" aria-label="Удалить счет" data-role="remove-invoice" data-order-id="${escapeHtml(order.id)}" type="button">×</button>`}
+    </div>`
   : `<div class="invoiceLink muted">Счет не загружен</div>`;
 let paidButtonHtml = order.paid_at
   ? `<div class="rowHint">Оплачено ${escapeHtml(paidDateLabel)}</div>`
@@ -1860,7 +1918,7 @@ return `
   </label>
   <label class="orderField">
     <span class="orderFieldLabel">Сумма</span>
-    <input class="fieldNumber order-input" data-field="order_amount" data-order-id="${escapeHtml(order.id)}" type="number" min="0" step="1" value="${order.order_amount ? Math.round(order.order_amount) : ""}" placeholder="0" ${isArchived ? "disabled" : ""}>
+    <input class="fieldNumber order-input" data-field="order_amount" data-order-id="${escapeHtml(order.id)}" type="text" inputmode="numeric" value="${escapeHtml(formatMoneyField(order.order_amount))}" placeholder="0 ₽" ${isArchived ? "disabled" : ""}>
   </label>
   <label class="orderField">
     <span class="orderFieldLabel">Дата заказа</span>
@@ -1881,7 +1939,7 @@ return `
   </div>
   <div class="orderField">
     <span class="orderFieldLabel">Статус</span>
-    <div class="statusPill ${status.key}">${status.label}</div>
+    <div class="statusPill ${status.key}" title="${escapeHtml(status.label)}" aria-label="${escapeHtml(status.label)}"></div>
   </div>
   <div class="orderField rowActions">
     <span class="orderFieldLabel">Оплачено</span>
@@ -2124,6 +2182,16 @@ showAuthNotice("Не удалось загрузить счет: " + error.messa
 }
 }
 
+async function removeInvoice(orderId){
+let order = getOrderById(orderId);
+if (!order) return;
+order.invoice_file_url = "";
+order.invoice_file_name = "";
+hideNotices();
+renderWeeks();
+queueOrderSave(orderId);
+}
+
 async function markOrderPaid(orderId){
 try {
 let result = await callProcurementApi("markPaid", {
@@ -2191,7 +2259,7 @@ function handleOrderFieldChange(orderId, field, value){
 let order = getOrderById(orderId);
 if (!order) return;
   let previousOrderDate = order.order_date;
-  let nextValue = field === "order_amount" ? Number(value || 0) : value;
+  let nextValue = field === "order_amount" ? parseMoneyField(value) : value;
 if (field === "order_amount" && order.week_start === getCurrentPlanViewWeekKey() && !canFitIntoPlanBudget(orderId, nextValue, order.week_start)){
 showAuthNotice("Нельзя превысить бюджет плана закупа. Увеличь бюджет или уменьши суммы строк.", "error");
 renderWeeks();
@@ -2254,6 +2322,10 @@ if (role === "pick-invoice"){
 let orderId = actionTrigger.getAttribute("data-order-id");
 let input = document.getElementById("invoice-" + orderId);
 if (input) input.click();
+return;
+}
+if (role === "remove-invoice"){
+removeInvoice(actionTrigger.getAttribute("data-order-id"));
 return;
 }
 if (role === "mark-paid"){
