@@ -1073,10 +1073,10 @@ width:100%;
 </section>
 </div>
 
-<div class="uiVersionToggle">v2.031</div>
+<div class="uiVersionToggle">v2.032</div>
 
 <script>
-const PROCUREMENT_VERSION = "v2.031";
+const PROCUREMENT_VERSION = "v2.032";
 const procurementConfig = {
 googleClientId: "462958236662-4jml8gljkbk0tddja2cktktgdvubiat9.apps.googleusercontent.com",
 apiUrl: "https://script.google.com/macros/s/AKfycbxUp-7LEYL0Sj_J4Ck7QgMiNVziLmxxseLGk4ottNTfkBAktrAcgSwk0r7k1ESVW56kwQ/exec",
@@ -1502,7 +1502,7 @@ return Array.from(keys)
 
 function getCurrentPlanViewWeekKey(){
 let availableKeys = buildSelectablePlanWeekKeys();
-let fallbackKey = getActivePlanWeekKey();
+let fallbackKey = getNextMondayKey();
 if (!selectedPlanWeekKey || !availableKeys.includes(selectedPlanWeekKey)){
   selectedPlanWeekKey = availableKeys.includes(fallbackKey) ? fallbackKey : (availableKeys[0] || fallbackKey);
 }
