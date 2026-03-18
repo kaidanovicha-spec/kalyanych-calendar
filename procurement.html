@@ -1009,10 +1009,10 @@ width:100%;
 </section>
 </div>
 
-<div class="uiVersionToggle">v2.013</div>
+<div class="uiVersionToggle">v2.014</div>
 
 <script>
-const PROCUREMENT_VERSION = "v2.013";
+const PROCUREMENT_VERSION = "v2.014";
 const procurementConfig = {
 googleClientId: "462958236662-4jml8gljkbk0tddja2cktktgdvubiat9.apps.googleusercontent.com",
 apiUrl: "https://script.google.com/macros/s/AKfycbxUp-7LEYL0Sj_J4Ck7QgMiNVziLmxxseLGk4ottNTfkBAktrAcgSwk0r7k1ESVW56kwQ/exec",
@@ -1469,11 +1469,15 @@ return formatDateKey(addDays(parseDateKey(orderDateKey), 14));
 
 function normalizeOrder(order, weekStartKey = ""){
 let normalizedWeekStart = normalizeDateValue(order.week_start || weekStartKey);
-let orderDate = normalizeDateValue(order.order_date) || normalizedWeekStart || formatDateKey(today);
+let explicitEmptyOrderDate = Object.prototype.hasOwnProperty.call(order, "order_date") && order.order_date === "";
+let orderDate = explicitEmptyOrderDate
+  ? ""
+  : (normalizeDateValue(order.order_date) || normalizedWeekStart || formatDateKey(today));
 let defaultDue = getDefaultDueDate(orderDate);
+let explicitEmptyDueDate = Object.prototype.hasOwnProperty.call(order, "payment_due_date") && order.payment_due_date === "";
 let paymentDueDate = order.payment_due_date === "prepayment"
   ? "prepayment"
-  : (normalizeDateValue(order.payment_due_date) || defaultDue);
+  : (explicitEmptyDueDate ? "" : (normalizeDateValue(order.payment_due_date) || defaultDue));
 return {
 id: order.id || ("local-" + Date.now() + "-" + Math.random().toString(16).slice(2, 8)),
 week_start: normalizedWeekStart,
@@ -1518,15 +1522,17 @@ let allOrders = [...procurementState.orders].sort((left, right) => {
 });
 let activeOrders = allOrders.filter((order) => !order.paid_at && !isArchivedPaid(order));
 let paidOrders = allOrders.filter((order) => order.paid_at && !isArchivedPaid(order));
+let nextMondayKey = getNextMondayKey();
+let planOrders = activeOrders.filter((order) => order.week_start === nextMondayKey);
+let groupedOrders = activeOrders.filter((order) => order.week_start !== nextMondayKey);
 let spent = activeOrders.reduce((sum, order) => sum + Number(order.order_amount || 0), 0);
 let overdueCount = activeOrders.filter((order) => getComputedStatus(order).key === "overdue").length;
-let waitingCount = activeOrders.filter((order) => getComputedStatus(order).key === "waiting").length;
- let nextMondayKey = getNextMondayKey();
+let waitingCount = activeOrders.filter((order) => !order.invoice_file_url).length;
  let nextMondayBudget = getBudgetForPreviousSevenDays(nextMondayKey);
  let previousPlanRangeStart = formatDateLabel(formatDateKey(addDays(parseDateKey(nextMondayKey), -7)));
  let previousPlanRangeEnd = formatDateLabel(formatDateKey(addDays(parseDateKey(nextMondayKey), -1)));
  let groupMap = new Map();
- for (let order of activeOrders){
+ for (let order of groupedOrders){
    let meta = getDueGroupMeta(order);
    if (!groupMap.has(meta.key)){
      groupMap.set(meta.key, {
@@ -1565,7 +1571,7 @@ let ordersHead = `
             <h3 class="dueGroupTitle">${escapeHtml(group.meta.title)} · ${group.orders.length}</h3>
             <div class="dueGroupMeta">${escapeHtml(group.meta.meta)}</div>
           </div>
-          <div class="heroMetaChip">Строк: ${group.orders.length}</div>
+          <div class="heroMetaChip">К оплате: ${formatMoney(group.orders.reduce((sum, order) => sum + Number(order.order_amount || 0), 0))}</div>
         </div>
         <div class="ordersTable">
           ${ordersHead}
@@ -1588,9 +1594,26 @@ container.innerHTML = `
       <div class="planMeta">
         <div class="heroMetaChip">Плановый бюджет: ${formatMoney(nextMondayBudget)}</div>
         <div class="heroMetaChip">Дата старта: ${escapeHtml(formatDateLabel(nextMondayKey))}</div>
+        <div class="heroMetaChip">Запланировано: ${formatMoney(planOrders.reduce((sum, order) => sum + Number(order.order_amount || 0), 0))}</div>
       </div>
     </div>
   </div>
+  <section class="dueGroup">
+    <div class="dueGroupHead">
+      <div>
+        <h3 class="dueGroupTitle">План закупа · ${planOrders.length}</h3>
+        <div class="dueGroupMeta">Поставщики на ближайший понедельник. Дату заказа можно поставить, когда наступит день закупа.</div>
+      </div>
+      <div class="heroMetaChip">К оплате: ${formatMoney(planOrders.reduce((sum, order) => sum + Number(order.order_amount || 0), 0))}</div>
+    </div>
+    <div class="ordersTable">
+      ${ordersHead}
+      ${planOrders.length ? planOrders.map((order) => renderOrderRow(order, false, { planned: true, planStartKey: nextMondayKey })).join("") : "<div class='emptyWeek'>Пока нет ни одной плановой строки на ближайший понедельник.</div>"}
+    </div>
+    <div class="addOrderRow">
+      <button class="plainButton secondary" data-role="add-plan-order" data-week-start="${nextMondayKey}" type="button">+ Добавить в план закупа</button>
+    </div>
+  </section>
   <div class="weekHeader">
     <div class="weekTitleWrap">
       <h3 class="weekTitle">Все заказы</h3>
@@ -1624,13 +1647,16 @@ container.innerHTML = `
   </div>
   ${groupsHtml}
   <div class="addOrderRow">
-    <button class="plainButton secondary" data-role="add-order-global" type="button">+ Добавить поставщика</button>
+    <button class="plainButton secondary" data-role="add-order-global" type="button">+ Добавить поставщика вне плана</button>
   </div>
   ${archivedHtml}
 </article>`;
 }
 
-function renderOrderRow(order, isArchived = false){
+function renderOrderRow(order, isArchived = false, options = {}){
+let isPlanned = Boolean(options.planned);
+let planStartKey = options.planStartKey || "";
+let canEditPlannedDates = !isPlanned || formatDateKey(today) >= planStartKey;
 let status = getComputedStatus(order);
 let paidDateLabel = order.paid_at ? new Date(order.paid_at).toLocaleDateString("ru-RU", { timeZone: "UTC" }) : "—";
 let dueDateHtml = order.payment_due_date === "prepayment"
@@ -1639,8 +1665,8 @@ let dueDateHtml = order.payment_due_date === "prepayment"
       ${isArchived ? "" : `<button class="plainButton ghost dateToggleButton" data-role="toggle-prepayment" data-order-id="${escapeHtml(order.id)}" type="button">Дата</button>`}
     </div>`
   : `<div class="dateFieldWrap">
-      <input class="fieldDate order-input" data-field="payment_due_date" data-order-id="${escapeHtml(order.id)}" type="date" value="${escapeHtml(order.payment_due_date || "")}" ${isArchived ? "disabled" : ""}>
-      ${isArchived ? "" : `<button class="plainButton ghost dateToggleButton" data-role="toggle-prepayment" data-order-id="${escapeHtml(order.id)}" type="button">Пред</button>`}
+      <input class="fieldDate order-input" data-field="payment_due_date" data-order-id="${escapeHtml(order.id)}" type="date" value="${escapeHtml(order.payment_due_date || "")}" ${(isArchived || !canEditPlannedDates) ? "disabled" : ""}>
+      ${isArchived || !canEditPlannedDates ? "" : `<button class="plainButton ghost dateToggleButton" data-role="toggle-prepayment" data-order-id="${escapeHtml(order.id)}" type="button">Пред</button>`}
     </div>`;
 let invoiceHtml = order.invoice_file_url
   ? `<a class="invoiceLink" href="${escapeHtml(order.invoice_file_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(order.invoice_file_name || "Открыть счет")}</a>`
@@ -1663,7 +1689,7 @@ return `
   </label>
   <label class="orderField">
     <span class="orderFieldLabel">Дата заказа</span>
-    <input class="fieldDate order-input" data-field="order_date" data-order-id="${escapeHtml(order.id)}" type="date" value="${escapeHtml(order.order_date || "")}" ${isArchived ? "disabled" : ""}>
+    <input class="fieldDate order-input" data-field="order_date" data-order-id="${escapeHtml(order.id)}" type="date" value="${escapeHtml(order.order_date || "")}" ${(isArchived || !canEditPlannedDates) ? "disabled" : ""} placeholder="${isPlanned ? "В день закупа" : ""}">
   </label>
   <label class="orderField">
     <span class="orderFieldLabel">Дата оплаты</span>
@@ -1686,7 +1712,7 @@ return `
     <span class="orderFieldLabel">Оплачено</span>
     <div class="rowActionsStack">
       ${paidButtonHtml}
-      ${isArchived ? "" : `<button class="plainButton ghost" data-role="delete-order" data-order-id="${escapeHtml(order.id)}" type="button">Удалить</button>`}
+      ${isArchived ? "" : `<button class="plainButton ghost iconButton" title="Удалить строку" aria-label="Удалить строку" data-role="delete-order" data-order-id="${escapeHtml(order.id)}" type="button">×</button>`}
     </div>
   </div>
 </div>`;
@@ -1904,6 +1930,17 @@ let currentMondayKey = formatDateKey(getMonday(today));
 addOrderForWeek(currentMondayKey);
 }
 
+function addPlannedOrder(weekStartKey){
+let order = normalizeOrder({
+week_start: weekStartKey,
+order_date: "",
+payment_due_date: ""
+}, weekStartKey);
+order.isLocalOnly = true;
+procurementState.orders.push(order);
+renderWeeks();
+}
+
 function handleOrderFieldChange(orderId, field, value){
 let order = getOrderById(orderId);
 if (!order) return;
@@ -1941,6 +1978,10 @@ return;
 }
 if (role === "add-order-global"){
 addOrderGlobal();
+return;
+}
+if (role === "add-plan-order"){
+addPlannedOrder(actionTrigger.getAttribute("data-week-start"));
 return;
 }
 if (role === "toggle-prepayment"){
