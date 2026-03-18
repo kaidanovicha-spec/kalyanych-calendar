@@ -1052,10 +1052,10 @@ width:100%;
 </section>
 </div>
 
-<div class="uiVersionToggle">v2.021</div>
+<div class="uiVersionToggle">v2.022</div>
 
 <script>
-const PROCUREMENT_VERSION = "v2.021";
+const PROCUREMENT_VERSION = "v2.022";
 const procurementConfig = {
 googleClientId: "462958236662-4jml8gljkbk0tddja2cktktgdvubiat9.apps.googleusercontent.com",
 apiUrl: "https://script.google.com/macros/s/AKfycbxUp-7LEYL0Sj_J4Ck7QgMiNVziLmxxseLGk4ottNTfkBAktrAcgSwk0r7k1ESVW56kwQ/exec",
@@ -1517,6 +1517,10 @@ function isPrepayment(order){
 return String(order.notes || "").includes(PREPAYMENT_MARKER);
 }
 
+function isOrdered(order){
+return Boolean(isPrepayment(order) || normalizeDateValue(order.order_date));
+}
+
 function setPrepaymentFlag(order, enabled){
 let rawNotes = String(order.notes || "").trim();
 let cleaned = rawNotes
@@ -1587,7 +1591,9 @@ let paidOrders = allOrders.filter((order) => order.paid_at && !isArchivedPaid(or
 let nextMondayKey = getNextMondayKey();
 let planOrders = activeOrders.filter((order) => order.week_start === nextMondayKey && !isPrepayment(order));
 let groupedOrders = activeOrders.filter((order) => order.week_start !== nextMondayKey || isPrepayment(order));
-let spent = groupedOrders.reduce((sum, order) => sum + Number(order.order_amount || 0), 0);
+let spent = groupedOrders
+  .filter((order) => isOrdered(order))
+  .reduce((sum, order) => sum + Number(order.order_amount || 0), 0);
 let overdueCount = activeOrders.filter((order) => getComputedStatus(order).key === "overdue").length;
 let waitingCount = activeOrders.filter((order) => !order.invoice_file_url).length;
  let nextMondayBudgetMeta = getPlanBudgetMeta(nextMondayKey);
@@ -1654,7 +1660,7 @@ container.innerHTML = `
       <div class="planMeta">
         <div class="heroMetaChip">Плановый бюджет: ${formatMoney(nextMondayBudgetMeta.effective)}</div>
         <div class="heroMetaChip">Дата старта: ${escapeHtml(formatDateLabel(nextMondayKey))}</div>
-        <div class="heroMetaChip">Запланировано: ${formatMoney(nextMondayBudgetMeta.spent)}</div>
+        <div class="heroMetaChip">Запланировано: ${formatMoney(planOrders.reduce((sum, order) => sum + Number(order.order_amount || 0), 0))}</div>
         <div class="heroMetaChip">Свободный остаток: ${formatMoney(nextMondayBudgetMeta.remaining)}</div>
       </div>
       ${canManageBudget() ? `
@@ -1669,7 +1675,7 @@ container.innerHTML = `
     <div class="dueGroupHead">
       <div>
         <h3 class="dueGroupTitle">План закупа · ${planOrders.length}</h3>
-        <div class="dueGroupMeta">Поставщики на ближайший понедельник. Дату заказа можно поставить, когда наступит день закупа.</div>
+        <div class="dueGroupMeta">Поставщики на ближайший понедельник. В заказанное попадут только строки с датой заказа или с галочкой предоплаты.</div>
       </div>
       <div class="heroMetaChip">К оплате: ${formatMoney(planOrders.reduce((sum, order) => sum + Number(order.order_amount || 0), 0))}</div>
     </div>
