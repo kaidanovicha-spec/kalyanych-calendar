@@ -825,6 +825,25 @@ gap:10px;
 flex-wrap:wrap;
 }
 
+.planSelector{
+margin-top:14px;
+display:flex;
+align-items:center;
+gap:10px;
+flex-wrap:wrap;
+}
+
+.planSelectorLabel{
+font-size:14px;
+font-weight:700;
+color:var(--muted);
+}
+
+.planSelectorField{
+min-width:220px;
+max-width:320px;
+}
+
 .groupList{
 display:flex;
 flex-direction:column;
@@ -1054,10 +1073,10 @@ width:100%;
 </section>
 </div>
 
-<div class="uiVersionToggle">v2.029</div>
+<div class="uiVersionToggle">v2.030</div>
 
 <script>
-const PROCUREMENT_VERSION = "v2.029";
+const PROCUREMENT_VERSION = "v2.030";
 const procurementConfig = {
 googleClientId: "462958236662-4jml8gljkbk0tddja2cktktgdvubiat9.apps.googleusercontent.com",
 apiUrl: "https://script.google.com/macros/s/AKfycbxUp-7LEYL0Sj_J4Ck7QgMiNVziLmxxseLGk4ottNTfkBAktrAcgSwk0r7k1ESVW56kwQ/exec",
@@ -1075,6 +1094,7 @@ orders: [],
 driveFolderUrl: "",
 loading: false
 };
+let selectedPlanWeekKey = "";
 const saveTimers = {};
 
 function formatDateKey(date){
@@ -1457,6 +1477,50 @@ cursor = addDays(cursor, 7);
 return nextMondayKey;
 }
 
+function buildSelectablePlanWeekKeys(){
+let keys = new Set();
+let activeKey = getActivePlanWeekKey();
+if (activeKey) keys.add(activeKey);
+
+let currentMonday = getMonday(today);
+for (let step = -12; step <= 16; step++){
+  keys.add(formatDateKey(addDays(currentMonday, step * 7)));
+}
+
+for (let entry of procurementState.weeks){
+  if (entry.week_start) keys.add(normalizeDateValue(entry.week_start));
+}
+
+for (let order of procurementState.orders){
+  if (order.week_start) keys.add(normalizeDateValue(order.week_start));
+}
+
+return Array.from(keys)
+  .filter(Boolean)
+  .sort();
+}
+
+function getCurrentPlanViewWeekKey(){
+let availableKeys = buildSelectablePlanWeekKeys();
+let fallbackKey = getActivePlanWeekKey();
+if (!selectedPlanWeekKey || !availableKeys.includes(selectedPlanWeekKey)){
+  selectedPlanWeekKey = availableKeys.includes(fallbackKey) ? fallbackKey : (availableKeys[0] || fallbackKey);
+}
+return selectedPlanWeekKey;
+}
+
+function shiftPlanWeek(direction){
+let availableKeys = buildSelectablePlanWeekKeys();
+let currentKey = getCurrentPlanViewWeekKey();
+let index = availableKeys.indexOf(currentKey);
+if (index < 0){
+  selectedPlanWeekKey = getActivePlanWeekKey();
+  return;
+}
+let nextIndex = Math.min(Math.max(index + direction, 0), availableKeys.length - 1);
+selectedPlanWeekKey = availableKeys[nextIndex];
+}
+
 function getPlanBudgetMeta(weekStartKey){
 let base = getAutoBudgetForWeek(weekStartKey);
 let effective = getEffectiveBudget(weekStartKey);
@@ -1612,7 +1676,9 @@ let allOrders = [...procurementState.orders].sort((left, right) => {
 });
 let activeOrders = allOrders.filter((order) => !order.paid_at && !isArchivedPaid(order));
 let paidOrders = allOrders.filter((order) => order.paid_at && !isArchivedPaid(order));
-let activePlanWeekKey = getActivePlanWeekKey();
+let activePlanWeekKey = getCurrentPlanViewWeekKey();
+let availablePlanWeekKeys = buildSelectablePlanWeekKeys();
+let activePlanIndex = availablePlanWeekKeys.indexOf(activePlanWeekKey);
 let planOrders = activeOrders.filter((order) => isPlanPending(order, activePlanWeekKey));
 let groupedOrders = activeOrders.filter((order) => !isPlanPending(order, activePlanWeekKey));
 let spent = activeOrders
@@ -1624,6 +1690,15 @@ let nextMondayBudgetMeta = getPlanBudgetMeta(activePlanWeekKey);
 let previousPlanRangeStart = formatDateLabel(formatDateKey(addDays(parseDateKey(activePlanWeekKey), -7)));
 let previousPlanRangeEnd = formatDateLabel(formatDateKey(addDays(parseDateKey(activePlanWeekKey), -1)));
 let planIsDone = isPlanCompleted(activePlanWeekKey);
+let planSelectorHtml = `
+<div class="planSelector">
+  <span class="planSelectorLabel">Понедельник плана:</span>
+  <button class="plainButton ghost iconButton" data-role="plan-prev" type="button" ${activePlanIndex <= 0 ? "disabled" : ""} aria-label="Предыдущий понедельник">‹</button>
+  <select class="fieldInput planSelectorField" data-role="plan-week-select">
+    ${availablePlanWeekKeys.map((weekKey) => `<option value="${weekKey}" ${weekKey === activePlanWeekKey ? "selected" : ""}>${escapeHtml(formatDateLabel(weekKey))} · ${escapeHtml(getWeekLabel(weekKey))}</option>`).join("")}
+  </select>
+  <button class="plainButton ghost iconButton" data-role="plan-next" type="button" ${activePlanIndex >= availablePlanWeekKeys.length - 1 ? "disabled" : ""} aria-label="Следующий понедельник">›</button>
+</div>`;
  let groupMap = new Map();
  for (let order of groupedOrders){
    let meta = getDueGroupMeta(order);
@@ -1682,6 +1757,7 @@ container.innerHTML = `
     <div>
       <h3 class="planTitle">План закупа на ${escapeHtml(formatDateLabel(activePlanWeekKey))}</h3>
       <p class="planText">Бюджет на ближайший понедельник считается по себестоимости за предыдущие 7 дней: ${escapeHtml(previousPlanRangeStart)} - ${escapeHtml(previousPlanRangeEnd)}.</p>
+      ${planSelectorHtml}
       <div class="planMeta">
         <div class="heroMetaChip">Плановый бюджет: ${formatMoney(nextMondayBudgetMeta.effective)}</div>
         <div class="heroMetaChip">Дата старта: ${escapeHtml(formatDateLabel(activePlanWeekKey))}</div>
@@ -1958,6 +2034,22 @@ if (pendingPlanOrders.length){
 showAuthNotice("Сначала заверши все строки плана: у всех поставь дату заказа.", "error");
 return;
 }
+try {
+let result = await callProcurementApi("completePlan", {
+week_start: weekStartKey
+});
+let index = procurementState.weeks.findIndex((entry) => entry.week_start === weekStartKey);
+if (index >= 0){
+procurementState.weeks[index] = result.week;
+} else {
+procurementState.weeks.push(result.week);
+}
+hideNotices();
+renderWeeks();
+} catch (error){
+showAuthNotice("Не удалось закрыть план закупа: " + error.message, "error");
+}
+}
 
 async function reopenPlan(weekStartKey){
 try {
@@ -1974,22 +2066,6 @@ hideNotices();
 renderWeeks();
 } catch (error){
 showAuthNotice("Не удалось вернуть план закупа: " + error.message, "error");
-}
-}
-try {
-let result = await callProcurementApi("completePlan", {
-week_start: weekStartKey
-});
-let index = procurementState.weeks.findIndex((entry) => entry.week_start === weekStartKey);
-if (index >= 0){
-procurementState.weeks[index] = result.week;
-} else {
-procurementState.weeks.push(result.week);
-}
-hideNotices();
-renderWeeks();
-} catch (error){
-showAuthNotice("Не удалось закрыть план закупа: " + error.message, "error");
 }
 }
 
@@ -2095,7 +2171,7 @@ let order = getOrderById(orderId);
 if (!order) return;
   let previousOrderDate = order.order_date;
   let nextValue = field === "order_amount" ? Number(value || 0) : value;
-if (field === "order_amount" && order.week_start === getActivePlanWeekKey() && !canFitIntoPlanBudget(orderId, nextValue, order.week_start)){
+if (field === "order_amount" && order.week_start === getCurrentPlanViewWeekKey() && !canFitIntoPlanBudget(orderId, nextValue, order.week_start)){
 showAuthNotice("Нельзя превысить бюджет плана закупа. Увеличь бюджет или уменьши суммы строк.", "error");
 renderWeeks();
 return;
@@ -2143,6 +2219,16 @@ if (role === "reopen-plan"){
 reopenPlan(actionTrigger.getAttribute("data-week-start"));
 return;
 }
+if (role === "plan-prev"){
+shiftPlanWeek(-1);
+renderWeeks();
+return;
+}
+if (role === "plan-next"){
+shiftPlanWeek(1);
+renderWeeks();
+return;
+}
 if (role === "pick-invoice"){
 let orderId = actionTrigger.getAttribute("data-order-id");
 let input = document.getElementById("invoice-" + orderId);
@@ -2161,6 +2247,11 @@ return;
 
 function handleWeeksChange(event){
 let input = event.target;
+if (input.getAttribute("data-role") === "plan-week-select"){
+selectedPlanWeekKey = input.value;
+renderWeeks();
+return;
+}
 if (input.classList.contains("order-input")){
 handleOrderFieldChange(
   input.getAttribute("data-order-id"),
