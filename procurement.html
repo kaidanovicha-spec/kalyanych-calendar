@@ -1073,10 +1073,10 @@ width:100%;
 </section>
 </div>
 
-<div class="uiVersionToggle">v2.030</div>
+<div class="uiVersionToggle">v2.031</div>
 
 <script>
-const PROCUREMENT_VERSION = "v2.030";
+const PROCUREMENT_VERSION = "v2.031";
 const procurementConfig = {
 googleClientId: "462958236662-4jml8gljkbk0tddja2cktktgdvubiat9.apps.googleusercontent.com",
 apiUrl: "https://script.google.com/macros/s/AKfycbxUp-7LEYL0Sj_J4Ck7QgMiNVziLmxxseLGk4ottNTfkBAktrAcgSwk0r7k1ESVW56kwQ/exec",
@@ -1695,7 +1695,7 @@ let planSelectorHtml = `
   <span class="planSelectorLabel">Понедельник плана:</span>
   <button class="plainButton ghost iconButton" data-role="plan-prev" type="button" ${activePlanIndex <= 0 ? "disabled" : ""} aria-label="Предыдущий понедельник">‹</button>
   <select class="fieldInput planSelectorField" data-role="plan-week-select">
-    ${availablePlanWeekKeys.map((weekKey) => `<option value="${weekKey}" ${weekKey === activePlanWeekKey ? "selected" : ""}>${escapeHtml(formatDateLabel(weekKey))} · ${escapeHtml(getWeekLabel(weekKey))}</option>`).join("")}
+    ${availablePlanWeekKeys.map((weekKey) => `<option value="${weekKey}" ${weekKey === activePlanWeekKey ? "selected" : ""}>${escapeHtml(formatDateLabel(weekKey))}</option>`).join("")}
   </select>
   <button class="plainButton ghost iconButton" data-role="plan-next" type="button" ${activePlanIndex >= availablePlanWeekKeys.length - 1 ? "disabled" : ""} aria-label="Следующий понедельник">›</button>
 </div>`;
@@ -2052,11 +2052,32 @@ showAuthNotice("Не удалось закрыть план закупа: " + er
 }
 
 async function reopenPlan(weekStartKey){
+let index = procurementState.weeks.findIndex((entry) => entry.week_start === weekStartKey);
+if (index >= 0){
+procurementState.weeks[index] = Object.assign({}, procurementState.weeks[index], {
+  plan_done_at: "",
+  plan_done_by: "",
+  updated_at: new Date().toISOString(),
+  updated_by: procurementState.user ? procurementState.user.email : ""
+});
+} else {
+procurementState.weeks.push({
+  week_start: weekStartKey,
+  budget_override: 0,
+  budget_base: getAutoBudgetForWeek(weekStartKey),
+  plan_done_at: "",
+  plan_done_by: "",
+  updated_at: new Date().toISOString(),
+  updated_by: procurementState.user ? procurementState.user.email : ""
+});
+}
+hideNotices();
+renderWeeks();
 try {
 let result = await callProcurementApi("reopenPlan", {
 week_start: weekStartKey
 });
-let index = procurementState.weeks.findIndex((entry) => entry.week_start === weekStartKey);
+index = procurementState.weeks.findIndex((entry) => entry.week_start === weekStartKey);
 if (index >= 0){
 procurementState.weeks[index] = result.week;
 } else {
@@ -2065,7 +2086,7 @@ procurementState.weeks.push(result.week);
 hideNotices();
 renderWeeks();
 } catch (error){
-showAuthNotice("Не удалось вернуть план закупа: " + error.message, "error");
+showAuthNotice("План визуально открыт. Для сохранения после обновления страницы может понадобиться обновить Apps Script: " + error.message, "error");
 }
 }
 
