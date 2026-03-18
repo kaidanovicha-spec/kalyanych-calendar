@@ -489,12 +489,23 @@ color:#65594a;
 .fieldNumber{
 width:100%;
 min-height:40px;
-padding:10px 12px;
+padding:9px 12px;
 border-radius:14px;
 border:1px solid rgba(17,17,17,0.1);
 background:#fff;
 font:inherit;
 color:var(--ink);
+}
+
+.fieldNumber::-webkit-outer-spin-button,
+.fieldNumber::-webkit-inner-spin-button{
+-webkit-appearance:none;
+margin:0;
+}
+
+.fieldNumber{
+appearance:textfield;
+-moz-appearance:textfield;
 }
 
 .fieldInput:focus,
@@ -512,14 +523,14 @@ width:200px;
 .ordersTable{
 display:flex;
 flex-direction:column;
-gap:10px;
+gap:8px;
 }
 
 .ordersHead,
 .orderRow{
 display:grid;
-grid-template-columns:minmax(160px,1.55fr) minmax(120px,0.9fr) minmax(120px,0.95fr) minmax(132px,0.95fr) minmax(160px,1.1fr) minmax(128px,0.9fr) minmax(120px,0.8fr);
-gap:10px;
+grid-template-columns:minmax(160px,1.7fr) minmax(110px,0.75fr) minmax(144px,0.9fr) minmax(144px,0.9fr) minmax(180px,1fr) minmax(130px,0.78fr) minmax(126px,0.78fr);
+gap:8px;
 align-items:start;
 }
 
@@ -533,8 +544,8 @@ color:#9a8774;
 }
 
 .orderRow{
-padding:14px;
-border-radius:22px;
+padding:10px 12px;
+border-radius:20px;
 background:#fff;
 border:1px solid rgba(17,17,17,0.06);
 box-shadow:0 8px 18px rgba(15,23,42,0.04);
@@ -573,7 +584,7 @@ color:#9a8774;
 .invoiceCell{
 display:flex;
 flex-direction:column;
-gap:8px;
+gap:6px;
 }
 
 .invoiceLink{
@@ -581,7 +592,7 @@ display:inline-flex;
 align-items:center;
 gap:8px;
 min-height:40px;
-padding:10px 12px;
+padding:9px 12px;
 border-radius:14px;
 background:#f8f2e8;
 border:1px solid rgba(17,17,17,0.06);
@@ -600,6 +611,62 @@ color:#9b8f82;
 
 .invoiceInput{
 display:none;
+}
+
+.invoiceInline{
+display:flex;
+align-items:center;
+gap:8px;
+min-width:0;
+}
+
+.iconButton{
+width:40px;
+min-width:40px;
+height:40px;
+padding:0;
+border-radius:14px;
+font-size:18px;
+line-height:1;
+}
+
+.dateFieldWrap{
+display:flex;
+align-items:center;
+gap:6px;
+}
+
+.dateToggleButton{
+min-width:40px;
+height:40px;
+padding:0 10px;
+border-radius:14px;
+font-size:12px;
+font-weight:800;
+}
+
+.dateModePill{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+min-height:40px;
+padding:10px 12px;
+border-radius:14px;
+background:#fff3d9;
+border:1px solid rgba(138,111,42,0.18);
+font-size:12px;
+font-weight:800;
+letter-spacing:0.04em;
+text-transform:uppercase;
+color:#8a6f2a;
+white-space:nowrap;
+}
+
+.rowActionsStack{
+display:flex;
+align-items:center;
+gap:8px;
+flex-wrap:wrap;
 }
 
 .statusPill{
@@ -684,6 +751,81 @@ line-height:1.45;
 color:var(--muted);
 }
 
+.planCard{
+margin-bottom:18px;
+padding:18px 20px;
+border-radius:24px;
+background:linear-gradient(180deg,#fffdf8 0%,#f9f3e8 100%);
+border:1px solid rgba(200,157,61,0.22);
+box-shadow:0 12px 28px rgba(110,89,52,0.08);
+display:flex;
+align-items:flex-start;
+justify-content:space-between;
+gap:18px;
+}
+
+.planTitle{
+margin:0;
+font-size:28px;
+line-height:1;
+letter-spacing:-0.03em;
+}
+
+.planText{
+margin:10px 0 0;
+font-size:14px;
+line-height:1.45;
+color:var(--muted);
+max-width:620px;
+}
+
+.planMeta{
+margin-top:12px;
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+}
+
+.groupList{
+display:flex;
+flex-direction:column;
+gap:14px;
+}
+
+.dueGroup{
+padding:16px;
+border-radius:24px;
+border:1px solid rgba(224,205,178,0.72);
+background:rgba(255,255,255,0.84);
+}
+
+.dueGroup.overdue{
+border-color:rgba(217,72,72,0.18);
+background:#fff7f6;
+}
+
+.dueGroupHead{
+display:flex;
+align-items:flex-start;
+justify-content:space-between;
+gap:12px;
+margin-bottom:12px;
+}
+
+.dueGroupTitle{
+margin:0;
+font-size:24px;
+line-height:1;
+letter-spacing:-0.03em;
+}
+
+.dueGroupMeta{
+margin-top:6px;
+font-size:13px;
+line-height:1.4;
+color:var(--muted);
+}
+
 .screenHidden{
 display:none !important;
 }
@@ -717,7 +859,7 @@ width:100%;
 
 .ordersHead,
 .orderRow{
-grid-template-columns:minmax(150px,1.4fr) minmax(110px,0.85fr) minmax(116px,0.9fr) minmax(124px,0.9fr) minmax(150px,1fr) minmax(120px,0.85fr) minmax(114px,0.8fr);
+grid-template-columns:minmax(150px,1.4fr) minmax(100px,0.75fr) minmax(132px,0.9fr) minmax(132px,0.9fr) minmax(160px,1fr) minmax(120px,0.8fr) minmax(114px,0.78fr);
 }
 }
 
@@ -749,6 +891,10 @@ border-radius:28px;
 .weekCard{
 padding:18px;
 border-radius:24px;
+}
+
+.planCard{
+flex-direction:column;
 }
 
 .weekBudgetGrid{
@@ -798,6 +944,10 @@ font-size:34px;
 font-size:24px;
 }
 
+.planTitle{
+font-size:24px;
+}
+
 .weekBudgetGrid{
 grid-template-columns:1fr;
 }
@@ -827,31 +977,18 @@ width:100%;
 </h1>
 <div class="pageActions">
 <a class="topAction secondary" href="./index.html">Календарь</a>
-<a class="topAction primary screenHidden" id="driveFolderButton" href="#" target="_blank" rel="noopener noreferrer">Папка счетов</a>
+<a class="topAction screenHidden" id="driveFolderButton" href="#" target="_blank" rel="noopener noreferrer">Папка счетов</a>
 <button class="plainButton secondary screenHidden" id="signOutButton" type="button">Выйти</button>
 <div class="userChip" id="userChip">Не вошли</div>
 </div>
 </div>
 
-<section class="heroCard">
-<div class="heroEyebrow">Weekly Procurement</div>
-<h2 class="heroTitle">Недельный закуп, счета и сроки оплаты</h2>
-<p class="heroText">
-Бюджет недели автоматически берётся из себестоимости предыдущей закрытой недели календаря.
-Закупщик и управляющий ведут поставщиков и счета, а оплату и увеличение бюджета подтверждаешь только Алексей.
-</p>
-<div class="heroMeta">
-<div class="heroMetaChip">Google-вход по whitelist</div>
-<div class="heroMetaChip">Бюджет = себестоимость прошлой недели</div>
-<div class="heroMetaChip">Просрочка красным</div>
-</div>
 <div class="setupNotice screenHidden" id="setupNotice"></div>
 <div class="authNotice screenHidden" id="authNotice"></div>
 <div class="loadingNotice screenHidden" id="loadingNotice">Загружаю данные закупа и календаря…</div>
 <div class="authActions" id="authActions">
 <div class="googleButtonWrap" id="googleButtonWrap"></div>
 </div>
-</section>
 
 <section class="procurementSection screenHidden" id="procurementSection">
 <div class="sectionHeader">
@@ -872,10 +1009,10 @@ width:100%;
 </section>
 </div>
 
-<div class="uiVersionToggle">v2.007</div>
+<div class="uiVersionToggle">v2.013</div>
 
 <script>
-const PROCUREMENT_VERSION = "v2.007";
+const PROCUREMENT_VERSION = "v2.013";
 const procurementConfig = {
 googleClientId: "462958236662-4jml8gljkbk0tddja2cktktgdvubiat9.apps.googleusercontent.com",
 apiUrl: "https://script.google.com/macros/s/AKfycbxUp-7LEYL0Sj_J4Ck7QgMiNVziLmxxseLGk4ottNTfkBAktrAcgSwk0r7k1ESVW56kwQ/exec",
@@ -1200,6 +1337,21 @@ totalCost += calculateCost(revenue, current.getFullYear(), current.getMonth());
 return totalCost;
 }
 
+function getBudgetForPreviousSevenDays(targetWeekStartKey){
+let weekStart = parseDateKey(targetWeekStartKey);
+if (Number.isNaN(weekStart.getTime())) return 0;
+let rangeStart = addDays(weekStart, -7);
+let totalCost = 0;
+for (let step = 0; step < 7; step++){
+let current = addDays(rangeStart, step);
+let dateKey = formatDateKey(current);
+let revenue = getRevenueValue(revenueData[dateKey]);
+if (revenue <= 0) continue;
+totalCost += calculateCost(revenue, current.getUTCFullYear(), current.getUTCMonth());
+}
+return totalCost;
+}
+
 function getEffectiveBudget(weekStartKey){
 let base = getWeekBaseBudget(weekStartKey);
 let meta = getWeekOverrideMeta(weekStartKey);
@@ -1214,11 +1366,70 @@ let hideAt = addDays(paidAt, 3);
 return hideAt < today;
 }
 
+function getNextMondayKey(){
+let monday = getMonday(today);
+let mondayKey = formatDateKey(monday);
+let todayKey = formatDateKey(today);
+if (mondayKey <= todayKey){
+  monday = addDays(monday, 7);
+}
+return formatDateKey(monday);
+}
+
+function getDueGroupMeta(order){
+let status = getComputedStatus(order);
+if (status.key === "overdue"){
+  return {
+    key: "overdue",
+    title: "Просроченные оплаты",
+    meta: "Счета, у которых дата оплаты уже прошла",
+    className: "dueGroup overdue"
+  };
+}
+if (order.payment_due_date === "prepayment"){
+  return {
+    key: "prepayment",
+    title: "Предоплата",
+    meta: "Поставщики, которых нужно оплачивать сразу",
+    className: "dueGroup"
+  };
+}
+let dueKey = normalizeDateValue(order.payment_due_date);
+if (!dueKey){
+  return {
+    key: "no-date",
+    title: "Без даты оплаты",
+    meta: "Поставщики, где дата оплаты ещё не заполнена",
+    className: "dueGroup"
+  };
+}
+let mondayKey = formatDateKey(getMonday(parseDateKey(dueKey)));
+return {
+  key: mondayKey,
+  title: getWeekLabel(mondayKey),
+  meta: "Оплаты, попадающие в это окно недели",
+  className: "dueGroup"
+};
+}
+
 function getComputedStatus(order){
 if (order.paid_at){
 return {
 key: "paid",
 label: "Оплачено"
+};
+}
+
+if (order.payment_due_date === "prepayment"){
+if (!order.invoice_file_url){
+return {
+key: "waiting",
+label: "Ожидает счет"
+};
+}
+return {
+key: "payable",
+label: "К оплате"
 };
 }
 
@@ -1260,7 +1471,9 @@ function normalizeOrder(order, weekStartKey = ""){
 let normalizedWeekStart = normalizeDateValue(order.week_start || weekStartKey);
 let orderDate = normalizeDateValue(order.order_date) || normalizedWeekStart || formatDateKey(today);
 let defaultDue = getDefaultDueDate(orderDate);
-let paymentDueDate = normalizeDateValue(order.payment_due_date) || defaultDue;
+let paymentDueDate = order.payment_due_date === "prepayment"
+  ? "prepayment"
+  : (normalizeDateValue(order.payment_due_date) || defaultDue);
 return {
 id: order.id || ("local-" + Date.now() + "-" + Math.random().toString(16).slice(2, 8)),
 week_start: normalizedWeekStart,
@@ -1303,11 +1516,35 @@ let allOrders = [...procurementState.orders].sort((left, right) => {
   let rightDue = right.payment_due_date || right.order_date || "9999-12-31";
   return leftDue.localeCompare(rightDue);
 });
-let activeOrders = allOrders.filter((order) => !isArchivedPaid(order));
-let archivedOrders = allOrders.filter((order) => isArchivedPaid(order));
+let activeOrders = allOrders.filter((order) => !order.paid_at && !isArchivedPaid(order));
+let paidOrders = allOrders.filter((order) => order.paid_at && !isArchivedPaid(order));
 let spent = activeOrders.reduce((sum, order) => sum + Number(order.order_amount || 0), 0);
 let overdueCount = activeOrders.filter((order) => getComputedStatus(order).key === "overdue").length;
 let waitingCount = activeOrders.filter((order) => getComputedStatus(order).key === "waiting").length;
+ let nextMondayKey = getNextMondayKey();
+ let nextMondayBudget = getBudgetForPreviousSevenDays(nextMondayKey);
+ let previousPlanRangeStart = formatDateLabel(formatDateKey(addDays(parseDateKey(nextMondayKey), -7)));
+ let previousPlanRangeEnd = formatDateLabel(formatDateKey(addDays(parseDateKey(nextMondayKey), -1)));
+ let groupMap = new Map();
+ for (let order of activeOrders){
+   let meta = getDueGroupMeta(order);
+   if (!groupMap.has(meta.key)){
+     groupMap.set(meta.key, {
+       meta,
+       orders: []
+     });
+   }
+   groupMap.get(meta.key).orders.push(order);
+ }
+ let groups = Array.from(groupMap.values()).sort((left, right) => {
+   if (left.meta.key === "overdue") return -1;
+   if (right.meta.key === "overdue") return 1;
+   if (left.meta.key === "prepayment") return -1;
+   if (right.meta.key === "prepayment") return 1;
+   if (left.meta.key === "no-date") return 1;
+   if (right.meta.key === "no-date") return -1;
+   return left.meta.key.localeCompare(right.meta.key);
+ });
 
 let ordersHead = `
 <div class="ordersHead">
@@ -1320,22 +1557,46 @@ let ordersHead = `
 <div>Оплачено</div>
 </div>`;
 
-let rowsHtml = activeOrders.length
-  ? activeOrders.map((order) => renderOrderRow(order)).join("")
+ let groupsHtml = groups.length
+  ? `<div class="groupList">${groups.map((group) => `
+      <section class="${group.meta.className}">
+        <div class="dueGroupHead">
+          <div>
+            <h3 class="dueGroupTitle">${escapeHtml(group.meta.title)} · ${group.orders.length}</h3>
+            <div class="dueGroupMeta">${escapeHtml(group.meta.meta)}</div>
+          </div>
+          <div class="heroMetaChip">Строк: ${group.orders.length}</div>
+        </div>
+        <div class="ordersTable">
+          ${ordersHead}
+          ${group.orders.map((order) => renderOrderRow(order)).join("")}
+        </div>
+      </section>
+    `).join("")}</div>`
   : "<div class='emptyWeek'>Пока нет ни одной строки закупа. Добавь поставщика, и запись сохранится в общей таблице.</div>";
 
-let archivedHtml = archivedOrders.length
-  ? `<div class="archivedOrders"><details><summary>Недавно оплачено: ${archivedOrders.length}</summary><div class="ordersTable">${archivedOrders.map((order) => renderOrderRow(order, true)).join("")}</div></details></div>`
+let archivedHtml = paidOrders.length
+  ? `<div class="archivedOrders"><details open><summary>Оплаченные: ${paidOrders.length}</summary><div class="ordersTable">${paidOrders.map((order) => renderOrderRow(order, true)).join("")}</div></details></div>`
   : "";
 
 container.innerHTML = `
 <article class="weekCard">
+  <div class="planCard">
+    <div>
+      <h3 class="planTitle">План закупа на ${escapeHtml(formatDateLabel(nextMondayKey))}</h3>
+      <p class="planText">Бюджет на ближайший понедельник считается по себестоимости за предыдущие 7 дней: ${escapeHtml(previousPlanRangeStart)} - ${escapeHtml(previousPlanRangeEnd)}.</p>
+      <div class="planMeta">
+        <div class="heroMetaChip">Плановый бюджет: ${formatMoney(nextMondayBudget)}</div>
+        <div class="heroMetaChip">Дата старта: ${escapeHtml(formatDateLabel(nextMondayKey))}</div>
+      </div>
+    </div>
+  </div>
   <div class="weekHeader">
     <div class="weekTitleWrap">
       <h3 class="weekTitle">Все заказы</h3>
       <div class="weekMeta">
-        <div class="weekMetaChip">Без разбивки по неделям</div>
-        <div class="weekMetaChip">Список можно спокойно заполнить вручную</div>
+        <div class="weekMetaChip">Группировка по датам оплаты</div>
+        <div class="weekMetaChip">Просроченные сверху</div>
       </div>
     </div>
     <div class="weekBudgetGrid">
@@ -1361,10 +1622,7 @@ container.innerHTML = `
       </div>
     </div>
   </div>
-  <div class="ordersTable">
-    ${ordersHead}
-    ${rowsHtml}
-  </div>
+  ${groupsHtml}
   <div class="addOrderRow">
     <button class="plainButton secondary" data-role="add-order-global" type="button">+ Добавить поставщика</button>
   </div>
@@ -1375,6 +1633,15 @@ container.innerHTML = `
 function renderOrderRow(order, isArchived = false){
 let status = getComputedStatus(order);
 let paidDateLabel = order.paid_at ? new Date(order.paid_at).toLocaleDateString("ru-RU", { timeZone: "UTC" }) : "—";
+let dueDateHtml = order.payment_due_date === "prepayment"
+  ? `<div class="dateFieldWrap">
+      <div class="dateModePill">Предоплата</div>
+      ${isArchived ? "" : `<button class="plainButton ghost dateToggleButton" data-role="toggle-prepayment" data-order-id="${escapeHtml(order.id)}" type="button">Дата</button>`}
+    </div>`
+  : `<div class="dateFieldWrap">
+      <input class="fieldDate order-input" data-field="payment_due_date" data-order-id="${escapeHtml(order.id)}" type="date" value="${escapeHtml(order.payment_due_date || "")}" ${isArchived ? "disabled" : ""}>
+      ${isArchived ? "" : `<button class="plainButton ghost dateToggleButton" data-role="toggle-prepayment" data-order-id="${escapeHtml(order.id)}" type="button">Пред</button>`}
+    </div>`;
 let invoiceHtml = order.invoice_file_url
   ? `<a class="invoiceLink" href="${escapeHtml(order.invoice_file_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(order.invoice_file_name || "Открыть счет")}</a>`
   : `<div class="invoiceLink muted">Счет не загружен</div>`;
@@ -1400,14 +1667,16 @@ return `
   </label>
   <label class="orderField">
     <span class="orderFieldLabel">Дата оплаты</span>
-    <input class="fieldDate order-input" data-field="payment_due_date" data-order-id="${escapeHtml(order.id)}" type="date" value="${escapeHtml(order.payment_due_date || "")}" ${isArchived ? "disabled" : ""}>
+    ${dueDateHtml}
   </label>
   <div class="orderField invoiceCell">
     <span class="orderFieldLabel">Счет</span>
-    ${invoiceHtml}
-    ${isArchived || order.invoice_file_url ? "" : `
-    <input class="invoiceInput" id="invoice-${escapeHtml(order.id)}" data-order-id="${escapeHtml(order.id)}" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.heic">
-    <button class="plainButton ghost" data-role="pick-invoice" data-order-id="${escapeHtml(order.id)}" type="button">Загрузить счет</button>`}
+    <div class="invoiceInline">
+      ${invoiceHtml}
+      ${isArchived || order.invoice_file_url ? "" : `
+      <input class="invoiceInput" id="invoice-${escapeHtml(order.id)}" data-order-id="${escapeHtml(order.id)}" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.heic">
+      <button class="plainButton ghost iconButton" title="Загрузить счет" aria-label="Загрузить счет" data-role="pick-invoice" data-order-id="${escapeHtml(order.id)}" type="button">↑</button>`}
+    </div>
   </div>
   <div class="orderField">
     <span class="orderFieldLabel">Статус</span>
@@ -1415,7 +1684,10 @@ return `
   </div>
   <div class="orderField rowActions">
     <span class="orderFieldLabel">Оплачено</span>
-    ${paidButtonHtml}
+    <div class="rowActionsStack">
+      ${paidButtonHtml}
+      ${isArchived ? "" : `<button class="plainButton ghost" data-role="delete-order" data-order-id="${escapeHtml(order.id)}" type="button">Удалить</button>`}
+    </div>
   </div>
 </div>`;
 }
@@ -1484,6 +1756,14 @@ renderWeeks();
 
 function getOrderById(orderId){
 return procurementState.orders.find((order) => order.id === orderId);
+}
+
+function removeOrderById(orderId){
+let index = procurementState.orders.findIndex((order) => order.id === orderId);
+if (index >= 0){
+procurementState.orders.splice(index, 1);
+}
+renderWeeks();
 }
 
 function queueOrderSave(orderId){
@@ -1591,6 +1871,23 @@ showAuthNotice("Не удалось отметить оплату: " + error.mes
 }
 }
 
+async function deleteOrder(orderId){
+let order = getOrderById(orderId);
+if (!order) return;
+if (order.isLocalOnly){
+removeOrderById(orderId);
+return;
+}
+try {
+await callProcurementApi("deleteOrder", {
+order_id: orderId
+});
+removeOrderById(orderId);
+} catch (error){
+showAuthNotice("Не удалось удалить строку закупа: " + error.message, "error");
+}
+}
+
 function addOrderForWeek(weekStartKey){
 let order = normalizeOrder({
 week_start: weekStartKey,
@@ -1622,6 +1919,18 @@ renderWeeks();
 queueOrderSave(orderId);
 }
 
+function togglePrepayment(orderId){
+let order = getOrderById(orderId);
+if (!order) return;
+if (order.payment_due_date === "prepayment"){
+order.payment_due_date = getDefaultDueDate(order.order_date || formatDateKey(today));
+} else {
+order.payment_due_date = "prepayment";
+}
+renderWeeks();
+queueOrderSave(orderId);
+}
+
 function handleWeeksClick(event){
 let actionTrigger = event.target.closest("[data-role]");
 if (!actionTrigger) return;
@@ -1632,6 +1941,10 @@ return;
 }
 if (role === "add-order-global"){
 addOrderGlobal();
+return;
+}
+if (role === "toggle-prepayment"){
+togglePrepayment(actionTrigger.getAttribute("data-order-id"));
 return;
 }
 if (role === "save-budget-override"){
@@ -1648,6 +1961,12 @@ return;
 }
 if (role === "mark-paid"){
 markOrderPaid(actionTrigger.getAttribute("data-order-id"));
+return;
+}
+if (role === "delete-order"){
+if (window.confirm("Удалить этого поставщика из списка закупа?")){
+deleteOrder(actionTrigger.getAttribute("data-order-id"));
+}
 }
 }
 
