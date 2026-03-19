@@ -1143,10 +1143,10 @@ width:100%;
 </section>
 </div>
 
-<div class="uiVersionToggle">v2.042</div>
+<div class="uiVersionToggle">v2.043</div>
 
 <script>
-const PROCUREMENT_VERSION = "v2.042";
+const PROCUREMENT_VERSION = "v2.043";
 const procurementConfig = {
 googleClientId: "462958236662-4jml8gljkbk0tddja2cktktgdvubiat9.apps.googleusercontent.com",
 apiUrl: "https://script.google.com/macros/s/AKfycbxUp-7LEYL0Sj_J4Ck7QgMiNVziLmxxseLGk4ottNTfkBAktrAcgSwk0r7k1ESVW56kwQ/exec",
@@ -2062,14 +2062,8 @@ saveOrder(orderId);
 }, 800);
 }
 
-async function saveOrder(orderId){
-let order = getOrderById(orderId);
-if (!order) return;
-if (!order.supplier_name.trim() && !order.order_amount){
-renderWeeks();
-return;
-}
-let payload = {
+function buildOrderPayload(order){
+return {
 id: order.isLocalOnly ? "" : order.id,
 client_id: order.id,
 week_start: order.week_start,
@@ -2082,6 +2076,16 @@ invoice_file_name: order.invoice_file_name,
 paid_at: order.paid_at,
 notes: order.notes || ""
 };
+}
+
+async function saveOrder(orderId){
+let order = getOrderById(orderId);
+if (!order) return;
+if (!order.supplier_name.trim() && !order.order_amount){
+renderWeeks();
+return;
+}
+let payload = buildOrderPayload(order);
 let snapshotKey = (order.isLocalOnly ? "local:" : "remote:") + order.id;
 let snapshot = JSON.stringify(payload);
 if (!order.isLocalOnly && lastSavedSnapshots[snapshotKey] === snapshot){
@@ -2100,9 +2104,28 @@ if (result.order && order.isLocalOnly){
 result.order.client_id = order.id;
 }
 let persistedId = result.order && result.order.id ? result.order.id : order.id;
+let latest = getOrderById(orderId);
 lastSavedSnapshots["remote:" + persistedId] = snapshot;
 delete lastSavedSnapshots[snapshotKey];
-upsertLocalOrder(result.order || order);
+if (latest && JSON.stringify(buildOrderPayload(latest)) !== snapshot){
+  let mergedOrder = Object.assign({}, result.order || order, {
+    id: result.order && result.order.id ? result.order.id : latest.id,
+    client_id: order.id,
+    week_start: latest.week_start,
+    supplier_name: latest.supplier_name,
+    order_amount: latest.order_amount,
+    order_date: latest.order_date,
+    payment_due_date: latest.payment_due_date,
+    invoice_file_url: latest.invoice_file_url,
+    invoice_file_name: latest.invoice_file_name,
+    paid_at: latest.paid_at,
+    notes: latest.notes || "",
+    isLocalOnly: false
+  });
+  upsertLocalOrder(mergedOrder);
+} else {
+  upsertLocalOrder(result.order || order);
+}
 } catch (error){
 showAuthNotice("Не удалось сохранить строку закупа: " + error.message, "error");
 } finally {
