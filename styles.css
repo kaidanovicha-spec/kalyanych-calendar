@@ -1,14 +1,18 @@
 :root {
-  --bg-1: #fff1de;
-  --bg-2: #ffd5a6;
-  --ink: #181818;
-  --accent: #ff7a00;
-  --accent-deep: #d55d00;
-  --grid: #ffffff55;
-  --panel: #fffaf3cc;
-  --snake: #ff9b34;
-  --snake-dark: #d96a0c;
-  --apple: #d7263d;
+  --bg-1: #0b1017;
+  --bg-2: #121b27;
+  --bg-3: #182333;
+  --surface: rgba(17, 24, 36, 0.76);
+  --surface-strong: rgba(22, 30, 44, 0.92);
+  --surface-soft: rgba(255, 255, 255, 0.06);
+  --stroke: rgba(255, 255, 255, 0.08);
+  --stroke-strong: rgba(255, 255, 255, 0.14);
+  --ink: #f4f7fb;
+  --muted: #9aa8bc;
+  --accent: #8ef269;
+  --accent-2: #4cd964;
+  --accent-red: #ff6b57;
+  --shadow: 0 28px 80px rgba(3, 8, 18, 0.38);
 }
 
 * {
@@ -18,11 +22,12 @@
 body {
   margin: 0;
   min-height: 100vh;
-  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  font-family: "SF Pro Display", "SF Pro Text", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
   color: var(--ink);
   background:
-    radial-gradient(circle at top left, #fffaf4 0%, transparent 30%),
-    linear-gradient(135deg, var(--bg-1), var(--bg-2));
+    radial-gradient(circle at top left, rgba(89, 255, 177, 0.16), transparent 24%),
+    radial-gradient(circle at top right, rgba(111, 173, 255, 0.14), transparent 28%),
+    linear-gradient(160deg, var(--bg-1), var(--bg-2) 42%, var(--bg-3));
 }
 
 .page {
@@ -32,29 +37,33 @@ body {
   align-items: center;
   justify-content: center;
   justify-items: center;
-  padding: 24px;
+  padding: 28px;
 }
 
-.panel {
-  width: min(96vw, 940px);
-}
-
+.panel,
 .game-shell {
-  width: min(96vw, 940px);
+  width: min(96vw, 980px);
 }
 
 .panel {
-  background: var(--panel);
-  border: 2px solid #ffffff80;
-  border-radius: 28px;
-  padding: 20px 24px;
-  box-shadow: 0 18px 50px #5c2b0018;
-  backdrop-filter: blur(10px);
+  background: var(--surface);
+  border: 1px solid var(--stroke);
+  border-radius: 30px;
+  padding: 22px 24px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
 }
 
 .panel-inner {
-  width: min(100%, 640px);
-  margin: 0 auto;
+  display: grid;
+  gap: 18px;
+}
+
+.panel-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .heading {
@@ -64,59 +73,127 @@ body {
 }
 
 .logo {
-  width: 64px;
-  height: 64px;
+  width: 62px;
+  height: 62px;
   border-radius: 18px;
-  box-shadow: 0 8px 24px #00000018;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.2);
 }
 
 .eyebrow {
-  margin: 0 0 4px;
+  margin: 0 0 6px;
   text-transform: uppercase;
-  letter-spacing: 0.16em;
-  color: var(--accent-deep);
-  font-size: 0.8rem;
+  letter-spacing: 0.18em;
+  color: #7ff4ac;
+  font-size: 0.74rem;
 }
 
 h1 {
   margin: 0;
-  font-size: clamp(1.8rem, 4vw, 3rem);
-  line-height: 0.95;
+  font-size: clamp(2rem, 4vw, 3.1rem);
+  line-height: 0.94;
+  letter-spacing: -0.04em;
+}
+
+.restart-button,
+.overlay-button,
+.buy-field-button,
+.difficulty-button {
+  font: inherit;
+}
+
+.restart-button {
+  border: 1px solid var(--stroke-strong);
+  border-radius: 999px;
+  padding: 11px 18px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.restart-button:hover,
+.difficulty-button:hover,
+.buy-field-button:hover,
+.overlay-button:hover {
+  transform: translateY(-1px);
+}
+
+.panel-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
+  gap: 16px;
+  align-items: stretch;
+}
+
+.summary-label {
+  margin: 0 0 8px;
+  color: #dfe8f5;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.summary-text {
+  margin: 0;
+  max-width: 46ch;
+  color: var(--muted);
+  line-height: 1.5;
 }
 
 .stats {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
-  margin: 20px 0 14px;
 }
 
 .stat {
-  flex: 1;
-  padding: 14px 16px;
-  border-radius: 18px;
-  background: white;
+  padding: 16px 18px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--stroke);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 .stat span {
   display: block;
-  font-size: 0.85rem;
-  color: #555;
-  margin-bottom: 4px;
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
 }
 
 .stat strong {
-  font-size: 1.5rem;
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  letter-spacing: -0.03em;
 }
 
-.hint {
-  margin: 0;
-  color: #444;
+.difficulty {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.difficulty-button {
+  border: 1px solid var(--stroke);
+  border-radius: 999px;
+  padding: 10px 14px;
+  color: #d7e3f3;
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.difficulty-button.active {
+  color: #07110a;
+  background: linear-gradient(135deg, #b4ff8c, #66f17e);
+  border-color: rgba(180, 255, 140, 0.6);
+  box-shadow: 0 10px 24px rgba(102, 241, 126, 0.2);
 }
 
 .expansion-bar {
   display: grid;
-  gap: 8px;
-  margin: 0 0 14px;
+  gap: 10px;
 }
 
 .buy-field-buttons {
@@ -126,90 +203,47 @@ h1 {
 }
 
 .buy-field-button {
-  border: 0;
-  border-radius: 16px;
+  border: 1px solid var(--stroke);
+  border-radius: 18px;
   padding: 12px 16px;
-  font: inherit;
-  color: #fffaf5;
-  background: linear-gradient(135deg, #ff8a1c, #d65a00);
-  box-shadow: 0 10px 24px #a843001f;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   cursor: pointer;
+  transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
 }
 
 .buy-field-button:disabled {
-  color: #8c7862;
-  background: #f2e3d1;
-  box-shadow: inset 0 0 0 1px #e5d0b8;
+  color: #748295;
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.06);
   cursor: not-allowed;
+  box-shadow: none;
 }
 
-.buy-field-note {
-  font-size: 0.92rem;
-  color: #6d5946;
-}
-
-.difficulty {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin: 0 0 14px;
-}
-
-.difficulty-button {
-  border: 0;
-  border-radius: 999px;
-  padding: 10px 14px;
-  font: inherit;
-  color: #5a3518;
-  background: #fff;
-  box-shadow: inset 0 0 0 1px #efc595;
-  cursor: pointer;
-  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
-}
-
-.difficulty-button:hover {
-  transform: translateY(-1px);
-  box-shadow: inset 0 0 0 1px #d98a3a, 0 8px 20px #c0701620;
-}
-
-.difficulty-button.active {
-  color: #fffaf5;
-  background: linear-gradient(135deg, #ff8a1c, #d65a00);
-  box-shadow: 0 10px 24px #a843001f;
+.buy-field-note,
+.hint {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
 }
 
 .game-shell {
   position: relative;
-  border-radius: 32px;
+  border-radius: 34px;
   padding: 18px;
-  background: #fff9f0;
-  box-shadow: 0 24px 64px #6b3a001f;
-}
-
-.game-footer {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 6px 2px;
-  color: #6b563f;
-  font-size: 0.98rem;
-}
-
-.game-footer strong {
-  color: #2a2018;
-}
-
-.beer-timer.active {
-  color: #b45f06;
-  font-weight: 700;
+  background: var(--surface-strong);
+  border: 1px solid var(--stroke);
+  box-shadow: var(--shadow);
 }
 
 canvas {
   display: block;
   width: 100%;
   height: auto;
-  background: linear-gradient(180deg, #ffe8ca, #ffd39d);
-  border-radius: 22px;
+  background: linear-gradient(180deg, #121a26, #0e1520);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 26px;
 }
 
 .overlay {
@@ -218,9 +252,10 @@ canvas {
   display: grid;
   place-items: center;
   text-align: center;
-  padding: 24px;
-  border-radius: 22px;
-  background: linear-gradient(180deg, #fff8f0dd, #ffe7c7e8);
+  padding: 32px;
+  border-radius: 26px;
+  background: linear-gradient(180deg, rgba(10, 15, 24, 0.78), rgba(14, 21, 32, 0.9));
+  backdrop-filter: blur(14px);
 }
 
 .overlay.hidden {
@@ -228,51 +263,72 @@ canvas {
 }
 
 .overlay h2 {
-  margin: 0 0 8px;
-  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  margin: 0 0 10px;
+  font-size: clamp(1.7rem, 3vw, 2.5rem);
+  letter-spacing: -0.04em;
 }
 
 .overlay p {
   margin: 0;
-  max-width: 28ch;
-  color: #4a4035;
+  max-width: 30ch;
+  color: #b7c3d5;
+  line-height: 1.5;
 }
 
 .overlay-actions {
   display: flex;
   gap: 10px;
-  margin-top: 18px;
+  margin-top: 20px;
 }
 
 .overlay-button {
-  border: 0;
-  border-radius: 14px;
+  border: 1px solid rgba(142, 242, 105, 0.3);
+  border-radius: 16px;
   padding: 12px 18px;
-  font: inherit;
-  color: #fffaf5;
-  background: linear-gradient(135deg, #ff8a1c, #d65a00);
-  box-shadow: 0 10px 24px #a843001f;
+  color: #07110a;
+  background: linear-gradient(135deg, #b8ff8d, #66f17e);
+  box-shadow: 0 12px 28px rgba(102, 241, 126, 0.22);
   cursor: pointer;
 }
 
 .overlay-button:disabled {
-  color: #8c7862;
-  background: #f2e3d1;
-  box-shadow: inset 0 0 0 1px #e5d0b8;
+  color: #748295;
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow: none;
   cursor: not-allowed;
 }
 
 .overlay-button-muted {
-  color: #5c4632;
-  background: #f7ebdd;
-  box-shadow: inset 0 0 0 1px #e0c9ae;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--stroke);
+  box-shadow: none;
+}
+
+.game-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 4px 2px;
+  color: var(--muted);
+  font-size: 0.96rem;
+}
+
+.game-footer strong {
+  color: var(--ink);
+}
+
+.beer-timer.active {
+  color: #a8ff8e;
+  font-weight: 700;
 }
 
 .hidden {
   display: none;
 }
 
-@media (max-width: 680px) {
+@media (max-width: 780px) {
   .page {
     padding: 16px;
     gap: 16px;
@@ -283,20 +339,32 @@ canvas {
     width: 100%;
   }
 
-  .stats {
-    flex-direction: column;
+  .panel-summary {
+    grid-template-columns: 1fr;
   }
 
-  .game-footer {
-    flex-direction: column;
+  .stats {
+    grid-template-columns: 1fr 1fr;
   }
 
   .buy-field-buttons {
     grid-template-columns: 1fr;
   }
+}
 
+@media (max-width: 620px) {
+  .panel-top,
+  .game-footer,
   .overlay-actions {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+  }
+
+  .restart-button {
     width: 100%;
   }
 }

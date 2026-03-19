@@ -15,6 +15,7 @@ const buySlowdownButton = document.getElementById("buy-slowdown-button");
 const buyFieldNote = document.getElementById("buy-field-note");
 const collectedMoneyNode = document.getElementById("collected-money");
 const beerTimerNode = document.getElementById("beer-timer");
+const restartButton = document.getElementById("restart-button");
 
 const cellSize = 30;
 const gridColumns = canvas.width / cellSize;
@@ -685,9 +686,9 @@ function drawBoard() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   if (currentLevel === "david") {
-    ctx.fillStyle = "#f8ead0";
+    ctx.fillStyle = "#111925";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#f5dfbc";
+    ctx.fillStyle = "#162131";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     drawGrid();
     drawFieldWatermark("Потоп в офисе");
@@ -696,10 +697,16 @@ function drawBoard() {
 
   const activeBounds = getActiveBounds();
 
-  ctx.fillStyle = "#f8ead0";
+  const boardGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  boardGradient.addColorStop(0, "#101823");
+  boardGradient.addColorStop(1, "#0d141d");
+  ctx.fillStyle = boardGradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  ctx.fillStyle = "#f5dfbc";
+  const activeGradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  activeGradient.addColorStop(0, "#172130");
+  activeGradient.addColorStop(1, "#111a27");
+  ctx.fillStyle = activeGradient;
   ctx.fillRect(
     activeBounds.minX * cellSize,
     activeBounds.minY * cellSize,
@@ -720,8 +727,8 @@ function drawBoard() {
 
 function drawFieldWatermark(text) {
   ctx.save();
-  ctx.fillStyle = "#8f6f4d18";
-  ctx.font = "bold 44px sans-serif";
+  ctx.fillStyle = "#d9e7ff14";
+  ctx.font = "600 44px sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(text, canvas.width / 2, canvas.height / 2);
@@ -729,7 +736,7 @@ function drawFieldWatermark(text) {
 }
 
 function drawGrid() {
-  ctx.strokeStyle = "#ffffff55";
+  ctx.strokeStyle = "#ffffff10";
   ctx.lineWidth = 1;
 
   for (let x = 0; x <= canvas.width; x += cellSize) {
@@ -749,11 +756,11 @@ function drawGrid() {
 
 function drawLockedZone(startX, width, label) {
   ctx.save();
-  ctx.fillStyle = "#ead6b645";
+  ctx.fillStyle = "#0a1018aa";
   ctx.fillRect(startX, 0, width, canvas.height);
 
-  ctx.fillStyle = "#b76a1d";
-  ctx.font = "bold 22px sans-serif";
+  ctx.fillStyle = "#89f78c";
+  ctx.font = "600 22px sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
@@ -769,36 +776,46 @@ function drawBeer(itemX, itemY) {
   const x = itemX * cellSize;
   const y = itemY * cellSize;
 
+  ctx.save();
+  ctx.shadowColor = "rgba(255, 214, 102, 0.38)";
+  ctx.shadowBlur = 14;
   ctx.font = "22px 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText("🍺", x + 15, y + 17);
+  ctx.restore();
 }
 
 function drawMoneyBag(itemX, itemY) {
   const x = itemX * cellSize;
   const y = itemY * cellSize;
 
-  ctx.fillStyle = "#9b5d2e";
-  roundRect(ctx, x + 5, y + 8, 20, 18, 9);
-  ctx.fill();
-
+  ctx.save();
+  ctx.shadowColor = "rgba(255, 115, 88, 0.42)";
+  ctx.shadowBlur = 20;
+  const glow = ctx.createRadialGradient(x + 15, y + 15, 2, x + 15, y + 15, 11);
+  glow.addColorStop(0, "#ffae63");
+  glow.addColorStop(1, "#ff5a4e");
+  ctx.fillStyle = glow;
   ctx.beginPath();
-  ctx.moveTo(x + 9.5, y + 8);
-  ctx.lineTo(x + 15, y + 2.5);
-  ctx.lineTo(x + 20.5, y + 8);
-  ctx.closePath();
-  ctx.fillStyle = "#c9894d";
+  ctx.arc(x + 15, y + 15, 9, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = "#6d3d16";
-  ctx.fillRect(x + 9.5, y + 7, 11, 3.3);
+  const core = ctx.createLinearGradient(x + 8, y + 8, x + 22, y + 22);
+  core.addColorStop(0, "#ffcf78");
+  core.addColorStop(1, "#ff6a4a");
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = core;
+  ctx.beginPath();
+  ctx.arc(x + 15, y + 15, 7, 0, Math.PI * 2);
+  ctx.fill();
 
-  ctx.fillStyle = "#ffd447";
-  ctx.font = "bold 12px sans-serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("$", x + 15, y + 18);
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.42)";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(x + 13, y + 13, 3.5, Math.PI * 1.1, Math.PI * 1.75);
+  ctx.stroke();
+  ctx.restore();
 }
 
 function drawObstacle(obstacle) {
@@ -886,7 +903,7 @@ function getHeadRotation(segment) {
 function drawSegment(segment, index) {
   const x = segment.x * cellSize;
   const y = segment.y * cellSize;
-  const size = cellSize - 4;
+  const size = cellSize - 6;
 
   if (index === 0) {
     ctx.save();
@@ -894,11 +911,31 @@ function drawSegment(segment, index) {
     ctx.rotate(getHeadRotation(segment));
 
     if (headImage.complete) {
-      ctx.drawImage(headImage, -size / 2, -size / 2, size, size);
-    } else {
-      ctx.fillStyle = "#ff7a00";
+      ctx.save();
+      ctx.beginPath();
+      roundRect(ctx, -size / 2, -size / 2, size, size, 10);
+      ctx.clip();
+      const headGradient = ctx.createLinearGradient(-size / 2, -size / 2, size / 2, size / 2);
+      headGradient.addColorStop(0, "#cbff8d");
+      headGradient.addColorStop(1, "#4ad76a");
+      ctx.fillStyle = headGradient;
       ctx.fillRect(-size / 2, -size / 2, size, size);
-      ctx.fillStyle = "#000";
+      ctx.globalAlpha = 0.92;
+      ctx.drawImage(headImage, -size / 2 + 2, -size / 2 + 2, size - 4, size - 4);
+      ctx.restore();
+
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.32)";
+      ctx.lineWidth = 1.4;
+      roundRect(ctx, -size / 2, -size / 2, size, size, 10);
+      ctx.stroke();
+    } else {
+      const fallbackHead = ctx.createLinearGradient(-size / 2, -size / 2, size / 2, size / 2);
+      fallbackHead.addColorStop(0, "#cbff8d");
+      fallbackHead.addColorStop(1, "#4ad76a");
+      ctx.fillStyle = fallbackHead;
+      roundRect(ctx, -size / 2, -size / 2, size, size, 10);
+      ctx.fill();
+      ctx.fillStyle = "#0f1620";
       ctx.font = "bold 18px sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
@@ -908,9 +945,16 @@ function drawSegment(segment, index) {
     return;
   }
 
-  ctx.fillStyle = index % 2 === 0 ? "#ff9b34" : "#d96a0c";
-  roundRect(ctx, x + 2, y + 2, size, size, 9);
+  ctx.save();
+  const bodyGradient = ctx.createLinearGradient(x + 2, y + 2, x + size, y + size);
+  bodyGradient.addColorStop(0, index % 2 === 0 ? "#bfff8b" : "#8ef06e");
+  bodyGradient.addColorStop(1, index % 2 === 0 ? "#62dd6d" : "#40c968");
+  ctx.fillStyle = bodyGradient;
+  ctx.shadowColor = "rgba(112, 255, 144, 0.2)";
+  ctx.shadowBlur = 10;
+  roundRect(ctx, x + 3, y + 3, size, size, 10);
   ctx.fill();
+  ctx.restore();
 }
 
 function roundRect(context, x, y, width, height, radius) {
@@ -1024,6 +1068,7 @@ buyRightFieldButton.addEventListener("click", () => buyField("right"));
 buySlowdownButton.addEventListener("click", buySlowdown);
 payBribeButton.addEventListener("click", continueAfterBribe);
 restartFromBribeButton.addEventListener("click", resetGame);
+restartButton.addEventListener("click", resetGame);
 
 headImage.addEventListener("load", draw);
 
