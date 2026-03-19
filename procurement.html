@@ -1740,13 +1740,11 @@ forecastDays
 function buildPlanRecommendationMeta(weekStartKey, activeOrders, groupedOrders, planOrders, budgetMeta){
 let weekRevenue = getWeekRevenueForecastMeta(weekStartKey);
 let cashlessMeta = getCashlessShareForWeek(weekStartKey);
-let baseWeekRevenue = weekRevenue.expectedRevenue;
-let baseWeekCost = calculateCost(baseWeekRevenue, parseDateKey(weekStartKey).getUTCFullYear(), parseDateKey(weekStartKey).getUTCMonth());
-let baseWeekGross = Math.max(0, baseWeekRevenue - baseWeekCost);
+let expectedWeekRevenue = weekRevenue.expectedRevenue;
+let expectedWeekCost = calculateCost(expectedWeekRevenue, parseDateKey(weekStartKey).getUTCFullYear(), parseDateKey(weekStartKey).getUTCMonth());
 let factWeekRevenue = weekRevenue.actualRevenue;
 let factWeekCost = calculateCost(factWeekRevenue, parseDateKey(weekStartKey).getUTCFullYear(), parseDateKey(weekStartKey).getUTCMonth());
-let factWeekGross = Math.max(0, factWeekRevenue - factWeekCost);
-let expectedCashless = baseWeekRevenue * cashlessMeta.share;
+let expectedCashless = expectedWeekRevenue * cashlessMeta.share;
 let obligatoryReserve = expectedCashless * procurementFinanceConfig.obligatoryReserveRate;
 let availableForBills = Math.max(0, expectedCashless - obligatoryReserve);
 let currentDebt = groupedOrders.reduce((sum, order) => sum + Number(order.order_amount || 0), 0);
@@ -1756,7 +1754,7 @@ let overdueDebt = groupedOrders
 let plannedAmount = planOrders.reduce((sum, order) => sum + Number(order.order_amount || 0), 0);
 let targetDebtLimit = procurementFinanceConfig.targetDebtLimit;
 let debtHeadroom = Math.max(0, targetDebtLimit - currentDebt);
-let recommendedProcurement = Math.max(0, Math.min(baseWeekCost, budgetMeta.effective, availableForBills - overdueDebt, debtHeadroom));
+let recommendedProcurement = Math.max(0, Math.min(expectedWeekCost, budgetMeta.effective, availableForBills - overdueDebt, debtHeadroom));
 let projectedDebt = currentDebt + plannedAmount;
 let reductionVsPlan = Math.max(0, plannedAmount - recommendedProcurement);
 let severity = "safe";
@@ -1809,12 +1807,10 @@ severity,
 title,
 body,
 bullets,
-baseWeekRevenue,
-baseWeekCost,
-baseWeekGross,
+expectedWeekRevenue,
+expectedWeekCost,
 factWeekRevenue,
-factWeekCost,
-factWeekGross
+factWeekCost
 };
 }
 
@@ -2396,9 +2392,10 @@ let recommendationHtml = planIsLocked ? "" : `
     <h4 class="planRecommendationTitle">${escapeHtml(recommendationMeta.title)}</h4>
     <div class="planRecommendationText">
       <div class="planRecommendationLine">Неделя ${escapeHtml(formatDateLabel(recommendationMeta.weekRevenue.rangeStartKey))} - ${escapeHtml(formatDateLabel(recommendationMeta.weekRevenue.rangeEndKey))}</div>
-      <div class="planRecommendationLine">Выручка:<strong>${formatMoney(recommendationMeta.factWeekRevenue)}</strong></div>
-      <div class="planRecommendationLine">Себестоимость:<strong>${formatMoney(recommendationMeta.factWeekCost)}</strong></div>
-      <div class="planRecommendationLine">База недели:<strong>${formatMoney(recommendationMeta.baseWeekRevenue)}</strong></div>
+      <div class="planRecommendationLine">Ожидаем выручку:<strong>${formatMoney(recommendationMeta.expectedWeekRevenue)}</strong></div>
+      <div class="planRecommendationLine">Ожидаем безнал:<strong>${formatMoney(recommendationMeta.expectedCashless)}</strong></div>
+      <div class="planRecommendationLine">Ожидаем средств на закуп:<strong>${formatMoney(recommendationMeta.availableForBills)}</strong></div>
+      <div class="planRecommendationLine">Ожидаем по себестоимости:<strong>${formatMoney(recommendationMeta.expectedWeekCost)}</strong></div>
       <div class="planRecommendationLine">Рекомендуемая сумма:<strong>${formatMoney(recommendationMeta.recommendedProcurement)}</strong></div>
     </div>
     <div class="planRecommendationActions">
@@ -2423,19 +2420,24 @@ let recommendationOverlayHtml = !planIsLocked && recommendationDetailsOpen ? `
       </div>
       <div class="planRecommendationGrid">
         <div class="planRecommendationMetric">
-          <div class="planRecommendationMetricLabel">База недели</div>
-          <div class="planRecommendationMetricValue">${formatMoney(recommendationMeta.baseWeekRevenue)}</div>
+          <div class="planRecommendationMetricLabel">Ожидаем выручку</div>
+          <div class="planRecommendationMetricValue">${formatMoney(recommendationMeta.expectedWeekRevenue)}</div>
           <div class="planRecommendationMetricMeta">${escapeHtml(formatDateLabel(recommendationMeta.weekRevenue.rangeStartKey))} - ${escapeHtml(formatDateLabel(recommendationMeta.weekRevenue.rangeEndKey))}</div>
         </div>
         <div class="planRecommendationMetric">
-          <div class="planRecommendationMetricLabel">Ожидаемый безнал</div>
+          <div class="planRecommendationMetricLabel">Ожидаем безнал</div>
           <div class="planRecommendationMetricValue">${formatMoney(recommendationMeta.expectedCashless)}</div>
           <div class="planRecommendationMetricMeta">${Math.round(recommendationMeta.cashlessMeta.share * 100)}% от ${escapeHtml(recommendationMeta.cashlessMeta.monthKey || "прошлого месяца")}</div>
         </div>
         <div class="planRecommendationMetric">
-          <div class="planRecommendationMetricLabel">База по себестоимости</div>
-          <div class="planRecommendationMetricValue">${formatMoney(recommendationMeta.baseWeekCost)}</div>
-          <div class="planRecommendationMetricMeta">От нее отталкиваемся как от безопасной закупочной базы</div>
+          <div class="planRecommendationMetricLabel">Ожидаем средств на закуп</div>
+          <div class="planRecommendationMetricValue">${formatMoney(recommendationMeta.availableForBills)}</div>
+          <div class="planRecommendationMetricMeta">После вычета 25% из ожидаемого безнала</div>
+        </div>
+        <div class="planRecommendationMetric">
+          <div class="planRecommendationMetricLabel">Ожидаем по себестоимости</div>
+          <div class="planRecommendationMetricValue">${formatMoney(recommendationMeta.expectedWeekCost)}</div>
+          <div class="planRecommendationMetricMeta">Безопасная закупочная база недели</div>
         </div>
         <div class="planRecommendationMetric">
           <div class="planRecommendationMetricLabel">Текущий долг</div>
