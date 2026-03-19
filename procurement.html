@@ -811,23 +811,80 @@ display:flex;
 justify-content:flex-start;
 }
 
-.archivedOrders{
+.paidRegistryBlock{
 margin-top:14px;
 border-top:1px solid rgba(17,17,17,0.06);
 padding-top:14px;
 }
 
-.archivedOrders details{
-border-radius:18px;
-background:#faf7f1;
-padding:10px 12px;
+.paidRegistryToggleWrap{
+display:flex;
+justify-content:flex-start;
 }
 
-.archivedOrders summary{
-cursor:pointer;
+.paidRegistryCard{
+margin-top:12px;
+border-radius:24px;
+background:#faf7f1;
+border:1px solid rgba(17,17,17,0.06);
+padding:16px 18px;
+}
+
+.paidRegistryHead{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:12px;
+margin-bottom:12px;
+}
+
+.paidRegistryTitle{
+font-size:15px;
+font-weight:800;
+color:var(--ink);
+}
+
+.paidRegistryCount{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+min-width:34px;
+height:34px;
+padding:0 10px;
+border-radius:999px;
+background:#efe3cf;
 font-size:13px;
-font-weight:700;
-color:#665c51;
+font-weight:800;
+color:#7b5a21;
+}
+
+.paidRegistryTable{
+display:flex;
+flex-direction:column;
+gap:8px;
+}
+
+.paidRegistryRow{
+display:grid;
+grid-template-columns:160px minmax(0,1fr) 150px;
+gap:12px;
+align-items:center;
+padding:12px 14px;
+border-radius:16px;
+background:#fff;
+border:1px solid rgba(17,17,17,0.06);
+font-size:14px;
+}
+
+.paidRegistryRowHead{
+background:transparent;
+border:none;
+padding:0 2px 4px;
+font-size:12px;
+font-weight:800;
+letter-spacing:0.08em;
+text-transform:uppercase;
+color:#8f8375;
 }
 
 .emptyWeek{
@@ -1077,6 +1134,10 @@ grid-template-columns:1fr 1fr;
 .orderFieldLabel{
 display:block;
 }
+
+.paidRegistryRow{
+grid-template-columns:140px minmax(0,1fr) 120px;
+}
 }
 
 @media (max-width: 640px){
@@ -1128,6 +1189,20 @@ grid-template-columns:1fr;
 .budgetOverrideInput{
 width:100%;
 }
+
+.paidRegistryHead{
+flex-direction:column;
+align-items:flex-start;
+}
+
+.paidRegistryRow{
+grid-template-columns:1fr;
+gap:6px;
+}
+
+.paidRegistryRowHead{
+display:none;
+}
 }
 </style>
 </head>
@@ -1173,10 +1248,10 @@ width:100%;
 </section>
 </div>
 
-<div class="uiVersionToggle">v2.044</div>
+<div class="uiVersionToggle">v2.045</div>
 
 <script>
-const PROCUREMENT_VERSION = "v2.044";
+const PROCUREMENT_VERSION = "v2.045";
 const procurementConfig = {
 googleClientId: "462958236662-4jml8gljkbk0tddja2cktktgdvubiat9.apps.googleusercontent.com",
 apiUrl: "https://script.google.com/macros/s/AKfycbxUp-7LEYL0Sj_J4Ck7QgMiNVziLmxxseLGk4ottNTfkBAktrAcgSwk0r7k1ESVW56kwQ/exec",
@@ -1195,6 +1270,7 @@ driveFolderUrl: "",
 loading: false
 };
 let selectedPlanWeekKey = "";
+let paidRegistryOpen = false;
 const saveTimers = {};
 const saveInFlight = {};
 const saveQueued = {};
@@ -1356,6 +1432,7 @@ procurementState.user = null;
 procurementState.weeks = [];
 procurementState.orders = [];
 procurementState.driveFolderUrl = "";
+paidRegistryOpen = false;
 sessionStorage.removeItem(procurementSessionKey);
 }
 
@@ -1486,7 +1563,7 @@ revenueData = json && typeof json === "object" ? json : {};
 }
 
 function getOrdersForWeek(weekStartKey){
-return procurementState.orders.filter((order) => order.week_start === weekStartKey);
+return procurementState.orders.filter((order) => order.week_start === weekStartKey && !isPaidArchived(order));
 }
 
 function getWeekSpentTotal(weekStartKey){
@@ -1546,11 +1623,8 @@ let override = Number(meta && meta.budget_override || 0);
 return Math.max(base, override);
 }
 
-function isArchivedPaid(order){
-if (!order.paid_at) return false;
-let paidAt = new Date(order.paid_at);
-let hideAt = addDays(paidAt, 3);
-return hideAt < today;
+function isPaidArchived(order){
+return Boolean(order && (order.paid_at || order.status === "paid_archived" || order.status === "paid"));
 }
 
 function getNextMondayKey(){
@@ -1569,7 +1643,7 @@ return Boolean(meta && meta.plan_done_at);
 }
 
 function hasPlanActivity(weekStartKey){
-return procurementState.orders.some((order) => order.week_start === weekStartKey) || Boolean(getWeekOverrideMeta(weekStartKey));
+return procurementState.orders.some((order) => order.week_start === weekStartKey && !isPaidArchived(order)) || Boolean(getWeekOverrideMeta(weekStartKey));
 }
 
 function getActivePlanWeekKey(){
@@ -1607,7 +1681,7 @@ for (let entry of procurementState.weeks){
 }
 
 for (let order of procurementState.orders){
-  if (order.week_start) keys.add(normalizeDateValue(order.week_start));
+  if (order.week_start && !isPaidArchived(order)) keys.add(normalizeDateValue(order.week_start));
 }
 
 return Array.from(keys)
@@ -1640,7 +1714,7 @@ function getPlanBudgetMeta(weekStartKey){
 let base = getAutoBudgetForWeek(weekStartKey);
 let effective = getEffectiveBudget(weekStartKey);
 let spent = procurementState.orders
-  .filter((order) => !order.paid_at && !isArchivedPaid(order) && order.week_start === weekStartKey)
+  .filter((order) => !isPaidArchived(order) && order.week_start === weekStartKey)
   .reduce((sum, order) => sum + Number(order.order_amount || 0), 0);
 return {
   base,
@@ -1653,7 +1727,7 @@ return {
 function canFitIntoPlanBudget(orderId, nextValue, weekStartKey){
 let meta = getPlanBudgetMeta(weekStartKey);
 let otherSpent = procurementState.orders
-  .filter((order) => !order.paid_at && !isArchivedPaid(order) && order.week_start === weekStartKey && order.id !== orderId)
+  .filter((order) => !isPaidArchived(order) && order.week_start === weekStartKey && order.id !== orderId)
   .reduce((sum, order) => sum + Number(order.order_amount || 0), 0);
 return otherSpent + Number(nextValue || 0) <= meta.effective;
 }
@@ -1688,7 +1762,7 @@ return {
 }
 
 function getComputedStatus(order){
-if (order.paid_at){
+if (isPaidArchived(order)){
 return {
 key: "waiting",
 label: "Скрыто"
@@ -1774,7 +1848,7 @@ for (let cursor = new Date(start); cursor <= end; cursor = addDays(cursor, 7)){
 result.push(formatDateKey(cursor));
 }
 for (let order of procurementState.orders){
-if (!order.week_start) continue;
+if (!order.week_start || isPaidArchived(order)) continue;
 if (!result.includes(order.week_start)){
 result.push(order.week_start);
 }
@@ -1789,8 +1863,10 @@ let allOrders = [...procurementState.orders].sort((left, right) => {
   let rightDue = right.payment_due_date || right.order_date || "9999-12-31";
   return leftDue.localeCompare(rightDue);
 });
-let activeOrders = allOrders.filter((order) => !order.paid_at && !isArchivedPaid(order));
-let paidOrders = allOrders.filter((order) => order.paid_at && !isArchivedPaid(order));
+let activeOrders = allOrders.filter((order) => !isPaidArchived(order));
+let paidOrders = [...procurementState.orders]
+  .filter((order) => isPaidArchived(order))
+  .sort((left, right) => String(right.paid_at || "").localeCompare(String(left.paid_at || "")));
 let activePlanWeekKey = getCurrentPlanViewWeekKey();
 let availablePlanWeekKeys = buildSelectablePlanWeekKeys();
 let activePlanIndex = availablePlanWeekKeys.indexOf(activePlanWeekKey);
@@ -1897,9 +1973,36 @@ let ordersHead = `
     `).join("")}</div>`
   : "<div class='emptyWeek'>Пока нет ни одной строки закупа. Добавь поставщика, и запись сохранится в общей таблице.</div>";
 
-let archivedHtml = paidOrders.length
-  ? `<div class="archivedOrders"><details open><summary>Оплаченные: ${paidOrders.length}</summary><div class="ordersTable">${paidOrders.map((order) => renderOrderRow(order, true)).join("")}</div></details></div>`
-  : "";
+let paidRegistryHtml = `
+  <div class="paidRegistryBlock">
+    <div class="paidRegistryToggleWrap">
+      <button class="plainButton ghost" data-role="toggle-paid-registry" type="button">${paidRegistryOpen ? "Скрыть оплаченные счета" : "Оплаченные счета"}</button>
+    </div>
+    ${paidRegistryOpen ? `
+      <div class="paidRegistryCard">
+        <div class="paidRegistryHead">
+          <div class="paidRegistryTitle">Реестр оплаченных счетов</div>
+          <div class="paidRegistryCount">${paidOrders.length}</div>
+        </div>
+        ${paidOrders.length ? `
+          <div class="paidRegistryTable">
+            <div class="paidRegistryRow paidRegistryRowHead">
+              <div>Дата оплаты</div>
+              <div>Поставщик</div>
+              <div>Сумма</div>
+            </div>
+            ${paidOrders.map((order) => `
+              <div class="paidRegistryRow">
+                <div>${escapeHtml(order.paid_at ? new Date(order.paid_at).toLocaleDateString("ru-RU", { timeZone: "UTC" }) : "—")}</div>
+                <div>${escapeHtml(order.supplier_name || "Без названия")}</div>
+                <div>${escapeHtml(formatMoney(order.order_amount || 0))}</div>
+              </div>
+            `).join("")}
+          </div>
+        ` : `<div class="emptyWeek">Оплаченных счетов пока нет.</div>`}
+      </div>
+    ` : ""}
+  </div>`;
 
 container.innerHTML = `
 <article class="weekCard">
@@ -1973,10 +2076,10 @@ container.innerHTML = `
     </div>
   </div>
   ${groupsHtml}
+  ${paidRegistryHtml}
   <div class="addOrderRow">
     <button class="plainButton secondary" data-role="add-order-global" type="button">+ Добавить поставщика вне плана</button>
   </div>
-  ${archivedHtml}
 </article>`;
 }
 
@@ -2138,6 +2241,7 @@ payment_due_date: order.payment_due_date,
 invoice_file_url: order.invoice_file_url,
 invoice_file_name: order.invoice_file_name,
 paid_at: order.paid_at,
+status: order.status || "",
 notes: order.notes || ""
 };
 }
@@ -2183,6 +2287,7 @@ if (latest && JSON.stringify(buildOrderPayload(latest)) !== snapshot){
     invoice_file_url: latest.invoice_file_url,
     invoice_file_name: latest.invoice_file_name,
     paid_at: latest.paid_at,
+    status: latest.status || "",
     notes: latest.notes || "",
     isLocalOnly: false
   });
@@ -2338,13 +2443,22 @@ if (order.isLocalOnly){
   return;
 }
 try {
-  await callProcurementApi("deleteOrder", {
+  let result = await callProcurementApi("markPaid", {
     order_id: orderId
   });
   hideNotices();
-  removeOrderById(orderId);
+  if (result.order){
+    upsertLocalOrder(result.order);
+  } else {
+    let target = getOrderById(orderId);
+    if (target){
+      target.paid_at = new Date().toISOString();
+      target.status = "paid_archived";
+      renderWeeks();
+    }
+  }
 } catch (error){
-  showAuthNotice("Не удалось удалить оплаченный счет: " + error.message, "error");
+  showAuthNotice("Не удалось отметить счет как оплаченный: " + error.message, "error");
 }
 }
 
@@ -2451,6 +2565,11 @@ return;
 }
 if (role === "plan-next"){
 shiftPlanWeek(1);
+renderWeeks();
+return;
+}
+if (role === "toggle-paid-registry"){
+paidRegistryOpen = !paidRegistryOpen;
 renderWeeks();
 return;
 }
