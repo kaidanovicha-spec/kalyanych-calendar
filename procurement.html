@@ -191,6 +191,26 @@ font-weight:600;
 color:#5f564b;
 }
 
+.heroMetaChip.planBudgetMain{
+background:linear-gradient(135deg, rgba(190, 246, 210, 0.96), rgba(233, 252, 240, 0.98));
+border:1px solid rgba(43, 146, 84, 0.18);
+box-shadow:0 14px 28px rgba(43, 146, 84, 0.14);
+color:#1d5f35;
+font-weight:800;
+}
+
+.heroMetaChip.planPlanned{
+background:linear-gradient(135deg, rgba(219, 245, 226, 0.96), rgba(242, 251, 245, 0.98));
+border:1px solid rgba(61, 138, 84, 0.14);
+color:#2a6f41;
+}
+
+.heroMetaChip.planRemaining{
+background:linear-gradient(135deg, rgba(255, 236, 233, 0.98), rgba(255, 247, 245, 0.98));
+border:1px solid rgba(217, 72, 72, 0.14);
+color:#a24a4a;
+}
+
 .authNotice,
 .setupNotice,
 .loadingNotice{
@@ -397,6 +417,18 @@ border-radius:20px;
 background:#fff;
 border:1px solid rgba(17,17,17,0.06);
 box-shadow:0 8px 18px rgba(15,23,42,0.04);
+}
+
+.budgetStat.alert{
+background:linear-gradient(180deg, rgba(255, 240, 238, 0.98), rgba(255, 248, 247, 0.98));
+border-color:rgba(217,72,72,0.18);
+box-shadow:0 10px 22px rgba(217,72,72,0.08);
+}
+
+.budgetStat.good{
+background:linear-gradient(180deg, rgba(236, 250, 241, 0.98), rgba(247, 253, 249, 0.98));
+border-color:rgba(43,146,84,0.14);
+box-shadow:0 10px 22px rgba(43,146,84,0.08);
 }
 
 .budgetStatLabel{
@@ -1111,10 +1143,10 @@ width:100%;
 </section>
 </div>
 
-<div class="uiVersionToggle">v2.039</div>
+<div class="uiVersionToggle">v2.040</div>
 
 <script>
-const PROCUREMENT_VERSION = "v2.039";
+const PROCUREMENT_VERSION = "v2.040";
 const procurementConfig = {
 googleClientId: "462958236662-4jml8gljkbk0tddja2cktktgdvubiat9.apps.googleusercontent.com",
 apiUrl: "https://script.google.com/macros/s/AKfycbxUp-7LEYL0Sj_J4Ck7QgMiNVziLmxxseLGk4ottNTfkBAktrAcgSwk0r7k1ESVW56kwQ/exec",
@@ -1814,10 +1846,10 @@ container.innerHTML = `
       <p class="planText">Бюджет на ближайший понедельник считается по себестоимости за предыдущие 7 дней: ${escapeHtml(previousPlanRangeStart)} - ${escapeHtml(previousPlanRangeEnd)}.</p>
       ${planSelectorHtml}
       <div class="planMeta">
-        <div class="heroMetaChip">Плановый бюджет: ${formatMoney(nextMondayBudgetMeta.effective)}</div>
+        <div class="heroMetaChip planBudgetMain">Плановый бюджет: ${formatMoney(nextMondayBudgetMeta.effective)}</div>
         <div class="heroMetaChip">Дата старта: ${escapeHtml(formatDateLabel(activePlanWeekKey))}</div>
-        <div class="heroMetaChip">Запланировано: ${formatMoney(planOrders.reduce((sum, order) => sum + Number(order.order_amount || 0), 0))}</div>
-        <div class="heroMetaChip">Свободный остаток: ${formatMoney(nextMondayBudgetMeta.remaining)}</div>
+        <div class="heroMetaChip planPlanned">Запланировано: ${formatMoney(planOrders.reduce((sum, order) => sum + Number(order.order_amount || 0), 0))}</div>
+        <div class="heroMetaChip planRemaining">Свободный остаток: ${formatMoney(nextMondayBudgetMeta.remaining)}</div>
       </div>
       ${canManageBudget() ? `
       <div class="planBudgetTools">
@@ -1864,14 +1896,14 @@ container.innerHTML = `
         <div class="budgetStatValue">${activeOrders.length}</div>
         <div class="budgetStatMeta">${activeOrders.length ? "Активные строки списка" : "Пока без заказов"}</div>
       </div>
-      <div class="budgetStat">
+      <div class="budgetStat ${overdueCount ? "alert" : "good"}">
         <div class="budgetStatLabel">Просрочки</div>
         <div class="budgetStatValue ${overdueCount ? "negative" : ""}">${overdueCount}</div>
         <div class="budgetStatMeta">Поставщики с просрочкой по оплате</div>
       </div>
-      <div class="budgetStat">
+      <div class="budgetStat ${waitingCount ? "alert" : "good"}">
         <div class="budgetStatLabel">Ждут счет</div>
-        <div class="budgetStatValue">${waitingCount}</div>
+        <div class="budgetStatValue ${waitingCount ? "negative" : "positive"}">${waitingCount}</div>
         <div class="budgetStatMeta">Строки без загруженного счета</div>
       </div>
     </div>
