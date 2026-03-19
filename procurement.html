@@ -2425,11 +2425,6 @@ let recommendationOverlayHtml = !planIsLocked && recommendationDetailsOpen ? `
           <div class="planRecommendationMetricMeta">${escapeHtml(formatDateLabel(recommendationMeta.weekRevenue.rangeStartKey))} - ${escapeHtml(formatDateLabel(recommendationMeta.weekRevenue.rangeEndKey))}</div>
         </div>
         <div class="planRecommendationMetric">
-          <div class="planRecommendationMetricLabel">Ожидаем безнал</div>
-          <div class="planRecommendationMetricValue">${formatMoney(recommendationMeta.expectedCashless)}</div>
-          <div class="planRecommendationMetricMeta">${Math.round(recommendationMeta.cashlessMeta.share * 100)}% от ${escapeHtml(recommendationMeta.cashlessMeta.monthKey || "прошлого месяца")}</div>
-        </div>
-        <div class="planRecommendationMetric">
           <div class="planRecommendationMetricLabel">Ожидаем средств на закуп</div>
           <div class="planRecommendationMetricValue">${formatMoney(recommendationMeta.availableForBills)}</div>
           <div class="planRecommendationMetricMeta">После вычета 25% из ожидаемого безнала</div>
