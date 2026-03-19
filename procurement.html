@@ -852,6 +852,156 @@ justify-content:space-between;
 gap:18px;
 }
 
+.planHeaderMain{
+flex:1 1 620px;
+min-width:0;
+}
+
+.planRecommendationCard{
+flex:0 0 420px;
+padding:18px 18px 16px;
+border-radius:24px;
+background:linear-gradient(180deg, rgba(255,255,255,0.96), rgba(251,246,238,0.96));
+border:2px solid rgba(26,36,51,0.9);
+box-shadow:0 18px 36px rgba(26,36,51,0.08);
+}
+
+.planRecommendationEyebrow{
+margin:0 0 10px;
+font-size:11px;
+font-weight:800;
+letter-spacing:0.12em;
+text-transform:uppercase;
+color:#ff5a4f;
+text-align:center;
+}
+
+.planRecommendationTitle{
+margin:0;
+font-size:24px;
+line-height:1;
+letter-spacing:-0.03em;
+}
+
+.planRecommendationText{
+margin:10px 0 0;
+font-size:14px;
+line-height:1.5;
+color:var(--muted);
+}
+
+.planRecommendationSummary{
+margin-top:14px;
+padding:14px 16px;
+border-radius:20px;
+background:#fff;
+border:1px solid rgba(17,17,17,0.08);
+}
+
+.planRecommendationSummary.safe{
+background:linear-gradient(180deg, rgba(238,250,242,0.98), rgba(255,255,255,0.96));
+border-color:rgba(27,156,74,0.18);
+}
+
+.planRecommendationSummary.warn{
+background:linear-gradient(180deg, rgba(255,247,232,0.98), rgba(255,255,255,0.96));
+border-color:rgba(200,157,61,0.24);
+}
+
+.planRecommendationSummary.danger{
+background:linear-gradient(180deg, rgba(255,240,238,0.98), rgba(255,255,255,0.96));
+border-color:rgba(217,72,72,0.24);
+}
+
+.planRecommendationAmount{
+font-size:28px;
+font-weight:800;
+line-height:1;
+letter-spacing:-0.04em;
+color:var(--ink);
+}
+
+.planRecommendationNote{
+margin-top:8px;
+font-size:13px;
+line-height:1.45;
+color:var(--muted);
+}
+
+.planRecommendationGrid{
+margin-top:14px;
+display:grid;
+grid-template-columns:repeat(2, minmax(0, 1fr));
+gap:10px;
+}
+
+.planRecommendationMetric{
+padding:12px 14px;
+border-radius:18px;
+background:rgba(255,255,255,0.86);
+border:1px solid rgba(17,17,17,0.06);
+}
+
+.planRecommendationMetricLabel{
+font-size:11px;
+font-weight:800;
+letter-spacing:0.08em;
+text-transform:uppercase;
+color:#9b8f82;
+}
+
+.planRecommendationMetricValue{
+margin-top:6px;
+font-size:19px;
+font-weight:800;
+line-height:1.05;
+color:var(--ink);
+}
+
+.planRecommendationMetricMeta{
+margin-top:5px;
+font-size:12px;
+line-height:1.35;
+color:var(--muted);
+}
+
+.planRecommendationBullets{
+margin:14px 0 0;
+padding:0;
+list-style:none;
+display:flex;
+flex-direction:column;
+gap:8px;
+}
+
+.planRecommendationBullets li{
+padding-left:16px;
+position:relative;
+font-size:13px;
+line-height:1.45;
+color:var(--ink);
+}
+
+.planRecommendationBullets li::before{
+content:"";
+position:absolute;
+left:0;
+top:7px;
+width:7px;
+height:7px;
+border-radius:999px;
+background:#c89d3d;
+}
+
+.planRecommendationMeta{
+margin-top:12px;
+padding-top:12px;
+border-top:1px solid rgba(17,17,17,0.06);
+font-size:12px;
+line-height:1.45;
+color:var(--muted);
+}
+
 .planUnifiedCard{
 margin-bottom:18px;
 padding:18px 20px 20px;
@@ -1062,6 +1212,11 @@ border-radius:24px;
 flex-direction:column;
 }
 
+.planRecommendationCard{
+flex:1 1 auto;
+width:100%;
+}
+
 .weekBudgetGrid{
 grid-template-columns:1fr 1fr;
 }
@@ -1175,14 +1330,22 @@ width:100%;
 </section>
 </div>
 
-<div class="uiVersionToggle">v2.044</div>
+<div class="uiVersionToggle">v2.045</div>
 
 <script>
-const PROCUREMENT_VERSION = "v2.044";
+const PROCUREMENT_VERSION = "v2.045";
 const procurementConfig = {
 googleClientId: "462958236662-4jml8gljkbk0tddja2cktktgdvubiat9.apps.googleusercontent.com",
 apiUrl: "https://script.google.com/macros/s/AKfycbxUp-7LEYL0Sj_J4Ck7QgMiNVziLmxxseLGk4ottNTfkBAktrAcgSwk0r7k1ESVW56kwQ/exec",
 revenueApiUrl: "https://script.google.com/macros/s/AKfycbyPoZgiulk-_qC7hKRxkoOarINnqzsQ5wtLed7rVVSW994dVC2QFxZwyQuT3Dr_hQTJ0w/exec"
+};
+const procurementFinanceConfig = {
+cashlessShareByMonth: {
+  "2026-02": 0.95
+},
+defaultCashlessShare: 0.95,
+obligatoryReserveRate: 0.25,
+targetDebtLimit: 1500000
 };
 
 const procurementSessionKey = "kalyanychProcurementSession";
@@ -1201,6 +1364,7 @@ const saveTimers = {};
 const saveInFlight = {};
 const saveQueued = {};
 const lastSavedSnapshots = {};
+const revenueBaselineCache = {};
 
 function formatDateKey(date){
 let year = date.getUTCFullYear();
@@ -1277,6 +1441,14 @@ copy.setUTCDate(copy.getUTCDate() + amount);
 return copy;
 }
 
+function clamp(value, min, max){
+return Math.min(Math.max(value, min), max);
+}
+
+function isDateKey(value){
+return /^\d{4}-\d{2}-\d{2}$/.test(String(value || ""));
+}
+
 function getMonday(date){
 let copy = new Date(date);
 let day = copy.getUTCDay();
@@ -1309,6 +1481,228 @@ return {
 start: weekStart,
 end: weekEnd,
 endKey: formatDateKey(weekEnd)
+};
+}
+
+function weightedAverage(entries){
+if (!entries.length) return 0;
+let totalWeight = 0;
+let totalValue = 0;
+entries.forEach((entry) => {
+let weight = Number(entry.weight || 0);
+if (weight <= 0) return;
+totalWeight += weight;
+totalValue += Number(entry.value || 0) * weight;
+});
+return totalWeight > 0 ? totalValue / totalWeight : 0;
+}
+
+function getWeightedSampleSize(entries){
+return entries.reduce((sum, entry) => sum + Number(entry.weight || 0), 0);
+}
+
+function getRevenueHistoryWeight(dateKey){
+if (!isDateKey(dateKey)) return 1;
+if (dateKey < "2024-05-01") return 0;
+if (dateKey < "2025-01-01") return 0.5;
+return 1;
+}
+
+function getDateTimestamp(dateKey){
+return parseDateKey(dateKey).getTime();
+}
+
+function getRevenueBaseline(dateKey){
+if (revenueBaselineCache[dateKey] != null){
+return revenueBaselineCache[dateKey];
+}
+
+let targetDate = parseDateKey(dateKey);
+if (Number.isNaN(targetDate.getTime())){
+revenueBaselineCache[dateKey] = 0;
+return 0;
+}
+let targetMonth = targetDate.getUTCMonth();
+let targetWeekday = targetDate.getUTCDay();
+let sameMonthWeekday = [];
+let sameWeekday = [];
+let sameMonth = [];
+let allPositive = [];
+
+for (let key in revenueData){
+if (!isDateKey(key) || key === dateKey) continue;
+let revenue = getRevenueValue(revenueData[key]);
+if (revenue <= 0) continue;
+let historyWeight = getRevenueHistoryWeight(key);
+if (historyWeight <= 0) continue;
+let currentDate = parseDateKey(key);
+allPositive.push({ value: revenue, weight: historyWeight });
+if (currentDate.getUTCMonth() === targetMonth){
+sameMonth.push({ value: revenue, weight: historyWeight });
+if (currentDate.getUTCDay() === targetWeekday){
+sameMonthWeekday.push({ value: revenue, weight: historyWeight });
+}
+}
+if (currentDate.getUTCDay() === targetWeekday){
+sameWeekday.push({ value: revenue, weight: historyWeight });
+}
+}
+
+let baseline = weightedAverage(sameMonthWeekday);
+if (!baseline && getWeightedSampleSize(sameMonth) >= 3){
+baseline = weightedAverage(sameMonth);
+}
+if (!baseline && getWeightedSampleSize(sameWeekday) >= 3){
+baseline = weightedAverage(sameWeekday);
+}
+if (!baseline){
+baseline = weightedAverage(allPositive);
+}
+
+revenueBaselineCache[dateKey] = baseline || 0;
+return revenueBaselineCache[dateKey];
+}
+
+function getPreviousMonthKey(weekStartKey){
+let target = parseDateKey(weekStartKey);
+if (Number.isNaN(target.getTime())) return "";
+target.setUTCDate(1);
+target.setUTCMonth(target.getUTCMonth() - 1);
+return `${target.getUTCFullYear()}-${String(target.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
+function getCashlessShareForWeek(weekStartKey){
+let monthKey = getPreviousMonthKey(weekStartKey);
+let explicitValue = procurementFinanceConfig.cashlessShareByMonth[monthKey];
+let numericValue = Number(explicitValue);
+if (!Number.isNaN(numericValue) && numericValue > 0 && numericValue <= 1){
+return {
+  monthKey,
+  share: numericValue,
+  isDefault: false
+};
+}
+return {
+monthKey,
+share: procurementFinanceConfig.defaultCashlessShare,
+isDefault: true
+};
+}
+
+function getWeekRevenueForecastMeta(weekStartKey){
+let weekStart = parseDateKey(weekStartKey);
+if (Number.isNaN(weekStart.getTime())){
+return {
+  rangeStartKey: "",
+  rangeEndKey: "",
+  expectedRevenue: 0,
+  actualRevenue: 0,
+  forecastRevenue: 0,
+  actualDays: 0,
+  forecastDays: 0
+};
+}
+let rangeStart = addDays(weekStart, -7);
+let rangeEnd = addDays(weekStart, -1);
+let expectedRevenue = 0;
+let actualRevenue = 0;
+let forecastRevenue = 0;
+let actualDays = 0;
+let forecastDays = 0;
+let todayKey = formatDateKey(today);
+for (let step = 0; step < 7; step++){
+let currentDate = addDays(rangeStart, step);
+let dateKey = formatDateKey(currentDate);
+let actual = getRevenueValue(revenueData[dateKey]);
+let hasActual = dateKey < todayKey && actual > 0;
+let value = hasActual ? actual : getRevenueBaseline(dateKey);
+expectedRevenue += value;
+if (hasActual){
+  actualRevenue += value;
+  actualDays += 1;
+} else {
+  forecastRevenue += value;
+  forecastDays += 1;
+}
+}
+return {
+rangeStartKey: formatDateKey(rangeStart),
+rangeEndKey: formatDateKey(rangeEnd),
+expectedRevenue,
+actualRevenue,
+forecastRevenue,
+actualDays,
+forecastDays
+};
+}
+
+function buildPlanRecommendationMeta(weekStartKey, activeOrders, groupedOrders, planOrders, budgetMeta){
+let weekRevenue = getWeekRevenueForecastMeta(weekStartKey);
+let cashlessMeta = getCashlessShareForWeek(weekStartKey);
+let expectedCashless = weekRevenue.expectedRevenue * cashlessMeta.share;
+let obligatoryReserve = expectedCashless * procurementFinanceConfig.obligatoryReserveRate;
+let availableForBills = Math.max(0, expectedCashless - obligatoryReserve);
+let currentDebt = groupedOrders.reduce((sum, order) => sum + Number(order.order_amount || 0), 0);
+let overdueDebt = groupedOrders
+  .filter((order) => getComputedStatus(order).key === "overdue")
+  .reduce((sum, order) => sum + Number(order.order_amount || 0), 0);
+let plannedAmount = planOrders.reduce((sum, order) => sum + Number(order.order_amount || 0), 0);
+let targetDebtLimit = procurementFinanceConfig.targetDebtLimit;
+let debtHeadroom = Math.max(0, targetDebtLimit - currentDebt);
+let recommendedProcurement = Math.max(0, Math.min(budgetMeta.effective, availableForBills - overdueDebt, debtHeadroom));
+let projectedDebt = currentDebt + plannedAmount;
+let reserveForDebt = Math.max(0, availableForBills - recommendedProcurement);
+let reductionVsPlan = Math.max(0, plannedAmount - recommendedProcurement);
+let severity = "safe";
+if (projectedDebt > targetDebtLimit || plannedAmount > recommendedProcurement + 50000){
+severity = "danger";
+} else if (overdueDebt > 0 || currentDebt > targetDebtLimit * 0.8 || plannedAmount > recommendedProcurement){
+severity = "warn";
+}
+let title = "Можно держать план";
+let body = `На закуп можно оставлять около ${formatMoney(recommendedProcurement)} без лишнего разгона долга.`;
+if (severity === "danger"){
+title = "Лучше сократить закуп";
+body = recommendedProcurement > 0
+  ? `Лучше опустить закуп до ${formatMoney(recommendedProcurement)} и остальное пустить на долг.`
+  : "Новый закуп лучше не расширять, пока не разгрузится текущая задолженность.";
+} else if (severity === "warn"){
+title = "Нужен осторожный режим";
+body = reductionVsPlan > 0
+  ? `План лучше урезать на ${formatMoney(reductionVsPlan)}, чтобы часть денег ушла в погашение долга.`
+  : `Закуп можно оставить близко к плану, но часть поступлений лучше сразу направить на закрытие просрочек.`;
+}
+let bullets = [];
+if (overdueDebt > 0){
+bullets.push(`Просрочка сейчас ${formatMoney(overdueDebt)}. Эту сумму лучше закрывать раньше нового расширения закупа.`);
+}
+if (projectedDebt > targetDebtLimit){
+bullets.push(`После текущего плана долг вырастет до ${formatMoney(projectedDebt)}, это выше лимита ${formatMoney(targetDebtLimit)}.`);
+} else {
+bullets.push(`После текущего плана долг будет около ${formatMoney(projectedDebt)} при целевом лимите ${formatMoney(targetDebtLimit)}.`);
+}
+if (weekRevenue.forecastDays > 0){
+bullets.push(`В окне ${formatDateLabel(weekRevenue.rangeStartKey)} - ${formatDateLabel(weekRevenue.rangeEndKey)} учтены ${weekRevenue.actualDays} факт. дн. и ${weekRevenue.forecastDays} прогн. дн.`);
+} else {
+bullets.push(`Окно ${formatDateLabel(weekRevenue.rangeStartKey)} - ${formatDateLabel(weekRevenue.rangeEndKey)} уже собрано по фактической выручке.`);
+}
+return {
+weekRevenue,
+cashlessMeta,
+expectedCashless,
+obligatoryReserve,
+availableForBills,
+currentDebt,
+overdueDebt,
+plannedAmount,
+projectedDebt,
+recommendedProcurement,
+debtHeadroom,
+reductionVsPlan,
+severity,
+title,
+body,
+bullets
 };
 }
 
@@ -1485,6 +1879,7 @@ throw new Error("Не удалось загрузить выручку: HTTP " +
 }
 let json = await response.json();
 revenueData = json && typeof json === "object" ? json : {};
+Object.keys(revenueBaselineCache).forEach((key) => delete revenueBaselineCache[key]);
 }
 
 function getOrdersForWeek(weekStartKey){
@@ -1807,6 +2202,8 @@ let overdueAmount = activeOrders
   .reduce((sum, order) => sum + Number(order.order_amount || 0), 0);
 let overdueSharePercent = spent > 0 ? Math.round((overdueAmount / spent) * 100) : 0;
 let waitingCount = activeOrders.filter((order) => !order.invoice_file_url).length;
+let nextMondayBudgetMeta = getPlanBudgetMeta(activePlanWeekKey);
+let recommendationMeta = buildPlanRecommendationMeta(activePlanWeekKey, activeOrders, groupedOrders, planOrders, nextMondayBudgetMeta);
 let healthState = (() => {
   if (overdueCount === 0 && spent <= 1500000) {
     return {
@@ -1837,7 +2234,6 @@ let healthState = (() => {
     meta: overdueCount ? "Нормально · есть точечные просрочки" : "Стабильно"
   };
 })();
-let nextMondayBudgetMeta = getPlanBudgetMeta(activePlanWeekKey);
 let previousPlanRangeStart = formatDateLabel(formatDateKey(addDays(parseDateKey(activePlanWeekKey), -7)));
 let previousPlanRangeEnd = formatDateLabel(formatDateKey(addDays(parseDateKey(activePlanWeekKey), -1)));
 let currentMondayKey = formatDateKey(getMonday(today));
@@ -1881,6 +2277,55 @@ let ordersHead = `
 <div>Оплачено</div>
 </div>`;
 
+let recommendationHtml = planIsLocked ? "" : `
+  <aside class="planRecommendationCard">
+    <div class="planRecommendationEyebrow">Рекомендации по закупу</div>
+    <h4 class="planRecommendationTitle">${escapeHtml(recommendationMeta.title)}</h4>
+    <p class="planRecommendationText">${escapeHtml(recommendationMeta.body)}</p>
+    <div class="planRecommendationSummary ${recommendationMeta.severity}">
+      <div class="planRecommendationAmount">${formatMoney(recommendationMeta.recommendedProcurement)}</div>
+      <div class="planRecommendationNote">Рекомендуемая сумма закупа на ближайшую неделю при текущем долге и ожидаемом денежном окне.</div>
+    </div>
+    <div class="planRecommendationGrid">
+      <div class="planRecommendationMetric">
+        <div class="planRecommendationMetricLabel">Ожидаемая выручка</div>
+        <div class="planRecommendationMetricValue">${formatMoney(recommendationMeta.weekRevenue.expectedRevenue)}</div>
+        <div class="planRecommendationMetricMeta">${escapeHtml(formatDateLabel(recommendationMeta.weekRevenue.rangeStartKey))} - ${escapeHtml(formatDateLabel(recommendationMeta.weekRevenue.rangeEndKey))}</div>
+      </div>
+      <div class="planRecommendationMetric">
+        <div class="planRecommendationMetricLabel">Ожидаемый безнал</div>
+        <div class="planRecommendationMetricValue">${formatMoney(recommendationMeta.expectedCashless)}</div>
+        <div class="planRecommendationMetricMeta">${Math.round(recommendationMeta.cashlessMeta.share * 100)}% от ${escapeHtml(recommendationMeta.cashlessMeta.monthKey || "прошлого месяца")}</div>
+      </div>
+      <div class="planRecommendationMetric">
+        <div class="planRecommendationMetricLabel">Доступно на счета</div>
+        <div class="planRecommendationMetricValue">${formatMoney(recommendationMeta.availableForBills)}</div>
+        <div class="planRecommendationMetricMeta">После вычета 25% на аренды, налоги и обязательные расходы</div>
+      </div>
+      <div class="planRecommendationMetric">
+        <div class="planRecommendationMetricLabel">Текущий долг</div>
+        <div class="planRecommendationMetricValue">${formatMoney(recommendationMeta.currentDebt)}</div>
+        <div class="planRecommendationMetricMeta">${recommendationMeta.overdueDebt ? `Просрочка ${formatMoney(recommendationMeta.overdueDebt)}` : "Просрочек сейчас нет"}</div>
+      </div>
+      <div class="planRecommendationMetric">
+        <div class="planRecommendationMetricLabel">Запланировано</div>
+        <div class="planRecommendationMetricValue">${formatMoney(recommendationMeta.plannedAmount)}</div>
+        <div class="planRecommendationMetricMeta">${recommendationMeta.reductionVsPlan > 0 ? `Лучше снизить на ${formatMoney(recommendationMeta.reductionVsPlan)}` : "Текущий план укладывается в рекомендацию"}</div>
+      </div>
+      <div class="planRecommendationMetric">
+        <div class="planRecommendationMetricLabel">Долг после плана</div>
+        <div class="planRecommendationMetricValue">${formatMoney(recommendationMeta.projectedDebt)}</div>
+        <div class="planRecommendationMetricMeta">Целевой потолок долга ${formatMoney(procurementFinanceConfig.targetDebtLimit)}</div>
+      </div>
+    </div>
+    <ul class="planRecommendationBullets">
+      ${recommendationMeta.bullets.map((bullet) => `<li>${escapeHtml(bullet)}</li>`).join("")}
+    </ul>
+    <div class="planRecommendationMeta">
+      Если по факту денег на счете в день закупа окажется больше прогноза, можно точечно вернуть часть позиций в план. Если денег меньше, держимся рекомендованной суммы и сначала разгружаем долг.
+    </div>
+  </aside>`;
+
  let groupsHtml = groups.length
   ? `<div class="groupList">${groups.map((group) => `
       <section class="${group.meta.className}">
@@ -1907,7 +2352,7 @@ container.innerHTML = `
 <article class="weekCard">
   <section class="planUnifiedCard">
   <div class="planCard">
-    <div>
+    <div class="planHeaderMain">
       <h3 class="planTitle">План закупа на ${escapeHtml(formatDateLabel(activePlanWeekKey))}</h3>
       <p class="planText">Бюджет на ближайший понедельник считается по себестоимости за предыдущие 7 дней: ${escapeHtml(previousPlanRangeStart)} - ${escapeHtml(previousPlanRangeEnd)}.</p>
       ${planSelectorHtml}
@@ -1924,6 +2369,7 @@ container.innerHTML = `
         <button class="plainButton secondary" data-role="save-budget-override" data-week-start="${activePlanWeekKey}" type="button">Сохранить бюджет</button>
       </div>` : ""}
     </div>
+    ${recommendationHtml}
   </div>
   <div class="planUnifiedBody">
     <div class="dueGroupHead">
