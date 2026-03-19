@@ -878,16 +878,90 @@ text-align:center;
 
 .planRecommendationTitle{
 margin:0;
-font-size:24px;
+font-size:20px;
 line-height:1;
 letter-spacing:-0.03em;
 }
 
 .planRecommendationText{
-margin:10px 0 0;
+margin:12px 0 0;
+display:flex;
+flex-direction:column;
+gap:6px;
+}
+
+.planRecommendationLine{
 font-size:14px;
-line-height:1.5;
+line-height:1.35;
 color:var(--muted);
+}
+
+.planRecommendationLine strong{
+display:inline-block;
+margin-left:4px;
+font-size:19px;
+font-weight:800;
+line-height:1.12;
+color:var(--ink);
+}
+
+.planRecommendationIndex{
+margin-top:10px;
+font-size:16px;
+font-weight:800;
+line-height:1.25;
+}
+
+.planRecommendationIndex.safe{
+color:var(--green);
+}
+
+.planRecommendationIndex.warn{
+color:#b27e18;
+}
+
+.planRecommendationIndex.danger{
+color:var(--red);
+}
+
+.planRecommendationActions{
+margin-top:14px;
+display:flex;
+justify-content:flex-start;
+}
+
+.planRecommendationOverlay{
+position:fixed;
+inset:0;
+z-index:90;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:24px;
+background:rgba(26,36,51,0.44);
+backdrop-filter:blur(6px);
+}
+
+.planRecommendationPanel{
+width:min(760px, calc(100vw - 40px));
+max-height:calc(100vh - 48px);
+overflow:auto;
+padding:22px 22px 20px;
+border-radius:28px;
+background:linear-gradient(180deg, rgba(255,255,255,0.99), rgba(251,246,238,0.98));
+border:1px solid rgba(17,17,17,0.08);
+box-shadow:0 28px 60px rgba(15,23,42,0.24);
+}
+
+.planRecommendationPanelHead{
+display:flex;
+align-items:flex-start;
+justify-content:space-between;
+gap:16px;
+}
+
+.planRecommendationPanelClose{
+flex:0 0 auto;
 }
 
 .planRecommendationSummary{
@@ -1217,6 +1291,15 @@ flex:1 1 auto;
 width:100%;
 }
 
+.planRecommendationOverlay{
+padding:18px;
+}
+
+.planRecommendationPanel{
+width:100%;
+max-height:calc(100vh - 36px);
+}
+
 .weekBudgetGrid{
 grid-template-columns:1fr 1fr;
 }
@@ -1360,6 +1443,7 @@ driveFolderUrl: "",
 loading: false
 };
 let selectedPlanWeekKey = "";
+let recommendationDetailsOpen = false;
 const saveTimers = {};
 const saveInFlight = {};
 const saveQueued = {};
@@ -1639,7 +1723,13 @@ forecastDays
 function buildPlanRecommendationMeta(weekStartKey, activeOrders, groupedOrders, planOrders, budgetMeta){
 let weekRevenue = getWeekRevenueForecastMeta(weekStartKey);
 let cashlessMeta = getCashlessShareForWeek(weekStartKey);
-let expectedCashless = weekRevenue.expectedRevenue * cashlessMeta.share;
+let baseWeekRevenue = weekRevenue.expectedRevenue;
+let baseWeekCost = calculateCost(baseWeekRevenue, parseDateKey(weekStartKey).getUTCFullYear(), parseDateKey(weekStartKey).getUTCMonth());
+let baseWeekGross = Math.max(0, baseWeekRevenue - baseWeekCost);
+let factWeekRevenue = weekRevenue.actualRevenue;
+let factWeekCost = calculateCost(factWeekRevenue, parseDateKey(weekStartKey).getUTCFullYear(), parseDateKey(weekStartKey).getUTCMonth());
+let factWeekGross = Math.max(0, factWeekRevenue - factWeekCost);
+let expectedCashless = baseWeekRevenue * cashlessMeta.share;
 let obligatoryReserve = expectedCashless * procurementFinanceConfig.obligatoryReserveRate;
 let availableForBills = Math.max(0, expectedCashless - obligatoryReserve);
 let currentDebt = groupedOrders.reduce((sum, order) => sum + Number(order.order_amount || 0), 0);
@@ -1649,9 +1739,8 @@ let overdueDebt = groupedOrders
 let plannedAmount = planOrders.reduce((sum, order) => sum + Number(order.order_amount || 0), 0);
 let targetDebtLimit = procurementFinanceConfig.targetDebtLimit;
 let debtHeadroom = Math.max(0, targetDebtLimit - currentDebt);
-let recommendedProcurement = Math.max(0, Math.min(budgetMeta.effective, availableForBills - overdueDebt, debtHeadroom));
+let recommendedProcurement = Math.max(0, Math.min(baseWeekCost, budgetMeta.effective, availableForBills - overdueDebt, debtHeadroom));
 let projectedDebt = currentDebt + plannedAmount;
-let reserveForDebt = Math.max(0, availableForBills - recommendedProcurement);
 let reductionVsPlan = Math.max(0, plannedAmount - recommendedProcurement);
 let severity = "safe";
 if (projectedDebt > targetDebtLimit || plannedAmount > recommendedProcurement + 50000){
@@ -1702,7 +1791,13 @@ reductionVsPlan,
 severity,
 title,
 body,
-bullets
+bullets,
+baseWeekRevenue,
+baseWeekCost,
+baseWeekGross,
+factWeekRevenue,
+factWeekCost,
+factWeekGross
 };
 }
 
@@ -1752,6 +1847,7 @@ procurementState.user = null;
 procurementState.weeks = [];
 procurementState.orders = [];
 procurementState.driveFolderUrl = "";
+recommendationDetailsOpen = false;
 sessionStorage.removeItem(procurementSessionKey);
 }
 
@@ -2281,50 +2377,77 @@ let recommendationHtml = planIsLocked ? "" : `
   <aside class="planRecommendationCard">
     <div class="planRecommendationEyebrow">Рекомендации по закупу</div>
     <h4 class="planRecommendationTitle">${escapeHtml(recommendationMeta.title)}</h4>
-    <p class="planRecommendationText">${escapeHtml(recommendationMeta.body)}</p>
-    <div class="planRecommendationSummary ${recommendationMeta.severity}">
-      <div class="planRecommendationAmount">${formatMoney(recommendationMeta.recommendedProcurement)}</div>
-      <div class="planRecommendationNote">Рекомендуемая сумма закупа на ближайшую неделю при текущем долге и ожидаемом денежном окне.</div>
+    <div class="planRecommendationText">
+      <div class="planRecommendationLine">Неделя ${escapeHtml(formatDateLabel(recommendationMeta.weekRevenue.rangeStartKey))} - ${escapeHtml(formatDateLabel(recommendationMeta.weekRevenue.rangeEndKey))}</div>
+      <div class="planRecommendationLine">Выручка:<strong>${formatMoney(recommendationMeta.factWeekRevenue)}</strong></div>
+      <div class="planRecommendationLine">Себестоимость:<strong>${formatMoney(recommendationMeta.factWeekCost)}</strong></div>
+      <div class="planRecommendationLine">Валовая:<strong>${formatMoney(recommendationMeta.factWeekGross)}</strong></div>
+      <div class="planRecommendationLine">База недели:<strong>${formatMoney(recommendationMeta.baseWeekRevenue)}</strong></div>
+      <div class="planRecommendationLine">Рекомендуемая сумма:<strong>${formatMoney(recommendationMeta.recommendedProcurement)}</strong></div>
     </div>
-    <div class="planRecommendationGrid">
-      <div class="planRecommendationMetric">
-        <div class="planRecommendationMetricLabel">Ожидаемая выручка</div>
-        <div class="planRecommendationMetricValue">${formatMoney(recommendationMeta.weekRevenue.expectedRevenue)}</div>
-        <div class="planRecommendationMetricMeta">${escapeHtml(formatDateLabel(recommendationMeta.weekRevenue.rangeStartKey))} - ${escapeHtml(formatDateLabel(recommendationMeta.weekRevenue.rangeEndKey))}</div>
-      </div>
-      <div class="planRecommendationMetric">
-        <div class="planRecommendationMetricLabel">Ожидаемый безнал</div>
-        <div class="planRecommendationMetricValue">${formatMoney(recommendationMeta.expectedCashless)}</div>
-        <div class="planRecommendationMetricMeta">${Math.round(recommendationMeta.cashlessMeta.share * 100)}% от ${escapeHtml(recommendationMeta.cashlessMeta.monthKey || "прошлого месяца")}</div>
-      </div>
-      <div class="planRecommendationMetric">
-        <div class="planRecommendationMetricLabel">Доступно на счета</div>
-        <div class="planRecommendationMetricValue">${formatMoney(recommendationMeta.availableForBills)}</div>
-        <div class="planRecommendationMetricMeta">После вычета 25% на аренды, налоги и обязательные расходы</div>
-      </div>
-      <div class="planRecommendationMetric">
-        <div class="planRecommendationMetricLabel">Текущий долг</div>
-        <div class="planRecommendationMetricValue">${formatMoney(recommendationMeta.currentDebt)}</div>
-        <div class="planRecommendationMetricMeta">${recommendationMeta.overdueDebt ? `Просрочка ${formatMoney(recommendationMeta.overdueDebt)}` : "Просрочек сейчас нет"}</div>
-      </div>
-      <div class="planRecommendationMetric">
-        <div class="planRecommendationMetricLabel">Запланировано</div>
-        <div class="planRecommendationMetricValue">${formatMoney(recommendationMeta.plannedAmount)}</div>
-        <div class="planRecommendationMetricMeta">${recommendationMeta.reductionVsPlan > 0 ? `Лучше снизить на ${formatMoney(recommendationMeta.reductionVsPlan)}` : "Текущий план укладывается в рекомендацию"}</div>
-      </div>
-      <div class="planRecommendationMetric">
-        <div class="planRecommendationMetricLabel">Долг после плана</div>
-        <div class="planRecommendationMetricValue">${formatMoney(recommendationMeta.projectedDebt)}</div>
-        <div class="planRecommendationMetricMeta">Целевой потолок долга ${formatMoney(procurementFinanceConfig.targetDebtLimit)}</div>
-      </div>
+    <div class="planRecommendationIndex ${recommendationMeta.severity}">
+      ${recommendationMeta.severity === "safe" ? "IndexKa: можно держать план" : recommendationMeta.severity === "warn" ? "IndexKa: нужен осторожный режим" : "IndexKa: лучше ниже базы"}
     </div>
-    <ul class="planRecommendationBullets">
-      ${recommendationMeta.bullets.map((bullet) => `<li>${escapeHtml(bullet)}</li>`).join("")}
-    </ul>
-    <div class="planRecommendationMeta">
-      Если по факту денег на счете в день закупа окажется больше прогноза, можно точечно вернуть часть позиций в план. Если денег меньше, держимся рекомендованной суммы и сначала разгружаем долг.
+    <div class="planRecommendationActions">
+      <button class="plainButton ghost" data-role="toggle-recommendation-details" type="button">Развернуть</button>
     </div>
   </aside>`;
+
+let recommendationOverlayHtml = !planIsLocked && recommendationDetailsOpen ? `
+  <div class="planRecommendationOverlay" data-role="toggle-recommendation-details">
+    <div class="planRecommendationPanel" onclick="event.stopPropagation()">
+      <div class="planRecommendationPanelHead">
+        <div>
+          <div class="planRecommendationEyebrow">Рекомендации по закупу</div>
+          <h4 class="planRecommendationTitle">${escapeHtml(recommendationMeta.title)}</h4>
+          <p class="planRecommendationText" style="margin-top:10px;">${escapeHtml(recommendationMeta.body)}</p>
+        </div>
+        <button class="plainButton ghost planRecommendationPanelClose" data-role="toggle-recommendation-details" type="button">Свернуть</button>
+      </div>
+      <div class="planRecommendationSummary ${recommendationMeta.severity}">
+        <div class="planRecommendationAmount">${formatMoney(recommendationMeta.recommendedProcurement)}</div>
+        <div class="planRecommendationNote">Рекомендуемая сумма закупа на ближайшую неделю с учетом базы недели, долга и просрочек.</div>
+      </div>
+      <div class="planRecommendationGrid">
+        <div class="planRecommendationMetric">
+          <div class="planRecommendationMetricLabel">База недели</div>
+          <div class="planRecommendationMetricValue">${formatMoney(recommendationMeta.baseWeekRevenue)}</div>
+          <div class="planRecommendationMetricMeta">${escapeHtml(formatDateLabel(recommendationMeta.weekRevenue.rangeStartKey))} - ${escapeHtml(formatDateLabel(recommendationMeta.weekRevenue.rangeEndKey))}</div>
+        </div>
+        <div class="planRecommendationMetric">
+          <div class="planRecommendationMetricLabel">Ожидаемый безнал</div>
+          <div class="planRecommendationMetricValue">${formatMoney(recommendationMeta.expectedCashless)}</div>
+          <div class="planRecommendationMetricMeta">${Math.round(recommendationMeta.cashlessMeta.share * 100)}% от ${escapeHtml(recommendationMeta.cashlessMeta.monthKey || "прошлого месяца")}</div>
+        </div>
+        <div class="planRecommendationMetric">
+          <div class="planRecommendationMetricLabel">База по себестоимости</div>
+          <div class="planRecommendationMetricValue">${formatMoney(recommendationMeta.baseWeekCost)}</div>
+          <div class="planRecommendationMetricMeta">От нее отталкиваемся как от безопасной закупочной базы</div>
+        </div>
+        <div class="planRecommendationMetric">
+          <div class="planRecommendationMetricLabel">Текущий долг</div>
+          <div class="planRecommendationMetricValue">${formatMoney(recommendationMeta.currentDebt)}</div>
+          <div class="planRecommendationMetricMeta">${recommendationMeta.overdueDebt ? `Просрочка ${formatMoney(recommendationMeta.overdueDebt)}` : "Просрочек сейчас нет"}</div>
+        </div>
+        <div class="planRecommendationMetric">
+          <div class="planRecommendationMetricLabel">Запланировано</div>
+          <div class="planRecommendationMetricValue">${formatMoney(recommendationMeta.plannedAmount)}</div>
+          <div class="planRecommendationMetricMeta">${recommendationMeta.reductionVsPlan > 0 ? `Лучше снизить на ${formatMoney(recommendationMeta.reductionVsPlan)}` : "Текущий план укладывается в рекомендацию"}</div>
+        </div>
+        <div class="planRecommendationMetric">
+          <div class="planRecommendationMetricLabel">Долг после плана</div>
+          <div class="planRecommendationMetricValue">${formatMoney(recommendationMeta.projectedDebt)}</div>
+          <div class="planRecommendationMetricMeta">Целевой потолок долга ${formatMoney(procurementFinanceConfig.targetDebtLimit)}</div>
+        </div>
+      </div>
+      <ul class="planRecommendationBullets">
+        ${recommendationMeta.bullets.map((bullet) => `<li>${escapeHtml(bullet)}</li>`).join("")}
+      </ul>
+      <div class="planRecommendationMeta">
+        Если по факту денег на счете в день закупа окажется больше прогноза, можно аккуратно вернуть часть позиций. Если денег меньше, держимся рекомендованной суммы и разгружаем долг.
+      </div>
+    </div>
+  </div>` : "";
 
  let groupsHtml = groups.length
   ? `<div class="groupList">${groups.map((group) => `
@@ -2426,6 +2549,7 @@ container.innerHTML = `
   </div>
   ${archivedHtml}
 </article>`;
+container.insertAdjacentHTML("beforeend", recommendationOverlayHtml);
 }
 
 function renderOrderRow(order, isArchived = false, options = {}){
@@ -2899,6 +3023,11 @@ return;
 }
 if (role === "plan-next"){
 shiftPlanWeek(1);
+renderWeeks();
+return;
+}
+if (role === "toggle-recommendation-details"){
+recommendationDetailsOpen = !recommendationDetailsOpen;
 renderWeeks();
 return;
 }
