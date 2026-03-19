@@ -1143,10 +1143,10 @@ width:100%;
 </section>
 </div>
 
-<div class="uiVersionToggle">v2.040</div>
+<div class="uiVersionToggle">v2.041</div>
 
 <script>
-const PROCUREMENT_VERSION = "v2.040";
+const PROCUREMENT_VERSION = "v2.041";
 const procurementConfig = {
 googleClientId: "462958236662-4jml8gljkbk0tddja2cktktgdvubiat9.apps.googleusercontent.com",
 apiUrl: "https://script.google.com/macros/s/AKfycbxUp-7LEYL0Sj_J4Ck7QgMiNVziLmxxseLGk4ottNTfkBAktrAcgSwk0r7k1ESVW56kwQ/exec",
@@ -1847,7 +1847,6 @@ container.innerHTML = `
       ${planSelectorHtml}
       <div class="planMeta">
         <div class="heroMetaChip planBudgetMain">Плановый бюджет: ${formatMoney(nextMondayBudgetMeta.effective)}</div>
-        <div class="heroMetaChip">Дата старта: ${escapeHtml(formatDateLabel(activePlanWeekKey))}</div>
         <div class="heroMetaChip planPlanned">Запланировано: ${formatMoney(planOrders.reduce((sum, order) => sum + Number(order.order_amount || 0), 0))}</div>
         <div class="heroMetaChip planRemaining">Свободный остаток: ${formatMoney(nextMondayBudgetMeta.remaining)}</div>
       </div>
