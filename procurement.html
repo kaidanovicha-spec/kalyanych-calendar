@@ -431,6 +431,30 @@ border-color:rgba(43,146,84,0.14);
 box-shadow:0 10px 22px rgba(43,146,84,0.08);
 }
 
+.budgetStat.healthGreat{
+background:linear-gradient(180deg, rgba(218, 248, 228, 0.98), rgba(240, 252, 245, 0.98));
+border-color:rgba(43,146,84,0.2);
+box-shadow:0 12px 26px rgba(43,146,84,0.1);
+}
+
+.budgetStat.healthGood{
+background:linear-gradient(180deg, rgba(244, 247, 233, 0.98), rgba(251, 252, 245, 0.98));
+border-color:rgba(145,125,54,0.16);
+box-shadow:0 12px 26px rgba(145,125,54,0.08);
+}
+
+.budgetStat.healthWarn{
+background:linear-gradient(180deg, rgba(255, 244, 227, 0.98), rgba(255, 249, 240, 0.98));
+border-color:rgba(194,118,47,0.18);
+box-shadow:0 12px 26px rgba(194,118,47,0.08);
+}
+
+.budgetStat.healthBad{
+background:linear-gradient(180deg, rgba(255, 238, 236, 0.98), rgba(255, 247, 246, 0.98));
+border-color:rgba(217,72,72,0.2);
+box-shadow:0 12px 26px rgba(217,72,72,0.09);
+}
+
 .budgetStatLabel{
 font-size:12px;
 font-weight:700;
@@ -446,6 +470,12 @@ line-height:1;
 letter-spacing:-0.03em;
 font-weight:800;
 color:var(--ink);
+}
+
+.budgetStatValue.healthEmoji{
+font-size:40px;
+line-height:0.95;
+letter-spacing:0;
 }
 
 .budgetStatValue.negative{
@@ -1143,10 +1173,10 @@ width:100%;
 </section>
 </div>
 
-<div class="uiVersionToggle">v2.043</div>
+<div class="uiVersionToggle">v2.044</div>
 
 <script>
-const PROCUREMENT_VERSION = "v2.043";
+const PROCUREMENT_VERSION = "v2.044";
 const procurementConfig = {
 googleClientId: "462958236662-4jml8gljkbk0tddja2cktktgdvubiat9.apps.googleusercontent.com",
 apiUrl: "https://script.google.com/macros/s/AKfycbxUp-7LEYL0Sj_J4Ck7QgMiNVziLmxxseLGk4ottNTfkBAktrAcgSwk0r7k1ESVW56kwQ/exec",
@@ -1770,7 +1800,41 @@ let spent = activeOrders
   .filter((order) => isOrdered(order))
   .reduce((sum, order) => sum + Number(order.order_amount || 0), 0);
 let overdueCount = activeOrders.filter((order) => getComputedStatus(order).key === "overdue").length;
+let overdueAmount = activeOrders
+  .filter((order) => getComputedStatus(order).key === "overdue")
+  .reduce((sum, order) => sum + Number(order.order_amount || 0), 0);
+let overdueSharePercent = spent > 0 ? Math.round((overdueAmount / spent) * 100) : 0;
 let waitingCount = activeOrders.filter((order) => !order.invoice_file_url).length;
+let healthState = (() => {
+  if (overdueCount === 0 && spent <= 1500000) {
+    return {
+      className: "healthGreat",
+      emoji: "😎",
+      meta: "Все круто"
+    };
+  }
+  if (spent > 2000000 && overdueAmount > spent / 2) {
+    return {
+      className: "healthBad",
+      emoji: "☹️",
+      meta: `Все плохо · просрочено ${overdueSharePercent}%`
+    };
+  }
+  if (overdueAmount > spent / 2 || spent > 1500000) {
+    return {
+      className: "healthWarn",
+      emoji: "😕",
+      meta: overdueAmount > spent / 2
+        ? `Ниже среднего · просрочено ${overdueSharePercent}%`
+        : `Ниже среднего · заказов уже ${formatMoney(spent)}`
+    };
+  }
+  return {
+    className: "healthGood",
+    emoji: "🙂",
+    meta: overdueCount ? "Нормально · есть точечные просрочки" : "Стабильно"
+  };
+})();
 let nextMondayBudgetMeta = getPlanBudgetMeta(activePlanWeekKey);
 let previousPlanRangeStart = formatDateLabel(formatDateKey(addDays(parseDateKey(activePlanWeekKey), -7)));
 let previousPlanRangeEnd = formatDateLabel(formatDateKey(addDays(parseDateKey(activePlanWeekKey), -1)));
@@ -1891,10 +1955,10 @@ container.innerHTML = `
         <div class="budgetStatValue">${formatMoney(spent)}</div>
         <div class="budgetStatMeta">Сумма всех активных заказов</div>
       </div>
-      <div class="budgetStat">
-        <div class="budgetStatLabel">Строк закупа</div>
-        <div class="budgetStatValue">${activeOrders.length}</div>
-        <div class="budgetStatMeta">${activeOrders.length ? "Активные строки списка" : "Пока без заказов"}</div>
+      <div class="budgetStat ${healthState.className}">
+        <div class="budgetStatLabel">Финансовое здоровье</div>
+        <div class="budgetStatValue healthEmoji">${healthState.emoji}</div>
+        <div class="budgetStatMeta">${healthState.meta}</div>
       </div>
       <div class="budgetStat ${overdueCount ? "alert" : "good"}">
         <div class="budgetStatLabel">Просрочки</div>
