@@ -930,6 +930,10 @@ display:flex;
 justify-content:flex-start;
 }
 
+.planRecommendationActions .plainButton{
+min-height:42px;
+}
+
 .planRecommendationOverlay{
 position:fixed;
 inset:0;
@@ -1688,26 +1692,39 @@ return {
 }
 let rangeStart = addDays(weekStart, -7);
 let rangeEnd = addDays(weekStart, -1);
-let expectedRevenue = 0;
 let actualRevenue = 0;
-let forecastRevenue = 0;
 let actualDays = 0;
 let forecastDays = 0;
 let todayKey = formatDateKey(today);
+let dayValues = [];
 for (let step = 0; step < 7; step++){
 let currentDate = addDays(rangeStart, step);
 let dateKey = formatDateKey(currentDate);
 let actual = getRevenueValue(revenueData[dateKey]);
 let hasActual = dateKey < todayKey && actual > 0;
-let value = hasActual ? actual : getRevenueBaseline(dateKey);
-expectedRevenue += value;
 if (hasActual){
-  actualRevenue += value;
+  actualRevenue += actual;
   actualDays += 1;
+  dayValues.push(actual);
 } else {
-  forecastRevenue += value;
   forecastDays += 1;
+  dayValues.push(null);
 }
+}
+let actualAverage = actualDays > 0 ? actualRevenue / actualDays : 0;
+let forecastRevenue = 0;
+let expectedRevenue = 0;
+for (let step = 0; step < dayValues.length; step++){
+let currentValue = dayValues[step];
+if (currentValue != null){
+  expectedRevenue += currentValue;
+  continue;
+}
+let currentDate = addDays(rangeStart, step);
+let dateKey = formatDateKey(currentDate);
+let fallbackValue = actualAverage > 0 ? actualAverage : getRevenueBaseline(dateKey);
+forecastRevenue += fallbackValue;
+expectedRevenue += fallbackValue;
 }
 return {
 rangeStartKey: formatDateKey(rangeStart),
@@ -2381,12 +2398,8 @@ let recommendationHtml = planIsLocked ? "" : `
       <div class="planRecommendationLine">Неделя ${escapeHtml(formatDateLabel(recommendationMeta.weekRevenue.rangeStartKey))} - ${escapeHtml(formatDateLabel(recommendationMeta.weekRevenue.rangeEndKey))}</div>
       <div class="planRecommendationLine">Выручка:<strong>${formatMoney(recommendationMeta.factWeekRevenue)}</strong></div>
       <div class="planRecommendationLine">Себестоимость:<strong>${formatMoney(recommendationMeta.factWeekCost)}</strong></div>
-      <div class="planRecommendationLine">Валовая:<strong>${formatMoney(recommendationMeta.factWeekGross)}</strong></div>
       <div class="planRecommendationLine">База недели:<strong>${formatMoney(recommendationMeta.baseWeekRevenue)}</strong></div>
       <div class="planRecommendationLine">Рекомендуемая сумма:<strong>${formatMoney(recommendationMeta.recommendedProcurement)}</strong></div>
-    </div>
-    <div class="planRecommendationIndex ${recommendationMeta.severity}">
-      ${recommendationMeta.severity === "safe" ? "IndexKa: можно держать план" : recommendationMeta.severity === "warn" ? "IndexKa: нужен осторожный режим" : "IndexKa: лучше ниже базы"}
     </div>
     <div class="planRecommendationActions">
       <button class="plainButton ghost" data-role="toggle-recommendation-details" type="button">Развернуть</button>
@@ -2395,14 +2408,14 @@ let recommendationHtml = planIsLocked ? "" : `
 
 let recommendationOverlayHtml = !planIsLocked && recommendationDetailsOpen ? `
   <div class="planRecommendationOverlay" data-role="toggle-recommendation-details">
-    <div class="planRecommendationPanel" onclick="event.stopPropagation()">
+    <div class="planRecommendationPanel">
       <div class="planRecommendationPanelHead">
         <div>
           <div class="planRecommendationEyebrow">Рекомендации по закупу</div>
           <h4 class="planRecommendationTitle">${escapeHtml(recommendationMeta.title)}</h4>
           <p class="planRecommendationText" style="margin-top:10px;">${escapeHtml(recommendationMeta.body)}</p>
         </div>
-        <button class="plainButton ghost planRecommendationPanelClose" data-role="toggle-recommendation-details" type="button">Свернуть</button>
+        <button class="plainButton ghost planRecommendationPanelClose" data-role="close-recommendation-details" type="button">Свернуть</button>
       </div>
       <div class="planRecommendationSummary ${recommendationMeta.severity}">
         <div class="planRecommendationAmount">${formatMoney(recommendationMeta.recommendedProcurement)}</div>
@@ -3028,6 +3041,11 @@ return;
 }
 if (role === "toggle-recommendation-details"){
 recommendationDetailsOpen = !recommendationDetailsOpen;
+renderWeeks();
+return;
+}
+if (role === "close-recommendation-details"){
+recommendationDetailsOpen = false;
 renderWeeks();
 return;
 }
