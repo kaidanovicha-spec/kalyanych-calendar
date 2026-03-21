@@ -621,8 +621,9 @@ box-shadow:0 8px 18px rgba(15,23,42,0.04);
 }
 
 .orderRow.overdue{
-background:#fff1ef;
-border-color:rgba(217,72,72,0.2);
+background:var(--overdue-row-bg, #fff1ef);
+border-color:var(--overdue-row-border, rgba(217,72,72,0.2));
+box-shadow:0 8px 18px rgba(15,23,42,0.04), inset 0 0 0 1px rgba(255,255,255,0.32);
 }
 
 .orderRow.waiting{
@@ -778,7 +779,8 @@ background:#b9931f;
 }
 
 .statusPill.overdue{
-background:#e25555;
+background:var(--overdue-dot-color, #e25555);
+box-shadow:0 0 0 3px var(--overdue-dot-glow, rgba(226,85,85,0.12));
 }
 
 .rowActions{
@@ -1759,10 +1761,10 @@ font-size:28px;
   </div>
 </div>
 
-<div class="uiVersionToggle">v2.053</div>
+<div class="uiVersionToggle">v2.055</div>
 
 <script>
-const PROCUREMENT_VERSION = "v2.053";
+const PROCUREMENT_VERSION = "v2.055";
 const procurementConfig = {
 googleClientId: "462958236662-4jml8gljkbk0tddja2cktktgdvubiat9.apps.googleusercontent.com",
 apiUrl: "https://script.google.com/macros/s/AKfycbxUp-7LEYL0Sj_J4Ck7QgMiNVziLmxxseLGk4ottNTfkBAktrAcgSwk0r7k1ESVW56kwQ/exec",
@@ -2897,6 +2899,50 @@ label: "К оплате"
 };
 }
 
+function clampNumber(value, min, max){
+return Math.min(Math.max(value, min), max);
+}
+
+function mixHexColors(startHex, endHex, weight){
+let normalizedWeight = clampNumber(Number(weight) || 0, 0, 1);
+let start = startHex.replace("#", "");
+let end = endHex.replace("#", "");
+let channels = [0, 2, 4].map((offset) => {
+let startChannel = parseInt(start.slice(offset, offset + 2), 16);
+let endChannel = parseInt(end.slice(offset, offset + 2), 16);
+return Math.round(startChannel + (endChannel - startChannel) * normalizedWeight);
+});
+return "#" + channels.map((channel) => channel.toString(16).padStart(2, "0")).join("");
+}
+
+function getOverdueVisualMeta(order){
+let status = getComputedStatus(order);
+if (status.key !== "overdue"){
+return null;
+}
+let dueDate = parseDateKey(order.payment_due_date);
+let todayDate = parseDateKey(formatDateKey(today));
+if (Number.isNaN(dueDate.getTime()) || Number.isNaN(todayDate.getTime())){
+return null;
+}
+let overdueDays = Math.max(1, Math.round((todayDate.getTime() - dueDate.getTime()) / 86400000));
+  let normalizedAge = clampNumber((overdueDays - 1) / 18, 0, 1);
+  let severity = Math.pow(normalizedAge, 0.72);
+  let rowBackground = `rgba(217, 72, 72, ${0.08 + severity * 0.18})`;
+  let rowBorder = `rgba(185, 28, 28, ${0.18 + severity * 0.3})`;
+  let dotColor = mixHexColors("#e25555", "#991b1b", severity);
+  let dotGlow = `rgba(153, 27, 27, ${0.14 + severity * 0.2})`;
+return {
+overdueDays,
+severity,
+rowBackground,
+rowBorder,
+dotColor,
+dotGlow,
+label: overdueDays === 1 ? "Просрочено 1 день" : `Просрочено ${overdueDays} дн.`
+};
+}
+
 function canManageBudget(){
 return procurementState.user && procurementState.user.role === "owner";
 }
@@ -3250,6 +3296,7 @@ let planStartKey = options.planStartKey || "";
 let currentMondayKey = formatDateKey(getMonday(today));
 let canEditPlannedDates = !isPlanned || (formatDateKey(today) >= planStartKey && planStartKey >= currentMondayKey);
 let status = getComputedStatus(order);
+let overdueMeta = getOverdueVisualMeta(order);
 let paidDateLabel = order.paid_at ? new Date(order.paid_at).toLocaleDateString("ru-RU", { timeZone: "UTC" }) : "—";
 let dueDateHtml = `<div class="dateFieldWrap">
       <input class="fieldDate order-input" data-field="payment_due_date" data-order-id="${escapeHtml(order.id)}" type="date" value="${escapeHtml(order.payment_due_date || "")}" ${(isArchived || !canEditPlannedDates) ? "disabled" : ""}>
@@ -3265,9 +3312,13 @@ let paidButtonHtml = order.paid_at
   : (canMarkPaid() && !isArchived
     ? `<button class="plainButton" data-role="mark-paid" data-order-id="${escapeHtml(order.id)}" type="button">Оплачено</button>`
     : `<div class="rowHint">Только владелец подтверждает оплату</div>`);
+let overdueStyle = overdueMeta
+  ? ` style="--overdue-row-bg:${escapeHtml(overdueMeta.rowBackground)}; --overdue-row-border:${escapeHtml(overdueMeta.rowBorder)}; --overdue-dot-color:${escapeHtml(overdueMeta.dotColor)}; --overdue-dot-glow:${escapeHtml(overdueMeta.dotGlow)};"`
+  : "";
+let statusTitle = overdueMeta ? overdueMeta.label : status.label;
 
 return `
-<div class="orderRow ${status.key}" data-order-id="${escapeHtml(order.id)}">
+<div class="orderRow ${status.key}" data-order-id="${escapeHtml(order.id)}"${overdueStyle}>
   <label class="orderField">
     <span class="orderFieldLabel">Поставщик</span>
     <div class="supplierFieldWrap">
@@ -3297,7 +3348,7 @@ return `
   </div>
   <div class="orderField statusField">
     <span class="orderFieldLabel">Статус</span>
-    <div class="statusPill ${status.key}" title="${escapeHtml(status.label)}" aria-label="${escapeHtml(status.label)}"></div>
+    <div class="statusPill ${status.key}" title="${escapeHtml(statusTitle)}" aria-label="${escapeHtml(statusTitle)}"></div>
   </div>
   <div class="orderField rowActions">
     <span class="orderFieldLabel">Оплачено</span>
