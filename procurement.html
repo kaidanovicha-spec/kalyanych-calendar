@@ -107,6 +107,17 @@ background:rgba(255,255,255,0.82);
 box-shadow:0 10px 26px rgba(15,23,42,0.08);
 backdrop-filter:blur(8px);
 color:var(--ink);
+cursor:pointer;
+appearance:none;
+transition:transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.topAction:hover,
+.topAction:focus-visible{
+transform:translateY(-1px);
+border-color:rgba(138,111,42,0.22);
+box-shadow:0 14px 30px rgba(15,23,42,0.12);
+outline:none;
 }
 
 .topAction.primary{
@@ -1289,6 +1300,219 @@ line-height:1.4;
 color:var(--muted);
 }
 
+.paidRegistryModal{
+position:fixed;
+inset:0;
+display:flex;
+align-items:flex-start;
+justify-content:center;
+padding:56px 20px 28px;
+background:rgba(26,36,51,0.3);
+backdrop-filter:blur(8px);
+z-index:60;
+}
+
+.paidRegistryDialog{
+width:min(1080px, 100%);
+max-height:calc(100vh - 84px);
+overflow:auto;
+background:linear-gradient(180deg, rgba(255,255,255,0.97), rgba(250,246,238,0.99));
+border:1px solid rgba(224,205,178,0.88);
+border-radius:30px;
+box-shadow:0 28px 72px rgba(76,55,24,0.18);
+padding:24px;
+}
+
+.paidRegistryHead{
+display:flex;
+align-items:flex-start;
+justify-content:space-between;
+gap:18px;
+margin-bottom:18px;
+}
+
+.paidRegistryTitle{
+margin:0;
+font-size:34px;
+line-height:1;
+letter-spacing:-0.04em;
+}
+
+.paidRegistryText{
+margin:10px 0 0;
+font-size:14px;
+line-height:1.45;
+color:var(--muted);
+max-width:720px;
+}
+
+.paidRegistryFilters{
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+margin-bottom:18px;
+}
+
+.paidRegistryFilterChip{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+min-height:38px;
+padding:8px 14px;
+border-radius:999px;
+border:1px solid rgba(17,17,17,0.08);
+background:rgba(255,255,255,0.9);
+box-shadow:0 8px 20px rgba(15,23,42,0.05);
+font-size:13px;
+font-weight:600;
+color:var(--muted);
+cursor:pointer;
+transition:transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+.paidRegistryFilterChip:hover,
+.paidRegistryFilterChip:focus-visible{
+transform:translateY(-1px);
+border-color:rgba(138,111,42,0.2);
+box-shadow:0 10px 24px rgba(15,23,42,0.08);
+outline:none;
+}
+
+.paidRegistryFilterChip.active{
+background:#f6efe5;
+border-color:rgba(200,157,61,0.24);
+color:#6b5524;
+}
+
+.paidRegistryGrid{
+display:grid;
+grid-template-columns:repeat(4,minmax(0,1fr));
+gap:12px;
+margin-bottom:18px;
+}
+
+.paidRegistryStat{
+padding:16px;
+border-radius:22px;
+background:#fff;
+border:1px solid rgba(17,17,17,0.06);
+box-shadow:0 10px 22px rgba(15,23,42,0.05);
+}
+
+.paidRegistryStatLabel{
+font-size:12px;
+font-weight:700;
+letter-spacing:0.08em;
+text-transform:uppercase;
+color:#958474;
+margin-bottom:8px;
+}
+
+.paidRegistryStatValue{
+font-size:28px;
+line-height:1;
+letter-spacing:-0.03em;
+font-weight:800;
+color:var(--ink);
+}
+
+.paidRegistryStatMeta{
+margin-top:8px;
+font-size:12px;
+line-height:1.35;
+color:var(--muted);
+}
+
+.paidRegistryMonths{
+display:flex;
+flex-direction:column;
+gap:16px;
+}
+
+.paidMonthCard{
+background:#fff;
+border:1px solid rgba(17,17,17,0.06);
+border-radius:24px;
+padding:18px;
+box-shadow:0 10px 24px rgba(15,23,42,0.04);
+}
+
+.paidMonthHead,
+.paidWeekHead{
+display:flex;
+align-items:flex-start;
+justify-content:space-between;
+gap:16px;
+}
+
+.paidMonthTitle,
+.paidWeekTitle{
+margin:0;
+font-size:24px;
+line-height:1;
+letter-spacing:-0.03em;
+}
+
+.paidMonthMeta,
+.paidWeekMeta{
+margin-top:8px;
+font-size:13px;
+line-height:1.4;
+color:var(--muted);
+}
+
+.paidWeeks{
+display:flex;
+flex-direction:column;
+gap:12px;
+margin-top:14px;
+}
+
+.paidWeekCard{
+border-radius:20px;
+background:#fcfaf6;
+border:1px solid rgba(224,205,178,0.68);
+padding:16px;
+}
+
+.paidWeekSuppliers{
+margin-top:12px;
+display:grid;
+grid-template-columns:repeat(2,minmax(0,1fr));
+gap:10px;
+}
+
+.paidSupplierCard{
+display:flex;
+align-items:flex-start;
+justify-content:space-between;
+gap:12px;
+padding:12px 14px;
+border-radius:18px;
+background:#fff;
+border:1px solid rgba(17,17,17,0.05);
+}
+
+.paidSupplierName{
+font-size:15px;
+font-weight:700;
+line-height:1.3;
+}
+
+.paidSupplierMeta{
+margin-top:4px;
+font-size:12px;
+line-height:1.35;
+color:var(--muted);
+}
+
+.paidSupplierAmount{
+font-size:16px;
+font-weight:800;
+line-height:1.1;
+white-space:nowrap;
+}
+
 .screenHidden{
 display:none !important;
 }
@@ -1374,6 +1598,24 @@ width:100%;
 max-height:calc(100vh - 36px);
 }
 
+.paidRegistryModal{
+padding:20px 14px;
+}
+
+.paidRegistryDialog{
+max-height:calc(100vh - 40px);
+padding:18px;
+border-radius:26px;
+}
+
+.paidRegistryGrid{
+grid-template-columns:1fr 1fr;
+}
+
+.paidWeekSuppliers{
+grid-template-columns:1fr;
+}
+
 .weekBudgetGrid{
 grid-template-columns:1fr 1fr;
 }
@@ -1442,6 +1684,20 @@ grid-template-columns:1fr;
 width:100%;
 }
 
+.paidRegistryHead,
+.paidMonthHead,
+.paidWeekHead{
+flex-direction:column;
+}
+
+.paidRegistryGrid{
+grid-template-columns:1fr;
+}
+
+.paidRegistryTitle{
+font-size:28px;
+}
+
 }
 </style>
 </head>
@@ -1457,6 +1713,7 @@ width:100%;
 <div class="pageActions">
 <a class="topAction secondary" href="./index.html">Календарь</a>
 <a class="topAction screenHidden" id="driveFolderButton" href="#" target="_blank" rel="noopener noreferrer">Папка счетов</a>
+<button class="topAction screenHidden" id="paidRegistryButton" type="button">Оплачено</button>
 <button class="plainButton secondary screenHidden" id="signOutButton" type="button">Выйти</button>
 <div class="userChip" id="userChip">Не вошли</div>
 </div>
@@ -1487,10 +1744,25 @@ width:100%;
 </section>
 </div>
 
-<div class="uiVersionToggle">v2.048</div>
+<div class="paidRegistryModal screenHidden" id="paidRegistryModal">
+  <div class="paidRegistryDialog" role="dialog" aria-modal="true" aria-labelledby="paidRegistryTitle">
+    <div class="paidRegistryHead">
+      <div>
+        <h2 class="paidRegistryTitle" id="paidRegistryTitle">Оплачено поставщикам</h2>
+        <p class="paidRegistryText">Реестр построен по выпискам банка за январь, февраль и март 2026 года. Учитываются только отобранные поставщики, а дубли по ИП и ФИО уже склеены.</p>
+      </div>
+      <button class="plainButton ghost" id="closePaidRegistryButton" type="button">Закрыть</button>
+    </div>
+    <div class="paidRegistryFilters" id="paidRegistryFilters"></div>
+    <div class="paidRegistryGrid" id="paidRegistrySummary"></div>
+    <div class="paidRegistryMonths" id="paidRegistryContent"></div>
+  </div>
+</div>
+
+<div class="uiVersionToggle">v2.053</div>
 
 <script>
-const PROCUREMENT_VERSION = "v2.048";
+const PROCUREMENT_VERSION = "v2.053";
 const procurementConfig = {
 googleClientId: "462958236662-4jml8gljkbk0tddja2cktktgdvubiat9.apps.googleusercontent.com",
 apiUrl: "https://script.google.com/macros/s/AKfycbxUp-7LEYL0Sj_J4Ck7QgMiNVziLmxxseLGk4ottNTfkBAktrAcgSwk0r7k1ESVW56kwQ/exec",
@@ -1503,6 +1775,167 @@ cashlessShareByMonth: {
 defaultCashlessShare: 0.95,
 obligatoryReserveRate: 0.25,
 targetDebtLimit: 1500000
+};
+const PROCUREMENT_PAID_REGISTRY = {
+  "2026-01": {
+    title: "Январь 2026",
+    total: 1590519.6,
+    payments: 66,
+    suppliers: [
+      { name: "ПРУДОВИКОВ ЕГОР ИГОРЕВИЧ", total: 448006, payments: 6 },
+      { name: "БОНДАРЧУК ВАСИЛИНА НИКОЛАЕВНА", total: 446352.2, payments: 12 },
+      { name: "ООО \"МЕОТИДА", total: 281197.9, payments: 5 },
+      { name: "УСКОВА ОЛЬГА СЕРГЕЕВНА", total: 217898, payments: 24 },
+      { name: "ООО \"УРАЛ ТАБАК", total: 63738, payments: 5 },
+      { name: "АИТОВ ЭРНЕС ИЛЬЯСОВИЧ", total: 48480, payments: 1 },
+      { name: "АРАКЕЛЯН ДАВИД КАРЭНОВИЧ", total: 45842.5, payments: 1 },
+      { name: "ООО \"М ЭНД КОМПАНИ", total: 39005, payments: 12 }
+    ],
+    weeks: [
+      { week_start: "2025-12-29", total: 264417.2, payments: 3, suppliers: [
+        { name: "ПРУДОВИКОВ ЕГОР ИГОРЕВИЧ", total: 139400 },
+        { name: "БОНДАРЧУК ВАСИЛИНА НИКОЛАЕВНА", total: 125017.2 }
+      ]},
+      { week_start: "2026-01-05", total: 336958, payments: 17, suppliers: [
+        { name: "БОНДАРЧУК ВАСИЛИНА НИКОЛАЕВНА", total: 201145 },
+        { name: "УСКОВА ОЛЬГА СЕРГЕЕВНА", total: 53841 },
+        { name: "ПРУДОВИКОВ ЕГОР ИГОРЕВИЧ", total: 49700 },
+        { name: "ООО \"УРАЛ ТАБАК", total: 23617 },
+        { name: "ООО \"М ЭНД КОМПАНИ", total: 8655 }
+      ]},
+      { week_start: "2026-01-12", total: 366766.9, payments: 17, suppliers: [
+        { name: "ООО \"МЕОТИДА", total: 151197.9 },
+        { name: "ПРУДОВИКОВ ЕГОР ИГОРЕВИЧ", total: 150000 },
+        { name: "УСКОВА ОЛЬГА СЕРГЕЕВНА", total: 38723 },
+        { name: "ООО \"УРАЛ ТАБАК", total: 18496 },
+        { name: "ООО \"М ЭНД КОМПАНИ", total: 8350 }
+      ]},
+      { week_start: "2026-01-19", total: 414017, payments: 18, suppliers: [
+        { name: "ООО \"МЕОТИДА", total: 130000 },
+        { name: "БОНДАРЧУК ВАСИЛИНА НИКОЛАЕВНА", total: 120190 },
+        { name: "ПРУДОВИКОВ ЕГОР ИГОРЕВИЧ", total: 108906 },
+        { name: "УСКОВА ОЛЬГА СЕРГЕЕВНА", total: 36248 },
+        { name: "ООО \"УРАЛ ТАБАК", total: 9688 },
+        { name: "ООО \"М ЭНД КОМПАНИ", total: 8985 }
+      ]},
+      { week_start: "2026-01-26", total: 208360.5, payments: 11, suppliers: [
+        { name: "УСКОВА ОЛЬГА СЕРГЕЕВНА", total: 89086 },
+        { name: "АИТОВ ЭРНЕС ИЛЬЯСОВИЧ", total: 48480 },
+        { name: "АРАКЕЛЯН ДАВИД КАРЭНОВИЧ", total: 45842.5 },
+        { name: "ООО \"М ЭНД КОМПАНИ", total: 13015 },
+        { name: "ООО \"УРАЛ ТАБАК", total: 11937 }
+      ]}
+    ]
+  },
+  "2026-02": {
+    title: "Февраль 2026",
+    total: 1537680.8,
+    payments: 66,
+    suppliers: [
+      { name: "БОНДАРЧУК ВАСИЛИНА НИКОЛАЕВНА", total: 369247, payments: 12 },
+      { name: "ПРУДОВИКОВ ЕГОР ИГОРЕВИЧ", total: 278842, payments: 3 },
+      { name: "ООО \"УРАЛ ТАБАК", total: 156718, payments: 9 },
+      { name: "УСКОВА ОЛЬГА СЕРГЕЕВНА", total: 130331, payments: 22 },
+      { name: "НИКИШИНА ЕВГЕНИЯ СЕРГЕЕВНА", total: 126138.8, payments: 2 },
+      { name: "ООО \"ТРИАДА", total: 89950, payments: 1 },
+      { name: "ООО \"ЧАБАККО", total: 80275, payments: 1 },
+      { name: "КАРАСЁВ ЮРИЙ ВЛАДИМИРОВИЧ", total: 80100, payments: 1 },
+      { name: "ИНДИН АНДРЕЙ ЮРЬЕВИЧ", total: 49254, payments: 1 },
+      { name: "ООО \"ПЕРСПЕКТИВА ЮГ", total: 47990, payments: 1 },
+      { name: "ООО \"М ЭНД КОМПАНИ", total: 46910, payments: 10 },
+      { name: "АИТОВ ЭРНЕС ИЛЬЯСОВИЧ", total: 44950, payments: 1 },
+      { name: "ООО \"АЛАТЫРЬ", total: 29475, payments: 1 },
+      { name: "ФИЛИППОВ ИЛЬЯ ОЛЕГОВИЧ", total: 7500, payments: 1 }
+    ],
+    weeks: [
+      { week_start: "2026-02-02", total: 426978, payments: 19, suppliers: [
+        { name: "ООО \"УРАЛ ТАБАК", total: 111350 },
+        { name: "ПРУДОВИКОВ ЕГОР ИГОРЕВИЧ", total: 102672 },
+        { name: "ООО \"ЧАБАККО", total: 80275 },
+        { name: "АИТОВ ЭРНЕС ИЛЬЯСОВИЧ", total: 44950 },
+        { name: "ООО \"АЛАТЫРЬ", total: 29475 },
+        { name: "УСКОВА ОЛЬГА СЕРГЕЕВНА", total: 25875 },
+        { name: "БОНДАРЧУК ВАСИЛИНА НИКОЛАЕВНА", total: 21361 },
+        { name: "ООО \"М ЭНД КОМПАНИ", total: 11020 }
+      ]},
+      { week_start: "2026-02-09", total: 285384, payments: 12, suppliers: [
+        { name: "ООО \"ТРИАДА", total: 89950 },
+        { name: "ПРУДОВИКОВ ЕГОР ИГОРЕВИЧ", total: 56170 },
+        { name: "ИНДИН АНДРЕЙ ЮРЬЕВИЧ", total: 49254 },
+        { name: "ООО \"ПЕРСПЕКТИВА ЮГ", total: 47990 },
+        { name: "УСКОВА ОЛЬГА СЕРГЕЕВНА", total: 24745 },
+        { name: "ООО \"УРАЛ ТАБАК", total: 9360 },
+        { name: "ООО \"М ЭНД КОМПАНИ", total: 7915 }
+      ]},
+      { week_start: "2026-02-16", total: 630243.8, payments: 23, suppliers: [
+        { name: "БОНДАРЧУК ВАСИЛИНА НИКОЛАЕВНА", total: 291503 },
+        { name: "НИКИШИНА ЕВГЕНИЯ СЕРГЕЕВНА", total: 126138.8 },
+        { name: "ПРУДОВИКОВ ЕГОР ИГОРЕВИЧ", total: 120000 },
+        { name: "ООО \"УРАЛ ТАБАК", total: 36008 },
+        { name: "УСКОВА ОЛЬГА СЕРГЕЕВНА", total: 34464 },
+        { name: "ООО \"М ЭНД КОМПАНИ", total: 14630 },
+        { name: "ФИЛИППОВ ИЛЬЯ ОЛЕГОВИЧ", total: 7500 }
+      ]},
+      { week_start: "2026-02-23", total: 195075, payments: 12, suppliers: [
+        { name: "КАРАСЁВ ЮРИЙ ВЛАДИМИРОВИЧ", total: 80100 },
+        { name: "БОНДАРЧУК ВАСИЛИНА НИКОЛАЕВНА", total: 56383 },
+        { name: "УСКОВА ОЛЬГА СЕРГЕЕВНА", total: 45247 },
+        { name: "ООО \"М ЭНД КОМПАНИ", total: 13345 }
+      ]}
+    ]
+  },
+  "2026-03": {
+    title: "Март 2026",
+    total: 1431412.05,
+    payments: 52,
+    suppliers: [
+      { name: "ПРУДОВИКОВ ЕГОР ИГОРЕВИЧ", total: 348167.25, payments: 3 },
+      { name: "ООО УРАЛ ТАБАК", total: 306425, payments: 6 },
+      { name: "БОНДАРЧУК ВАСИЛИНА НИКОЛАЕВНА", total: 302557, payments: 13 },
+      { name: "ООО ТАБАЧНАЯ ДИСТРИБУЦИОННАЯ КОМПАНИЯ", total: 125667, payments: 2 },
+      { name: "АИТОВ ЭРНЕС ИЛЬЯСОВИЧ", total: 93400, payments: 2 },
+      { name: "УСКОВА ОЛЬГА СЕРГЕЕВНА", total: 74049, payments: 12 },
+      { name: "ООО АЛАТЫРЬ", total: 55350, payments: 1 },
+      { name: "ООО ЧАБАККО", total: 49480, payments: 1 },
+      { name: "ООО М ЭНД КОМПАНИ", total: 28675, payments: 7 },
+      { name: "ПОПКОВ СТАНИСЛАВ ВЯЧЕСЛАВОВИЧ", total: 24000, payments: 2 },
+      { name: "ГЕРАСИМОВ СЕРГЕЙ АЛЕКСАНДРОВИЧ", total: 16081.8, payments: 2 },
+      { name: "ФИЛИППОВ ИЛЬЯ ОЛЕГОВИЧ", total: 7560, payments: 1 }
+    ],
+    weeks: [
+      { week_start: "2026-02-23", total: 7560, payments: 1, suppliers: [
+        { name: "ФИЛИППОВ ИЛЬЯ ОЛЕГОВИЧ", total: 7560 }
+      ]},
+      { week_start: "2026-03-02", total: 412304, payments: 17, suppliers: [
+        { name: "БОНДАРЧУК ВАСИЛИНА НИКОЛАЕВНА", total: 280649 },
+        { name: "АИТОВ ЭРНЕС ИЛЬЯСОВИЧ", total: 74200 },
+        { name: "УСКОВА ОЛЬГА СЕРГЕЕВНА", total: 33970 },
+        { name: "ООО ТАБАЧНАЯ ДИСТРИБУЦИОННАЯ КОМПАНИЯ", total: 9720 },
+        { name: "ООО М ЭНД КОМПАНИ", total: 8995 },
+        { name: "ООО УРАЛ ТАБАК", total: 4770 }
+      ]},
+      { week_start: "2026-03-09", total: 436323, payments: 14, suppliers: [
+        { name: "ПРУДОВИКОВ ЕГОР ИГОРЕВИЧ", total: 158510 },
+        { name: "ООО ТАБАЧНАЯ ДИСТРИБУЦИОННАЯ КОМПАНИЯ", total: 115947 },
+        { name: "ООО УРАЛ ТАБАК", total: 114372 },
+        { name: "УСКОВА ОЛЬГА СЕРГЕЕВНА", total: 31679 },
+        { name: "ПОПКОВ СТАНИСЛАВ ВЯЧЕСЛАВОВИЧ", total: 9300 },
+        { name: "ООО М ЭНД КОМПАНИ", total: 6515 }
+      ]},
+      { week_start: "2026-03-16", total: 575225.05, payments: 20, suppliers: [
+        { name: "ПРУДОВИКОВ ЕГОР ИГОРЕВИЧ", total: 189657.25 },
+        { name: "ООО УРАЛ ТАБАК", total: 187283 },
+        { name: "ООО АЛАТЫРЬ", total: 55350 },
+        { name: "ООО ЧАБАККО", total: 49480 },
+        { name: "БОНДАРЧУК ВАСИЛИНА НИКОЛАЕВНА", total: 21908 },
+        { name: "АИТОВ ЭРНЕС ИЛЬЯСОВИЧ", total: 19200 },
+        { name: "ГЕРАСИМОВ СЕРГЕЙ АЛЕКСАНДРОВИЧ", total: 16081.8 },
+        { name: "ПОПКОВ СТАНИСЛАВ ВЯЧЕСЛАВОВИЧ", total: 14700 },
+        { name: "ООО М ЭНД КОМПАНИ", total: 13165 },
+        { name: "УСКОВА ОЛЬГА СЕРГЕЕВНА", total: 8400 }
+      ]}
+    ]
+  }
 };
 
 const procurementSessionKey = "kalyanychProcurementSession";
@@ -1518,6 +1951,8 @@ loading: false
 };
 let selectedPlanWeekKey = "";
 let recommendationDetailsOpen = false;
+let paidRegistryOpen = false;
+let paidRegistrySelectedMonthKey = "";
 const saveTimers = {};
 const saveInFlight = {};
 const saveQueued = {};
@@ -1585,6 +2020,13 @@ if (Number.isNaN(date.getTime())) return "—";
 return date.toLocaleDateString("ru-RU", { day: "numeric", month: "long", timeZone: "UTC" });
 }
 
+function formatMonthLabel(monthKey){
+if (!/^\d{4}-\d{2}$/.test(String(monthKey || ""))) return monthKey || "—";
+let [year, month] = String(monthKey).split("-").map(Number);
+let date = new Date(Date.UTC(year, month - 1, 1));
+return date.toLocaleDateString("ru-RU", { month: "long", year: "numeric", timeZone: "UTC" });
+}
+
 function escapeHtml(value){
 return String(value ?? "")
   .replaceAll("&", "&amp;")
@@ -1597,6 +2039,163 @@ function addDays(date, amount){
 let copy = new Date(date);
 copy.setUTCDate(copy.getUTCDate() + amount);
 return copy;
+}
+
+function getWeekRangeLabel(weekStartKey){
+let start = parseDateKey(weekStartKey);
+if (Number.isNaN(start.getTime())) return "—";
+let end = addDays(start, 6);
+return `${formatDateLabel(formatDateKey(start))} - ${formatDateLabel(formatDateKey(end))}`;
+}
+
+function getPaidRegistrySummary(){
+let monthEntries = Object.entries(PROCUREMENT_PAID_REGISTRY);
+let totalPaid = monthEntries.reduce((sum, [, month]) => sum + Number(month.total || 0), 0);
+let totalWeeks = monthEntries.reduce((sum, [, month]) => sum + Number((month.weeks || []).length), 0);
+let totalPayments = monthEntries.reduce((sum, [, month]) => sum + Number(month.payments || 0), 0);
+let averageWeek = totalWeeks ? totalPaid / totalWeeks : 0;
+let averageMonth = monthEntries.length ? totalPaid / monthEntries.length : 0;
+return {
+  totalPaid,
+  totalWeeks,
+  totalPayments,
+  averageWeek,
+  averageMonth
+};
+}
+
+function getPaidRegistryWeeks(){
+return Object.entries(PROCUREMENT_PAID_REGISTRY)
+  .sort((left, right) => left[0].localeCompare(right[0]))
+  .flatMap(([monthKey, month]) => {
+    return (month.weeks || []).map((week) => ({
+      monthKey,
+      monthTitle: month.title || formatMonthLabel(monthKey),
+      week_start: String(week.week_start || ""),
+      total: Number(week.total || 0),
+      payments: Number(week.payments || 0),
+      suppliers: Array.isArray(week.suppliers) ? week.suppliers : []
+    }));
+  })
+  .sort((left, right) => left.week_start.localeCompare(right.week_start));
+}
+
+function renderPaidRegistry(){
+let summary = getPaidRegistrySummary();
+let summaryNode = document.getElementById("paidRegistrySummary");
+let contentNode = document.getElementById("paidRegistryContent");
+let filtersNode = document.getElementById("paidRegistryFilters");
+if (!summaryNode || !contentNode || !filtersNode) return;
+let monthEntries = Object.entries(PROCUREMENT_PAID_REGISTRY).sort((left, right) => left[0].localeCompare(right[0]));
+let selectedMonthEntry = monthEntries.find(([monthKey]) => monthKey === paidRegistrySelectedMonthKey) || null;
+let selectedMonth = selectedMonthEntry ? selectedMonthEntry[1] : null;
+
+filtersNode.innerHTML = `
+  <button class="paidRegistryFilterChip ${selectedMonth ? "" : "active"}" data-role="paid-registry-month" data-month-key="" type="button">Все месяцы</button>
+  ${monthEntries.map(([monthKey, month]) => `
+    <button class="paidRegistryFilterChip ${paidRegistrySelectedMonthKey === monthKey ? "active" : ""}" data-role="paid-registry-month" data-month-key="${escapeHtml(monthKey)}" type="button">${escapeHtml(month.title || formatMonthLabel(monthKey))}</button>
+  `).join("")}`;
+
+summaryNode.innerHTML = selectedMonth ? `
+  <div class="paidRegistryStat">
+    <div class="paidRegistryStatLabel">Оплачено за месяц</div>
+    <div class="paidRegistryStatValue">${formatMoney(selectedMonth.total)}</div>
+    <div class="paidRegistryStatMeta">${escapeHtml(selectedMonth.title || "")}</div>
+  </div>
+  <div class="paidRegistryStat">
+    <div class="paidRegistryStatLabel">Платежей за месяц</div>
+    <div class="paidRegistryStatValue">${selectedMonth.payments}</div>
+    <div class="paidRegistryStatMeta">Списания банка, которые вошли в фильтр поставщиков</div>
+  </div>
+  <div class="paidRegistryStat">
+    <div class="paidRegistryStatLabel">Среднее оплат в неделю</div>
+    <div class="paidRegistryStatValue">${formatMoney((selectedMonth.total || 0) / Math.max((selectedMonth.weeks || []).length, 1))}</div>
+    <div class="paidRegistryStatMeta">Средний недельный темп оплат внутри выбранного месяца</div>
+  </div>
+  <div class="paidRegistryStat">
+    <div class="paidRegistryStatLabel">Недель в месяце</div>
+    <div class="paidRegistryStatValue">${(selectedMonth.weeks || []).length}</div>
+    <div class="paidRegistryStatMeta">Ниже оплаты разбиты по неделям</div>
+  </div>` : `
+  <div class="paidRegistryStat">
+    <div class="paidRegistryStatLabel">Всего оплачено</div>
+    <div class="paidRegistryStatValue">${formatMoney(summary.totalPaid)}</div>
+    <div class="paidRegistryStatMeta">Сумма по очищенным оплатам поставщикам за январь, февраль и март 2026</div>
+  </div>
+  <div class="paidRegistryStat">
+    <div class="paidRegistryStatLabel">Среднее в неделю</div>
+    <div class="paidRegistryStatValue">${formatMoney(summary.averageWeek)}</div>
+    <div class="paidRegistryStatMeta">${summary.totalWeeks} недель вошло в расчет среднего ритма оплат</div>
+  </div>
+  <div class="paidRegistryStat">
+    <div class="paidRegistryStatLabel">Среднее в месяц</div>
+    <div class="paidRegistryStatValue">${formatMoney(summary.averageMonth)}</div>
+    <div class="paidRegistryStatMeta">${Object.keys(PROCUREMENT_PAID_REGISTRY).length} месяца в текущем реестре</div>
+  </div>
+  <div class="paidRegistryStat">
+    <div class="paidRegistryStatLabel">Всего платежей</div>
+    <div class="paidRegistryStatValue">${summary.totalPayments}</div>
+    <div class="paidRegistryStatMeta">Количество списаний, которые остались после фильтрации и склейки дублей</div>
+  </div>`;
+
+contentNode.innerHTML = monthEntries
+  .map(([monthKey, month]) => {
+    if (selectedMonth && monthKey !== paidRegistrySelectedMonthKey){
+      return "";
+    }
+    let weeks = month.weeks || [];
+    if (!weeks.length) {
+      return "";
+    }
+    return `
+      <section class="paidMonthCard">
+        <div class="paidMonthHead">
+          <div>
+            <h3 class="paidMonthTitle">${escapeHtml(month.title || formatMonthLabel(monthKey))}</h3>
+            <div class="paidMonthMeta">${selectedMonth ? `Оплаты за месяц по неделям` : `Оплачено ${formatMoney(month.total)} · ${month.payments} платежей · ${month.suppliers.length} поставщиков`}</div>
+          </div>
+          <div class="heroMetaChip">Месяц: ${formatMoney(month.total)}</div>
+        </div>
+        <div class="paidWeeks">
+          ${weeks.map((week) => `
+            <article class="paidWeekCard">
+              <div class="paidWeekHead">
+                <div>
+                  <h4 class="paidWeekTitle">Неделя ${escapeHtml(getWeekRangeLabel(week.week_start))}</h4>
+                  <div class="paidWeekMeta">${week.payments} платежей в банке за неделю</div>
+                </div>
+                <div class="heroMetaChip">Неделя: ${formatMoney(week.total)}</div>
+              </div>
+              <div class="paidWeekSuppliers">
+                ${(week.suppliers || []).map((supplier) => `
+                  <div class="paidSupplierCard">
+                    <div>
+                      <div class="paidSupplierName">${escapeHtml(supplier.name)}</div>
+                      <div class="paidSupplierMeta">Вошло в недельную оплату поставщиков</div>
+                    </div>
+                    <div class="paidSupplierAmount">${formatMoney(supplier.total)}</div>
+                  </div>
+                `).join("")}
+              </div>
+            </article>
+          `).join("")}
+        </div>
+      </section>
+    `;
+  }).join("");
+}
+
+function setPaidRegistryOpen(nextOpen){
+paidRegistryOpen = Boolean(nextOpen);
+let modal = document.getElementById("paidRegistryModal");
+if (!modal) return;
+modal.classList.toggle("screenHidden", !paidRegistryOpen);
+document.body.style.overflow = paidRegistryOpen ? "hidden" : "";
+if (paidRegistryOpen){
+  renderPaidRegistry();
+} else {
+  paidRegistrySelectedMonthKey = "";
+}
 }
 
 function clamp(value, min, max){
@@ -1931,6 +2530,8 @@ procurementState.weeks = [];
 procurementState.orders = [];
 procurementState.driveFolderUrl = "";
 recommendationDetailsOpen = false;
+paidRegistryOpen = false;
+paidRegistrySelectedMonthKey = "";
 sessionStorage.removeItem(procurementSessionKey);
 }
 
@@ -1967,6 +2568,7 @@ function renderAuthState(){
 let userChip = document.getElementById("userChip");
 let signOutButton = document.getElementById("signOutButton");
 let driveFolderButton = document.getElementById("driveFolderButton");
+let paidRegistryButton = document.getElementById("paidRegistryButton");
 let procurementSection = document.getElementById("procurementSection");
 let googleWrap = document.getElementById("googleButtonWrap");
 
@@ -1976,6 +2578,7 @@ let roleLabel = procurementState.user.role === "owner"
   : (procurementState.user.role === "manager" ? "Управляющий" : "Закупщик");
 userChip.textContent = procurementState.user.email + " · " + roleLabel;
 signOutButton.classList.remove("screenHidden");
+paidRegistryButton.classList.remove("screenHidden");
 procurementSection.classList.remove("screenHidden");
 if (procurementState.driveFolderUrl){
 driveFolderButton.href = procurementState.driveFolderUrl;
@@ -1988,8 +2591,10 @@ googleWrap.classList.add("screenHidden");
 userChip.textContent = "Не вошли";
 signOutButton.classList.add("screenHidden");
 driveFolderButton.classList.add("screenHidden");
+paidRegistryButton.classList.add("screenHidden");
 procurementSection.classList.add("screenHidden");
 googleWrap.classList.remove("screenHidden");
+setPaidRegistryOpen(false);
 }
 }
 
@@ -2502,9 +3107,9 @@ let recommendationOverlayHtml = !planIsLocked && recommendationDetailsOpen ? `
           <div class="planRecommendationMetricMeta">${escapeHtml(formatDateLabel(recommendationMeta.weekRevenue.rangeStartKey))} - ${escapeHtml(formatDateLabel(recommendationMeta.weekRevenue.rangeEndKey))}</div>
         </div>
         <div class="planRecommendationMetric">
-          <div class="planRecommendationMetricLabel">Ожидаем средств на закуп</div>
-          <div class="planRecommendationMetricValue">${formatMoney(recommendationMeta.availableForBills)}</div>
-          <div class="planRecommendationMetricMeta">После вычета 25% из ожидаемого безнала</div>
+          <div class="planRecommendationMetricLabel">В среднем в неделю платим</div>
+          <div class="planRecommendationMetricValue">${formatMoney(getPaidRegistrySummary().averageWeek)}</div>
+          <div class="planRecommendationMetricMeta">Средний ритм оплат поставщикам по данным с января 2026</div>
         </div>
         <div class="planRecommendationMetric">
           <div class="planRecommendationMetricLabel">Ожидаем по себестоимости</div>
@@ -3213,8 +3818,26 @@ renderAuthState();
 }
 
 document.getElementById("signOutButton").addEventListener("click", signOut);
+document.getElementById("paidRegistryButton").addEventListener("click", () => setPaidRegistryOpen(true));
+document.getElementById("closePaidRegistryButton").addEventListener("click", () => setPaidRegistryOpen(false));
+document.getElementById("paidRegistryModal").addEventListener("click", (event) => {
+if (event.target.id === "paidRegistryModal"){
+  setPaidRegistryOpen(false);
+  return;
+}
+let monthTrigger = event.target.closest("[data-role='paid-registry-month']");
+if (monthTrigger){
+  paidRegistrySelectedMonthKey = monthTrigger.getAttribute("data-month-key") || "";
+  renderPaidRegistry();
+}
+});
 document.getElementById("weeksList").addEventListener("click", handleWeeksClick);
 document.getElementById("weeksList").addEventListener("change", handleWeeksChange);
+document.addEventListener("keydown", (event) => {
+if (event.key === "Escape" && paidRegistryOpen){
+  setPaidRegistryOpen(false);
+}
+});
 
 window.addEventListener("load", async () => {
 if (!isConfigReady()){
