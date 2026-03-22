@@ -1495,6 +1495,30 @@ background:#fff;
 border:1px solid rgba(17,17,17,0.05);
 }
 
+.paidSupplierMain{
+display:flex;
+align-items:flex-start;
+justify-content:space-between;
+gap:12px;
+min-width:0;
+flex:1;
+}
+
+.paidSupplierActions{
+display:flex;
+align-items:center;
+gap:8px;
+}
+
+.paidSupplierDelete{
+width:34px;
+min-width:34px;
+height:34px;
+border-radius:12px;
+font-size:18px;
+line-height:1;
+}
+
 .paidSupplierName{
 font-size:15px;
 font-weight:700;
@@ -1751,7 +1775,7 @@ font-size:28px;
     <div class="paidRegistryHead">
       <div>
         <h2 class="paidRegistryTitle" id="paidRegistryTitle">Оплачено поставщикам</h2>
-        <p class="paidRegistryText">Реестр построен по выпискам банка за январь, февраль и март 2026 года. Учитываются только отобранные поставщики, а дубли по ИП и ФИО уже склеены.</p>
+        <p class="paidRegistryText">Реестр построен по строкам, где нажали «Оплачено». Здесь видны реально отмеченные оплаты из закупа.</p>
       </div>
       <button class="plainButton ghost" id="closePaidRegistryButton" type="button">Закрыть</button>
     </div>
@@ -1761,10 +1785,10 @@ font-size:28px;
   </div>
 </div>
 
-<div class="uiVersionToggle">v2.055</div>
+<div class="uiVersionToggle">v2.059</div>
 
 <script>
-const PROCUREMENT_VERSION = "v2.055";
+const PROCUREMENT_VERSION = "v2.059";
 const procurementConfig = {
 googleClientId: "462958236662-4jml8gljkbk0tddja2cktktgdvubiat9.apps.googleusercontent.com",
 apiUrl: "https://script.google.com/macros/s/AKfycbxUp-7LEYL0Sj_J4Ck7QgMiNVziLmxxseLGk4ottNTfkBAktrAcgSwk0r7k1ESVW56kwQ/exec",
@@ -2050,8 +2074,87 @@ let end = addDays(start, 6);
 return `${formatDateLabel(formatDateKey(start))} - ${formatDateLabel(formatDateKey(end))}`;
 }
 
-function getPaidRegistrySummary(){
-let monthEntries = Object.entries(PROCUREMENT_PAID_REGISTRY);
+function getPaidRegistryMonthKey(dateValue){
+let dateKey = normalizeDateValue(dateValue);
+return dateKey ? dateKey.slice(0, 7) : "";
+}
+
+function buildPaidRegistryData(){
+let months = {};
+procurementState.orders
+  .filter((order) => Boolean(order.paid_at))
+  .map((order) => {
+    let paidDateKey = normalizeDateValue(order.paid_at);
+    if (!paidDateKey) return null;
+    let monthKey = getPaidRegistryMonthKey(order.paid_at);
+    let weekStartKey = formatDateKey(getMonday(parseDateKey(paidDateKey)));
+    return {
+      id: String(order.id || ""),
+      supplier_name: String(order.supplier_name || "").trim() || "Без названия",
+      order_amount: Number(order.order_amount || 0),
+      paid_date: paidDateKey,
+      week_start: weekStartKey,
+      month_key: monthKey,
+      invoice_file_name: String(order.invoice_file_name || ""),
+      invoice_file_url: String(order.invoice_file_url || "")
+    };
+  })
+  .filter(Boolean)
+  .sort((left, right) => {
+    let leftKey = `${left.paid_date}:${left.supplier_name}:${left.id}`;
+    let rightKey = `${right.paid_date}:${right.supplier_name}:${right.id}`;
+    return leftKey.localeCompare(rightKey);
+  })
+  .forEach((entry) => {
+    if (!months[entry.month_key]){
+      months[entry.month_key] = {
+        title: formatMonthLabel(entry.month_key),
+        total: 0,
+        payments: 0,
+        uniqueSuppliers: new Set(),
+        weeks: {}
+      };
+    }
+    let month = months[entry.month_key];
+    month.total += entry.order_amount;
+    month.payments += 1;
+    month.uniqueSuppliers.add(entry.supplier_name);
+    if (!month.weeks[entry.week_start]){
+      month.weeks[entry.week_start] = {
+        week_start: entry.week_start,
+        total: 0,
+        payments: 0,
+        orders: []
+      };
+    }
+    let week = month.weeks[entry.week_start];
+    week.total += entry.order_amount;
+    week.payments += 1;
+    week.orders.push(entry);
+  });
+
+return Object.fromEntries(
+  Object.entries(months)
+    .sort((left, right) => left[0].localeCompare(right[0]))
+    .map(([monthKey, month]) => [
+      monthKey,
+      {
+        title: month.title,
+        total: month.total,
+        payments: month.payments,
+        suppliers: month.uniqueSuppliers.size,
+        weeks: Object.values(month.weeks).sort((left, right) => left.week_start.localeCompare(right.week_start))
+      }
+    ])
+);
+}
+
+function getPaidRegistrySummary(monthKey = ""){
+let registry = buildPaidRegistryData();
+let monthEntries = Object.entries(registry);
+if (monthKey && registry[monthKey]){
+  monthEntries = [[monthKey, registry[monthKey]]];
+}
 let totalPaid = monthEntries.reduce((sum, [, month]) => sum + Number(month.total || 0), 0);
 let totalWeeks = monthEntries.reduce((sum, [, month]) => sum + Number((month.weeks || []).length), 0);
 let totalPayments = monthEntries.reduce((sum, [, month]) => sum + Number(month.payments || 0), 0);
@@ -2062,35 +2165,33 @@ return {
   totalWeeks,
   totalPayments,
   averageWeek,
-  averageMonth
+  averageMonth,
+  months: monthEntries.length
 };
 }
 
-function getPaidRegistryWeeks(){
-return Object.entries(PROCUREMENT_PAID_REGISTRY)
-  .sort((left, right) => left[0].localeCompare(right[0]))
-  .flatMap(([monthKey, month]) => {
-    return (month.weeks || []).map((week) => ({
-      monthKey,
-      monthTitle: month.title || formatMonthLabel(monthKey),
-      week_start: String(week.week_start || ""),
-      total: Number(week.total || 0),
-      payments: Number(week.payments || 0),
-      suppliers: Array.isArray(week.suppliers) ? week.suppliers : []
-    }));
-  })
-  .sort((left, right) => left.week_start.localeCompare(right.week_start));
-}
-
 function renderPaidRegistry(){
+let registry = buildPaidRegistryData();
 let summary = getPaidRegistrySummary();
 let summaryNode = document.getElementById("paidRegistrySummary");
 let contentNode = document.getElementById("paidRegistryContent");
 let filtersNode = document.getElementById("paidRegistryFilters");
 if (!summaryNode || !contentNode || !filtersNode) return;
-let monthEntries = Object.entries(PROCUREMENT_PAID_REGISTRY).sort((left, right) => left[0].localeCompare(right[0]));
+let monthEntries = Object.entries(registry).sort((left, right) => left[0].localeCompare(right[0]));
 let selectedMonthEntry = monthEntries.find(([monthKey]) => monthKey === paidRegistrySelectedMonthKey) || null;
 let selectedMonth = selectedMonthEntry ? selectedMonthEntry[1] : null;
+
+if (!monthEntries.length){
+  filtersNode.innerHTML = "";
+  summaryNode.innerHTML = `
+    <div class="paidRegistryStat">
+      <div class="paidRegistryStatLabel">Оплачено поставщикам</div>
+      <div class="paidRegistryStatValue">0 ₽</div>
+      <div class="paidRegistryStatMeta">Пока нет ни одной строки, отмеченной через кнопку «Оплачено»</div>
+    </div>`;
+  contentNode.innerHTML = `<div class="emptyWeek">Как только отметишь оплату в закупе, здесь появится реестр оплаченных счетов.</div>`;
+  return;
+}
 
 filtersNode.innerHTML = `
   <button class="paidRegistryFilterChip ${selectedMonth ? "" : "active"}" data-role="paid-registry-month" data-month-key="" type="button">Все месяцы</button>
@@ -2107,7 +2208,7 @@ summaryNode.innerHTML = selectedMonth ? `
   <div class="paidRegistryStat">
     <div class="paidRegistryStatLabel">Платежей за месяц</div>
     <div class="paidRegistryStatValue">${selectedMonth.payments}</div>
-    <div class="paidRegistryStatMeta">Списания банка, которые вошли в фильтр поставщиков</div>
+    <div class="paidRegistryStatMeta">Строки закупа, отмеченные как оплаченные</div>
   </div>
   <div class="paidRegistryStat">
     <div class="paidRegistryStatLabel">Среднее оплат в неделю</div>
@@ -2122,7 +2223,7 @@ summaryNode.innerHTML = selectedMonth ? `
   <div class="paidRegistryStat">
     <div class="paidRegistryStatLabel">Всего оплачено</div>
     <div class="paidRegistryStatValue">${formatMoney(summary.totalPaid)}</div>
-    <div class="paidRegistryStatMeta">Сумма по очищенным оплатам поставщикам за январь, февраль и март 2026</div>
+    <div class="paidRegistryStatMeta">Сумма по всем строкам, где в закупе нажали «Оплачено»</div>
   </div>
   <div class="paidRegistryStat">
     <div class="paidRegistryStatLabel">Среднее в неделю</div>
@@ -2132,12 +2233,12 @@ summaryNode.innerHTML = selectedMonth ? `
   <div class="paidRegistryStat">
     <div class="paidRegistryStatLabel">Среднее в месяц</div>
     <div class="paidRegistryStatValue">${formatMoney(summary.averageMonth)}</div>
-    <div class="paidRegistryStatMeta">${Object.keys(PROCUREMENT_PAID_REGISTRY).length} месяца в текущем реестре</div>
+    <div class="paidRegistryStatMeta">${summary.months} месяца в текущем реестре</div>
   </div>
   <div class="paidRegistryStat">
     <div class="paidRegistryStatLabel">Всего платежей</div>
     <div class="paidRegistryStatValue">${summary.totalPayments}</div>
-    <div class="paidRegistryStatMeta">Количество списаний, которые остались после фильтрации и склейки дублей</div>
+    <div class="paidRegistryStatMeta">Количество строк закупа, отмеченных как оплаченные</div>
   </div>`;
 
 contentNode.innerHTML = monthEntries
@@ -2154,7 +2255,7 @@ contentNode.innerHTML = monthEntries
         <div class="paidMonthHead">
           <div>
             <h3 class="paidMonthTitle">${escapeHtml(month.title || formatMonthLabel(monthKey))}</h3>
-            <div class="paidMonthMeta">${selectedMonth ? `Оплаты за месяц по неделям` : `Оплачено ${formatMoney(month.total)} · ${month.payments} платежей · ${month.suppliers.length} поставщиков`}</div>
+            <div class="paidMonthMeta">${selectedMonth ? `Оплаты за месяц по неделям` : `Оплачено ${formatMoney(month.total)} · ${month.payments} оплат · ${month.suppliers} поставщиков`}</div>
           </div>
           <div class="heroMetaChip">Месяц: ${formatMoney(month.total)}</div>
         </div>
@@ -2164,18 +2265,21 @@ contentNode.innerHTML = monthEntries
               <div class="paidWeekHead">
                 <div>
                   <h4 class="paidWeekTitle">Неделя ${escapeHtml(getWeekRangeLabel(week.week_start))}</h4>
-                  <div class="paidWeekMeta">${week.payments} платежей в банке за неделю</div>
+                  <div class="paidWeekMeta">${week.payments} оплат отмечено за неделю</div>
                 </div>
                 <div class="heroMetaChip">Неделя: ${formatMoney(week.total)}</div>
               </div>
               <div class="paidWeekSuppliers">
-                ${(week.suppliers || []).map((supplier) => `
+                ${(week.orders || []).map((order) => `
                   <div class="paidSupplierCard">
-                    <div>
-                      <div class="paidSupplierName">${escapeHtml(supplier.name)}</div>
-                      <div class="paidSupplierMeta">Вошло в недельную оплату поставщиков</div>
+                    <div class="paidSupplierMain">
+                      <div>
+                        <div class="paidSupplierName">${escapeHtml(order.supplier_name)}</div>
+                        <div class="paidSupplierMeta">${escapeHtml(formatDateLabel(order.paid_date))}${order.invoice_file_name ? ` · ${escapeHtml(order.invoice_file_name)}` : ""}</div>
+                      </div>
+                      <div class="paidSupplierAmount">${formatMoney(order.order_amount)}</div>
                     </div>
-                    <div class="paidSupplierAmount">${formatMoney(supplier.total)}</div>
+                    ${canMarkPaid() ? `<div class="paidSupplierActions"><button class="plainButton ghost iconButton paidSupplierDelete" title="Удалить из оплаченных" aria-label="Удалить из оплаченных" data-role="remove-paid-entry" data-order-id="${escapeHtml(order.id)}" type="button">×</button></div>` : ""}
                   </div>
                 `).join("")}
               </div>
@@ -2194,6 +2298,11 @@ if (!modal) return;
 modal.classList.toggle("screenHidden", !paidRegistryOpen);
 document.body.style.overflow = paidRegistryOpen ? "hidden" : "";
 if (paidRegistryOpen){
+  let currentMonthKey = getPaidRegistryMonthKey(formatDateKey(today));
+  let registry = buildPaidRegistryData();
+  if (!paidRegistrySelectedMonthKey && registry[currentMonthKey]){
+    paidRegistrySelectedMonthKey = currentMonthKey;
+  }
   renderPaidRegistry();
 } else {
   paidRegistrySelectedMonthKey = "";
@@ -2823,7 +2932,7 @@ function getPlanBudgetMeta(weekStartKey){
 let base = getAutoBudgetForWeek(weekStartKey);
 let effective = getEffectiveBudget(weekStartKey);
 let spent = procurementState.orders
-  .filter((order) => !order.paid_at && !isArchivedPaid(order) && order.week_start === weekStartKey)
+  .filter((order) => order.week_start === weekStartKey)
   .reduce((sum, order) => sum + Number(order.order_amount || 0), 0);
 return {
   base,
@@ -2836,7 +2945,7 @@ return {
 function canFitIntoPlanBudget(orderId, nextValue, weekStartKey){
 let meta = getPlanBudgetMeta(weekStartKey);
 let otherSpent = procurementState.orders
-  .filter((order) => !order.paid_at && !isArchivedPaid(order) && order.week_start === weekStartKey && order.id !== orderId)
+  .filter((order) => order.week_start === weekStartKey && order.id !== orderId)
   .reduce((sum, order) => sum + Number(order.order_amount || 0), 0);
 return otherSpent + Number(nextValue || 0) <= meta.effective;
 }
@@ -3016,8 +3125,8 @@ let allOrders = [...procurementState.orders].sort((left, right) => {
   let rightDue = right.payment_due_date || right.order_date || "9999-12-31";
   return leftDue.localeCompare(rightDue);
 });
-let activeOrders = allOrders.filter((order) => !order.paid_at && !isArchivedPaid(order));
-let paidOrders = allOrders.filter((order) => order.paid_at && !isArchivedPaid(order));
+let activeOrders = allOrders.filter((order) => !order.paid_at);
+let paidOrders = allOrders.filter((order) => order.paid_at);
 let activePlanWeekKey = getCurrentPlanViewWeekKey();
 let availablePlanWeekKeys = buildSelectablePlanWeekKeys();
 let activePlanIndex = availablePlanWeekKeys.indexOf(activePlanWeekKey);
@@ -3154,8 +3263,8 @@ let recommendationOverlayHtml = !planIsLocked && recommendationDetailsOpen ? `
         </div>
         <div class="planRecommendationMetric">
           <div class="planRecommendationMetricLabel">В среднем в неделю платим</div>
-          <div class="planRecommendationMetricValue">${formatMoney(getPaidRegistrySummary().averageWeek)}</div>
-          <div class="planRecommendationMetricMeta">Средний ритм оплат поставщикам по данным с января 2026</div>
+          <div class="planRecommendationMetricValue">${formatMoney(getPaidRegistrySummary(getPaidRegistryMonthKey(formatDateKey(today))).averageWeek)}</div>
+          <div class="planRecommendationMetricMeta">Средний ритм оплат поставщикам по отмеченным оплатам текущего месяца</div>
         </div>
         <div class="planRecommendationMetric">
           <div class="planRecommendationMetricLabel">Ожидаем по себестоимости</div>
@@ -3205,9 +3314,7 @@ let recommendationOverlayHtml = !planIsLocked && recommendationDetailsOpen ? `
     `).join("")}</div>`
   : "<div class='emptyWeek'>Пока нет ни одной строки закупа. Добавь поставщика, и запись сохранится в общей таблице.</div>";
 
-let archivedHtml = paidOrders.length
-  ? `<div class="archivedOrders"><details open><summary>Оплаченные: ${paidOrders.length}</summary><div class="ordersTable">${paidOrders.map((order) => renderOrderRow(order, true)).join("")}</div></details></div>`
-  : "";
+let archivedHtml = "";
 
 container.innerHTML = `
 <article class="weekCard">
@@ -3220,7 +3327,7 @@ container.innerHTML = `
       ${planIsLocked ? "" : `
       <div class="planMeta">
         <div class="heroMetaChip planBudgetMain">Плановый бюджет: ${formatMoney(nextMondayBudgetMeta.effective)}</div>
-        <div class="heroMetaChip planPlanned">Запланировано: ${formatMoney(planOrders.reduce((sum, order) => sum + Number(order.order_amount || 0), 0))}</div>
+        <div class="heroMetaChip planPlanned">Запланировано: ${formatMoney(nextMondayBudgetMeta.spent)}</div>
         <div class="heroMetaChip planRemaining">Свободный остаток: ${formatMoney(nextMondayBudgetMeta.remaining)}</div>
       </div>`}
       ${!planIsLocked && canManageBudget() ? `
@@ -3238,7 +3345,7 @@ container.innerHTML = `
         <h3 class="dueGroupTitle">План закупа · ${planOrders.length}</h3>
         <div class="dueGroupMeta">Поставщики на ближайший понедельник. Строка остаётся в плане, пока не указана дата заказа.</div>
       </div>
-      <div class="heroMetaChip">К оплате: ${formatMoney(planOrders.reduce((sum, order) => sum + Number(order.order_amount || 0), 0))}</div>
+      <div class="heroMetaChip">В бюджете: ${formatMoney(nextMondayBudgetMeta.spent)}</div>
     </div>
     <div class="ordersTable">
       ${ordersHead}
@@ -3647,19 +3754,30 @@ queueOrderSave(orderId);
 async function markOrderPaid(orderId){
 let order = getOrderById(orderId);
 if (!order) return;
+window.clearTimeout(saveTimers[orderId]);
+if (!order.isLocalOnly){
+  await saveOrder(orderId);
+  order = getOrderById(orderId);
+  if (!order) return;
+}
 if (order.isLocalOnly){
+  order.paid_at = new Date().toISOString();
+  order.status = "paid";
   hideNotices();
-  removeOrderById(orderId);
+  renderWeeks();
   return;
 }
 try {
-  await callProcurementApi("deleteOrder", {
+  let result = await callProcurementApi("markPaid", {
     order_id: orderId
   });
+  upsertLocalOrder(result.order || Object.assign({}, order, {
+    paid_at: new Date().toISOString(),
+    status: "paid"
+  }));
   hideNotices();
-  removeOrderById(orderId);
 } catch (error){
-  showAuthNotice("Не удалось удалить оплаченный счет: " + error.message, "error");
+  showAuthNotice("Не удалось отметить оплату: " + error.message, "error");
 }
 }
 
@@ -3679,6 +3797,18 @@ hideNotices();
 removeOrderById(orderId);
 } catch (error){
 showAuthNotice("Не удалось удалить строку закупа: " + error.message, "error");
+}
+}
+
+async function removePaidEntry(orderId){
+let order = getOrderById(orderId);
+if (!order) return;
+if (!order.paid_at){
+  return;
+}
+await deleteOrder(orderId);
+if (paidRegistryOpen){
+  renderPaidRegistry();
 }
 }
 
@@ -3880,6 +4010,11 @@ let monthTrigger = event.target.closest("[data-role='paid-registry-month']");
 if (monthTrigger){
   paidRegistrySelectedMonthKey = monthTrigger.getAttribute("data-month-key") || "";
   renderPaidRegistry();
+  return;
+}
+let removePaidTrigger = event.target.closest("[data-role='remove-paid-entry']");
+if (removePaidTrigger){
+  removePaidEntry(removePaidTrigger.getAttribute("data-order-id"));
 }
 });
 document.getElementById("weeksList").addEventListener("click", handleWeeksClick);
