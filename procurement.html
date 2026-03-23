@@ -1497,9 +1497,14 @@ border:1px solid rgba(17,17,17,0.05);
 
 .paidSupplierMain{
 display:flex;
-align-items:flex-start;
+align-items:center;
 justify-content:space-between;
-gap:12px;
+gap:16px;
+min-width:0;
+flex:1;
+}
+
+.paidSupplierMain > div:first-child{
 min-width:0;
 flex:1;
 }
@@ -1508,6 +1513,7 @@ flex:1;
 display:flex;
 align-items:center;
 gap:8px;
+flex-shrink:0;
 }
 
 .paidSupplierDelete{
@@ -1537,6 +1543,8 @@ font-size:16px;
 font-weight:800;
 line-height:1.1;
 white-space:nowrap;
+margin-right:10px;
+padding-left:8px;
 }
 
 .screenHidden{
@@ -1785,10 +1793,10 @@ font-size:28px;
   </div>
 </div>
 
-<div class="uiVersionToggle">v2.059</div>
+<div class="uiVersionToggle">v2.061</div>
 
 <script>
-const PROCUREMENT_VERSION = "v2.059";
+const PROCUREMENT_VERSION = "v2.061";
 const procurementConfig = {
 googleClientId: "462958236662-4jml8gljkbk0tddja2cktktgdvubiat9.apps.googleusercontent.com",
 apiUrl: "https://script.google.com/macros/s/AKfycbxUp-7LEYL0Sj_J4Ck7QgMiNVziLmxxseLGk4ottNTfkBAktrAcgSwk0r7k1ESVW56kwQ/exec",
@@ -2865,9 +2873,11 @@ return procurementState.orders.some((order) => order.week_start === weekStartKey
 }
 
 function getActivePlanWeekKey(){
-let currentMondayKey = formatDateKey(getMonday(today));
+let currentMonday = getMonday(today);
+let currentMondayKey = formatDateKey(currentMonday);
 let nextMondayKey = getNextMondayKey();
-if (currentMondayKey === formatDateKey(today) && !isPlanCompleted(currentMondayKey)){
+let planGraceEnd = addDays(currentMonday, 3);
+if (today <= planGraceEnd && !isPlanCompleted(currentMondayKey)){
 return currentMondayKey;
 }
 if (currentMondayKey !== nextMondayKey && hasPlanActivity(currentMondayKey) && !isPlanCompleted(currentMondayKey)){
@@ -2909,7 +2919,7 @@ return Array.from(keys)
 
 function getCurrentPlanViewWeekKey(){
 let availableKeys = buildSelectablePlanWeekKeys();
-let fallbackKey = getNextMondayKey();
+let fallbackKey = getActivePlanWeekKey();
 if (!selectedPlanWeekKey || !availableKeys.includes(selectedPlanWeekKey)){
   selectedPlanWeekKey = availableKeys.includes(fallbackKey) ? fallbackKey : (availableKeys[0] || fallbackKey);
 }
