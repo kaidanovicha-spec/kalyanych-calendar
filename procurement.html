@@ -1793,10 +1793,10 @@ font-size:28px;
   </div>
 </div>
 
-<div class="uiVersionToggle">v2.061</div>
+<div class="uiVersionToggle">v2.062</div>
 
 <script>
-const PROCUREMENT_VERSION = "v2.061";
+const PROCUREMENT_VERSION = "v2.062";
 const procurementConfig = {
 googleClientId: "462958236662-4jml8gljkbk0tddja2cktktgdvubiat9.apps.googleusercontent.com",
 apiUrl: "https://script.google.com/macros/s/AKfycbxUp-7LEYL0Sj_J4Ck7QgMiNVziLmxxseLGk4ottNTfkBAktrAcgSwk0r7k1ESVW56kwQ/exec",
@@ -3959,6 +3959,24 @@ uploadInvoice(input.getAttribute("data-order-id"), input.files && input.files[0]
 }
 }
 
+function handleWeeksInput(event){
+let input = event.target;
+if (!input.classList.contains("order-input")){
+return;
+}
+let orderId = input.getAttribute("data-order-id");
+let field = input.getAttribute("data-field");
+let order = getOrderById(orderId);
+if (!order) return;
+if (field === "order_amount"){
+order.order_amount = parseMoneyField(input.value);
+return;
+}
+if (field === "supplier_name"){
+order.supplier_name = input.value;
+}
+}
+
 function handleGoogleCredential(response){
 let profile = decodeJwt(response.credential);
 if (!profile || !profile.email){
@@ -4028,6 +4046,7 @@ if (removePaidTrigger){
 }
 });
 document.getElementById("weeksList").addEventListener("click", handleWeeksClick);
+document.getElementById("weeksList").addEventListener("input", handleWeeksInput);
 document.getElementById("weeksList").addEventListener("change", handleWeeksChange);
 document.addEventListener("keydown", (event) => {
 if (event.key === "Escape" && paidRegistryOpen){
