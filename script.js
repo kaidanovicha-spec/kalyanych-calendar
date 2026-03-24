@@ -789,32 +789,61 @@ function drawBeer(itemX, itemY) {
 function drawMoneyBag(itemX, itemY) {
   const x = itemX * cellSize;
   const y = itemY * cellSize;
+  const centerX = x + 15;
+  const centerY = y + 15;
 
   ctx.save();
-  ctx.shadowColor = "rgba(255, 115, 88, 0.42)";
-  ctx.shadowBlur = 20;
-  const glow = ctx.createRadialGradient(x + 15, y + 15, 2, x + 15, y + 15, 11);
-  glow.addColorStop(0, "#ffae63");
-  glow.addColorStop(1, "#ff5a4e");
+  ctx.shadowColor = "rgba(72, 171, 102, 0.28)";
+  ctx.shadowBlur = 14;
+  const glow = ctx.createRadialGradient(centerX, centerY, 4, centerX, centerY, 15);
+  glow.addColorStop(0, "rgba(163, 255, 174, 0.75)");
+  glow.addColorStop(1, "rgba(72, 171, 102, 0)");
   ctx.fillStyle = glow;
   ctx.beginPath();
-  ctx.arc(x + 15, y + 15, 9, 0, Math.PI * 2);
+  ctx.arc(centerX, centerY, 13, 0, Math.PI * 2);
   ctx.fill();
 
-  const core = ctx.createLinearGradient(x + 8, y + 8, x + 22, y + 22);
-  core.addColorStop(0, "#ffcf78");
-  core.addColorStop(1, "#ff6a4a");
   ctx.shadowBlur = 0;
-  ctx.fillStyle = core;
+
+  const bodyGradient = ctx.createLinearGradient(x + 6, y + 6, x + 24, y + 26);
+  bodyGradient.addColorStop(0, "#f3cf7c");
+  bodyGradient.addColorStop(1, "#bc8540");
+  ctx.fillStyle = bodyGradient;
   ctx.beginPath();
-  ctx.arc(x + 15, y + 15, 7, 0, Math.PI * 2);
+  ctx.moveTo(x + 11, y + 8);
+  ctx.quadraticCurveTo(x + 15, y + 5, x + 19, y + 8);
+  ctx.lineTo(x + 22.5, y + 12);
+  ctx.quadraticCurveTo(x + 24.5, y + 16, x + 22, y + 23);
+  ctx.quadraticCurveTo(x + 15, y + 27.5, x + 8, y + 23);
+  ctx.quadraticCurveTo(x + 5.5, y + 16, x + 7.5, y + 12);
+  ctx.closePath();
   ctx.fill();
 
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.42)";
-  ctx.lineWidth = 1.5;
+  ctx.fillStyle = "#8d5b22";
+  roundRect(ctx, x + 9.5, y + 9.5, 11, 3.4, 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#f8e8b1";
   ctx.beginPath();
-  ctx.arc(x + 13, y + 13, 3.5, Math.PI * 1.1, Math.PI * 1.75);
+  ctx.moveTo(x + 12, y + 6.5);
+  ctx.quadraticCurveTo(centerX, y + 2.5, x + 18, y + 6.5);
+  ctx.lineTo(x + 17, y + 10);
+  ctx.quadraticCurveTo(centerX, y + 8.5, x + 13, y + 10);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(93, 53, 17, 0.7)";
+  ctx.lineWidth = 1.1;
+  ctx.beginPath();
+  ctx.moveTo(x + 11, y + 12);
+  ctx.lineTo(x + 19, y + 12);
   ctx.stroke();
+
+  ctx.fillStyle = "#297a39";
+  ctx.font = "bold 12px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("₽", centerX, y + 18.5);
   ctx.restore();
 }
 
