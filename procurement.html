@@ -1973,6 +1973,7 @@ const PROCUREMENT_PAID_REGISTRY = {
 };
 
 const procurementSessionKey = "kalyanychProcurementSession";
+const PROCUREMENT_AUTO_REFRESH_MS = 60 * 60 * 1000;
 let today = new Date();
 let revenueData = {};
 let procurementState = {
@@ -1992,6 +1993,11 @@ const saveInFlight = {};
 const saveQueued = {};
 const lastSavedSnapshots = {};
 const revenueBaselineCache = {};
+let procurementAutoRefreshTimer = 0;
+
+function refreshToday(){
+today = new Date();
+}
 
 function formatDateKey(date){
 let year = date.getUTCFullYear();
@@ -2872,33 +2878,8 @@ function hasPlanActivity(weekStartKey){
 return procurementState.orders.some((order) => order.week_start === weekStartKey) || Boolean(getWeekOverrideMeta(weekStartKey));
 }
 
-function getActivePlanWeekKey(){
-let currentMonday = getMonday(today);
-let currentMondayKey = formatDateKey(currentMonday);
-let nextMondayKey = getNextMondayKey();
-let planGraceEnd = addDays(currentMonday, 3);
-if (today <= planGraceEnd && !isPlanCompleted(currentMondayKey)){
-return currentMondayKey;
-}
-if (currentMondayKey !== nextMondayKey && hasPlanActivity(currentMondayKey) && !isPlanCompleted(currentMondayKey)){
-return currentMondayKey;
-}
-let cursor = parseDateKey(nextMondayKey);
-for (let step = 0; step < 26; step++){
-let candidateKey = formatDateKey(cursor);
-if (!isPlanCompleted(candidateKey)){
-return candidateKey;
-}
-cursor = addDays(cursor, 7);
-}
-return nextMondayKey;
-}
-
-function buildSelectablePlanWeekKeys(){
+function buildPlanWeekKeyPool(){
 let keys = new Set();
-let activeKey = getActivePlanWeekKey();
-if (activeKey) keys.add(activeKey);
-
 let currentMonday = getMonday(today);
 for (let step = -12; step <= 16; step++){
   keys.add(formatDateKey(addDays(currentMonday, step * 7)));
@@ -2915,6 +2896,38 @@ for (let order of procurementState.orders){
 return Array.from(keys)
   .filter(Boolean)
   .sort();
+}
+
+function getNearestPlanWeekKey(keys){
+let todayKey = formatDateKey(today);
+let todayTimestamp = getDateTimestamp(todayKey);
+let candidates = (keys || []).filter(Boolean);
+if (!candidates.length){
+  return "";
+}
+return candidates.slice().sort((left, right) => {
+  let leftDistance = Math.abs(getDateTimestamp(left) - todayTimestamp);
+  let rightDistance = Math.abs(getDateTimestamp(right) - todayTimestamp);
+  if (leftDistance !== rightDistance){
+    return leftDistance - rightDistance;
+  }
+  return left.localeCompare(right);
+})[0];
+}
+
+function getActivePlanWeekKey(){
+let allKeys = buildPlanWeekKeyPool();
+let currentMondayKey = formatDateKey(getMonday(today));
+let upcomingKeys = allKeys.filter((weekStartKey) => weekStartKey >= currentMondayKey);
+let fallbackKey = getNextMondayKey();
+return getNearestPlanWeekKey(upcomingKeys) || fallbackKey;
+}
+
+function buildSelectablePlanWeekKeys(){
+let activeKey = getActivePlanWeekKey();
+let keys = new Set(buildPlanWeekKeyPool());
+if (activeKey) keys.add(activeKey);
+return Array.from(keys).sort();
 }
 
 function getCurrentPlanViewWeekKey(){
@@ -3502,6 +3515,7 @@ return json;
 }
 
 async function bootstrapProcurement(){
+refreshToday();
 setLoading(true, "Проверяю доступ и загружаю закуп…");
 hideNotices();
 try {
@@ -3524,6 +3538,18 @@ renderAuthState();
 } finally {
 setLoading(false);
 }
+}
+
+function startProcurementAutoRefresh(){
+if (procurementAutoRefreshTimer){
+window.clearInterval(procurementAutoRefreshTimer);
+}
+procurementAutoRefreshTimer = window.setInterval(() => {
+if (!procurementState.idToken || !procurementState.user || procurementState.loading){
+  return;
+}
+bootstrapProcurement();
+}, PROCUREMENT_AUTO_REFRESH_MS);
 }
 
 function upsertLocalOrder(order){
@@ -4055,11 +4081,13 @@ if (event.key === "Escape" && paidRegistryOpen){
 });
 
 window.addEventListener("load", async () => {
+refreshToday();
 if (!isConfigReady()){
 showSetupNotice("Для запуска укажи в procurement.html Google Client ID и Apps Script Web App URL. После этого вход и синхронизация закупа заработают на всех устройствах.");
 }
 
 renderAuthState();
+startProcurementAutoRefresh();
 
 let stored = getStoredSession();
 if (stored && stored.idToken && stored.user){
