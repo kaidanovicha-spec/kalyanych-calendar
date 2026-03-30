@@ -84,10 +84,382 @@ gap:12px;
 .monthHeader{
 display:flex;
 align-items:center;
-justify-content:center;
+justify-content:flex-start;
 gap:14px;
 flex:1;
 min-width:0;
+position:relative;
+overflow:hidden;
+padding:8px 240px 8px 0;
+border-radius:24px;
+}
+
+.monthMood{
+position:absolute;
+top:10px;
+right:18px;
+bottom:10px;
+width:min(46%, 440px);
+pointer-events:none;
+z-index:0;
+border-radius:18px;
+border:1px solid rgba(181, 213, 169, 0.42);
+background:linear-gradient(180deg, rgba(255,255,255,0.74), rgba(255,255,255,0.38));
+box-shadow:inset 0 0 0 1px rgba(255,255,255,0.5);
+}
+
+.monthMood::before{
+content:"";
+position:absolute;
+inset:0;
+border-radius:inherit;
+background:
+radial-gradient(circle at 82% 26%, var(--month-mood-glow, rgba(255, 214, 160, 0.16)), rgba(255,255,255,0) 30%),
+linear-gradient(270deg, rgba(255,255,255,0.08), rgba(255,255,255,0));
+opacity:1;
+pointer-events:none;
+}
+
+.monthMoodToken{
+position:absolute;
+display:flex;
+align-items:center;
+justify-content:center;
+line-height:1;
+opacity:0.92;
+filter:drop-shadow(0 6px 14px rgba(44, 36, 25, 0.12));
+animation:monthMoodFloat 6.6s ease-in-out infinite;
+pointer-events:none;
+}
+
+.monthMoodToken.token-a{
+left:10%;
+top:12%;
+font-size:34px;
+}
+
+.monthMoodToken.token-b{
+left:44%;
+bottom:10%;
+font-size:28px;
+animation-delay:-2.2s;
+}
+
+.monthMoodToken.token-c{
+right:8%;
+top:14%;
+font-size:20px;
+opacity:0.46;
+animation-delay:-4s;
+}
+
+.monthMoodToken.token-d{
+left:68%;
+bottom:14%;
+font-size:18px;
+opacity:0.38;
+animation-delay:-1.3s;
+}
+
+.monthMoodToken.token-e{
+left:28%;
+top:46%;
+font-size:16px;
+opacity:0.34;
+animation-delay:-3.5s;
+}
+
+.monthHeaderContent{
+position:relative;
+z-index:1;
+display:flex;
+flex-direction:column;
+gap:4px;
+min-width:0;
+max-width:100%;
+}
+
+.monthMoodEvents{
+position:absolute;
+left:16px;
+top:12px;
+right:16px;
+bottom:12px;
+display:flex;
+flex-direction:column;
+gap:6px;
+z-index:1;
+pointer-events:auto;
+}
+
+.monthMoodEvents.hidden{
+display:none;
+}
+
+.monthMoodEventsLabel{
+font-size:10px;
+font-weight:700;
+letter-spacing:0.08em;
+text-transform:uppercase;
+color:#8d8579;
+opacity:0.9;
+}
+
+.monthMoodEventsHead{
+display:flex;
+align-items:center;
+gap:8px;
+}
+
+.monthMoodEventList{
+display:block;
+flex:1;
+min-height:0;
+}
+
+.monthMoodCard{
+position:relative;
+overflow:hidden;
+height:100%;
+min-height:86px;
+padding:10px 96px 10px 12px;
+border-radius:16px;
+background:rgba(255,255,255,0.72);
+border:1px solid rgba(223,210,193,0.8);
+box-shadow:0 12px 28px rgba(88,70,40,0.06);
+}
+
+.monthMoodCard::before{
+content:"";
+position:absolute;
+inset:0;
+background:
+linear-gradient(120deg, var(--holiday-wash, rgba(255,214,160,0.10)) 0%, rgba(255,255,255,0) 42%),
+radial-gradient(circle at 88% 20%, var(--holiday-glow, rgba(255,204,136,0.20)), rgba(255,255,255,0) 28%);
+pointer-events:none;
+}
+
+.monthMoodDate{
+display:inline-flex;
+align-items:center;
+padding:5px 8px;
+border-radius:999px;
+background:rgba(255,255,255,0.82);
+border:1px solid rgba(209,196,180,0.64);
+font-size:11px;
+font-weight:700;
+letter-spacing:0.03em;
+color:#7f7468;
+margin-bottom:8px;
+}
+
+.monthMoodTitle{
+font-size:17px;
+font-weight:800;
+line-height:1.05;
+letter-spacing:-0.02em;
+color:#1e2634;
+max-width:170px;
+}
+
+.monthMoodDesc{
+margin-top:6px;
+font-size:11px;
+line-height:1.3;
+color:#776d61;
+max-width:190px;
+display:-webkit-box;
+-webkit-line-clamp:2;
+-webkit-box-orient:vertical;
+overflow:hidden;
+}
+
+.monthMoodMiniStage{
+position:absolute;
+top:8px;
+right:8px;
+bottom:8px;
+width:82px;
+border-radius:14px;
+background:linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.22));
+border:1px solid rgba(255,255,255,0.6);
+box-shadow:inset 0 0 0 1px rgba(255,255,255,0.32);
+}
+
+.monthMoodMiniToken{
+position:absolute;
+display:flex;
+align-items:center;
+justify-content:center;
+line-height:1;
+filter:drop-shadow(0 4px 10px rgba(50, 34, 16, 0.12));
+animation:floaty 7s ease-in-out infinite;
+}
+
+.monthMoodMiniToken.m1{ left:10%; top:10%; font-size:22px; }
+.monthMoodMiniToken.m2{ left:42%; top:40%; font-size:18px; animation-delay:-2s; }
+.monthMoodMiniToken.m3{ right:10%; top:14%; font-size:16px; animation-delay:-3.6s; }
+.monthMoodMiniToken.m4{ left:58%; bottom:12%; font-size:16px; animation-delay:-1.1s; }
+.monthMoodMiniToken.m5{ left:18%; bottom:10%; font-size:14px; animation-delay:-4.4s; opacity:0.78; }
+
+.monthMoodEmpty{
+display:flex;
+align-items:center;
+justify-content:center;
+height:100%;
+padding:0 10px;
+font-size:12px;
+font-weight:600;
+line-height:1.35;
+color:#8d8579;
+text-align:center;
+opacity:0.84;
+}
+
+.holidayPreviewCard{
+position:relative;
+overflow:hidden;
+min-height:190px;
+padding:20px 22px;
+border-radius:26px;
+background:rgba(255,255,255,0.88);
+border:1px solid rgba(223,210,193,0.8);
+box-shadow:0 18px 42px rgba(88,70,40,0.08);
+}
+
+.holidayPreviewCard::before{
+content:"";
+position:absolute;
+inset:0;
+background:
+linear-gradient(120deg, var(--holiday-wash, rgba(255,214,160,0.10)) 0%, rgba(255,255,255,0) 42%),
+radial-gradient(circle at 85% 18%, var(--holiday-glow, rgba(255,204,136,0.20)), rgba(255,255,255,0) 28%);
+pointer-events:none;
+}
+
+.holidayPreviewContent{
+position:relative;
+z-index:1;
+padding-right:min(40%, 240px);
+}
+
+.holidayPreviewDate{
+display:inline-flex;
+align-items:center;
+gap:8px;
+padding:8px 12px;
+border-radius:999px;
+background:rgba(255,255,255,0.74);
+border:1px solid rgba(209,196,180,0.64);
+font-size:12px;
+font-weight:700;
+letter-spacing:0.04em;
+color:#7f7468;
+margin-bottom:12px;
+}
+
+.holidayPreviewName{
+margin:0 0 10px;
+font-size:28px;
+line-height:1.02;
+letter-spacing:-0.03em;
+}
+
+.holidayPreviewDesc{
+margin:0;
+font-size:14px;
+line-height:1.45;
+color:#776d61;
+max-width:340px;
+}
+
+.holidayPreviewStage{
+position:absolute;
+top:14px;
+right:16px;
+bottom:14px;
+width:min(39%, 220px);
+border-radius:22px;
+border:1px solid rgba(255,255,255,0.68);
+background:linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.24));
+box-shadow:inset 0 0 0 1px rgba(255,255,255,0.42);
+}
+
+.holidayPreviewLabel{
+position:absolute;
+left:14px;
+top:12px;
+right:14px;
+font-size:10px;
+font-weight:700;
+letter-spacing:0.1em;
+text-transform:uppercase;
+color:#8c8175;
+opacity:0.92;
+}
+
+.holidayPreviewEvent{
+position:absolute;
+left:14px;
+right:14px;
+bottom:14px;
+font-size:13px;
+font-weight:700;
+line-height:1.25;
+color:#5a5248;
+}
+
+.holidayPreviewToken{
+position:absolute;
+display:flex;
+align-items:center;
+justify-content:center;
+line-height:1;
+filter:drop-shadow(0 8px 16px rgba(50, 34, 16, 0.12));
+animation:floaty 7s ease-in-out infinite;
+}
+
+.holidayPreviewToken.t1{ left:10%; top:10%; font-size:34px; }
+.holidayPreviewToken.t2{ left:42%; top:44%; font-size:28px; animation-delay:-2s; }
+.holidayPreviewToken.t3{ right:10%; top:14%; font-size:24px; animation-delay:-3.6s; }
+.holidayPreviewToken.t4{ left:68%; bottom:12%; font-size:22px; animation-delay:-1.1s; }
+.holidayPreviewToken.t5{ left:22%; bottom:10%; font-size:18px; animation-delay:-4.4s; opacity:0.78; }
+
+.holidayTheme-newyear{ --holiday-wash:rgba(99, 137, 255, 0.14); --holiday-glow:rgba(126, 190, 255, 0.24); }
+.holidayTheme-christmas{ --holiday-wash:rgba(208, 236, 255, 0.16); --holiday-glow:rgba(197, 223, 255, 0.28); }
+.holidayTheme-valentine{ --holiday-wash:rgba(255, 196, 212, 0.18); --holiday-glow:rgba(255, 168, 198, 0.24); }
+.holidayTheme-defender{ --holiday-wash:rgba(208, 223, 188, 0.18); --holiday-glow:rgba(191, 211, 160, 0.24); }
+.holidayTheme-march8{ --holiday-wash:rgba(255, 208, 218, 0.18); --holiday-glow:rgba(255, 185, 198, 0.24); }
+.holidayTheme-palm{ --holiday-wash:rgba(218, 239, 188, 0.18); --holiday-glow:rgba(178, 216, 125, 0.24); }
+.holidayTheme-cosmos{ --holiday-wash:rgba(196, 214, 255, 0.18); --holiday-glow:rgba(137, 167, 255, 0.24); }
+.holidayTheme-labor{ --holiday-wash:rgba(255, 223, 184, 0.18); --holiday-glow:rgba(255, 171, 108, 0.24); }
+.holidayTheme-victory{ --holiday-wash:rgba(232, 207, 154, 0.18); --holiday-glow:rgba(197, 146, 66, 0.24); }
+.holidayTheme-children{ --holiday-wash:rgba(255, 227, 154, 0.18); --holiday-glow:rgba(255, 202, 92, 0.24); }
+.holidayTheme-russia{ --holiday-wash:rgba(193, 221, 255, 0.18); --holiday-glow:rgba(154, 192, 255, 0.24); }
+.holidayTheme-school{ --holiday-wash:rgba(255, 228, 170, 0.18); --holiday-glow:rgba(255, 194, 105, 0.24); }
+.holidayTheme-unity{ --holiday-wash:rgba(232, 210, 255, 0.17); --holiday-glow:rgba(211, 169, 255, 0.22); }
+.holidayTheme-nye{ --holiday-wash:rgba(255, 220, 174, 0.18); --holiday-glow:rgba(255, 180, 98, 0.24); }
+.holidayTheme-generic{ --holiday-wash:rgba(226, 215, 201, 0.18); --holiday-glow:rgba(214, 194, 165, 0.22); }
+
+@media (max-width: 860px){
+.monthHeader{
+padding-right:180px;
+}
+
+.monthMood{
+width:min(48%, 280px);
+}
+}
+
+@keyframes monthMoodFloat{
+0%, 100%{ transform:translateY(0) rotate(0deg); }
+50%{ transform:translateY(-5px) rotate(3deg); }
+}
+
+@media (prefers-reduced-motion: reduce){
+.monthMoodToken{
+animation:none;
+}
 }
 
 .monthExpectation{
@@ -1020,8 +1392,7 @@ box-shadow:0 10px 24px rgba(23,32,44,0.14);
 body[data-ui-version="v2"] .monthHeader{
 align-items:flex-start;
 justify-content:flex-start;
-flex-direction:column;
-gap:4px;
+gap:0;
 }
 
 body[data-ui-version="v2"] #monthTitle{
@@ -1291,6 +1662,133 @@ background:radial-gradient(circle,rgba(255,165,113,0.18),rgba(255,255,255,0));
 pointer-events:none;
 }
 
+body[data-ui-version="v2"] .v2HeroSection::after{
+content:"";
+position:absolute;
+inset:0;
+background:
+linear-gradient(135deg, var(--hero-tint-soft, rgba(255, 226, 186, 0.14)) 0%, rgba(255,255,255,0) 38%),
+radial-gradient(circle at 85% 18%, var(--hero-tint-glow, rgba(255, 184, 107, 0.18)), rgba(255,255,255,0) 34%);
+pointer-events:none;
+}
+
+body[data-ui-version="v2"] .v2HeroMood{
+position:absolute;
+inset:0;
+pointer-events:none;
+z-index:0;
+}
+
+body[data-ui-version="v2"] .v2HeroMoodToken{
+position:absolute;
+display:flex;
+align-items:center;
+justify-content:center;
+line-height:1;
+opacity:0.92;
+filter:drop-shadow(0 8px 20px rgba(38, 34, 28, 0.12));
+animation:heroFloat 7s ease-in-out infinite;
+}
+
+body[data-ui-version="v2"] .v2HeroMoodToken.token-a{
+top:18px;
+right:122px;
+font-size:42px;
+animation-delay:0s;
+}
+
+body[data-ui-version="v2"] .v2HeroMoodToken.token-b{
+right:42px;
+bottom:26px;
+font-size:34px;
+animation-delay:-2.4s;
+}
+
+body[data-ui-version="v2"] .v2HeroMoodToken.token-c{
+left:36px;
+bottom:20px;
+font-size:28px;
+opacity:0.6;
+animation-delay:-4.2s;
+}
+
+body[data-ui-version="v2"] .v2HeroMoodRibbon{
+position:absolute;
+left:34px;
+top:30px;
+width:170px;
+height:10px;
+border-radius:999px;
+background:linear-gradient(90deg, var(--hero-ribbon-start, rgba(114, 197, 126, 0.28)), var(--hero-ribbon-end, rgba(255,255,255,0)));
+opacity:0.9;
+transform-origin:left center;
+animation:heroRibbonPulse 5.2s ease-in-out infinite;
+}
+
+body[data-ui-version="v2"] .v2HeroMoodDust{
+position:absolute;
+inset:auto 210px 18px auto;
+width:170px;
+height:170px;
+border-radius:50%;
+background:radial-gradient(circle, var(--hero-dust-core, rgba(255,255,255,0.55)) 0%, rgba(255,255,255,0) 68%);
+opacity:0.6;
+animation:heroPulse 6.4s ease-in-out infinite;
+}
+
+body[data-ui-version="v2"] .v2HeroContent{
+position:relative;
+z-index:1;
+}
+
+body[data-ui-version="v2"] .v2HeroSection[data-season="spring"]{
+--hero-tint-soft: rgba(255, 198, 210, 0.16);
+--hero-tint-glow: rgba(255, 175, 168, 0.2);
+--hero-ribbon-start: rgba(119, 194, 125, 0.36);
+--hero-ribbon-end: rgba(255, 220, 228, 0);
+--hero-dust-core: rgba(255, 232, 237, 0.66);
+}
+
+body[data-ui-version="v2"] .v2HeroSection[data-season="summer"]{
+--hero-tint-soft: rgba(255, 214, 126, 0.18);
+--hero-tint-glow: rgba(255, 200, 96, 0.22);
+--hero-ribbon-start: rgba(255, 191, 66, 0.42);
+--hero-ribbon-end: rgba(255, 242, 204, 0);
+--hero-dust-core: rgba(255, 247, 212, 0.7);
+}
+
+body[data-ui-version="v2"] .v2HeroSection[data-season="autumn"]{
+--hero-tint-soft: rgba(232, 179, 118, 0.18);
+--hero-tint-glow: rgba(201, 116, 53, 0.2);
+--hero-ribbon-start: rgba(199, 111, 55, 0.38);
+--hero-ribbon-end: rgba(246, 220, 191, 0);
+--hero-dust-core: rgba(255, 232, 210, 0.62);
+}
+
+body[data-ui-version="v2"] .v2HeroSection[data-season="winter"]{
+--hero-tint-soft: rgba(191, 221, 255, 0.18);
+--hero-tint-glow: rgba(171, 210, 255, 0.22);
+--hero-ribbon-start: rgba(137, 183, 230, 0.36);
+--hero-ribbon-end: rgba(232, 244, 255, 0);
+--hero-dust-core: rgba(240, 248, 255, 0.74);
+}
+
+body[data-ui-version="v2"] .v2HeroSection[data-season="spring"] .v2HeroMoodToken{
+filter:drop-shadow(0 8px 18px rgba(169, 91, 110, 0.14));
+}
+
+body[data-ui-version="v2"] .v2HeroSection[data-season="summer"] .v2HeroMoodToken{
+filter:drop-shadow(0 8px 22px rgba(178, 127, 18, 0.16));
+}
+
+body[data-ui-version="v2"] .v2HeroSection[data-season="autumn"] .v2HeroMoodToken{
+filter:drop-shadow(0 8px 20px rgba(139, 76, 28, 0.16));
+}
+
+body[data-ui-version="v2"] .v2HeroSection[data-season="winter"] .v2HeroMoodToken{
+filter:drop-shadow(0 8px 18px rgba(84, 131, 176, 0.14));
+}
+
 body[data-ui-version="v2"] .v2HeroNav{
 display:flex;
 gap:10px;
@@ -1395,6 +1893,29 @@ body[data-ui-version="v2"] .v2MetricMeta{
 font-size:15px;
 line-height:1.45;
 color:#6f685f;
+}
+
+@keyframes heroFloat{
+0%, 100%{ transform:translateY(0) rotate(0deg); }
+50%{ transform:translateY(-8px) rotate(3deg); }
+}
+
+@keyframes heroPulse{
+0%, 100%{ transform:scale(0.96); opacity:0.42; }
+50%{ transform:scale(1.06); opacity:0.72; }
+}
+
+@keyframes heroRibbonPulse{
+0%, 100%{ transform:scaleX(0.92); opacity:0.72; }
+50%{ transform:scaleX(1.04); opacity:1; }
+}
+
+@media (prefers-reduced-motion: reduce){
+body[data-ui-version="v2"] .v2HeroMoodToken,
+body[data-ui-version="v2"] .v2HeroMoodDust,
+body[data-ui-version="v2"] .v2HeroMoodRibbon{
+animation:none;
+}
 }
 
 body[data-ui-version="v2"] .v2MetricsGrid{
@@ -2450,20 +2971,43 @@ padding-top:14px;
 <div class="indexKaAccuracyBadge neutral" id="indexKaAccuracyBadge">Точность IndexKa: —</div>
 <a class="topReportButton secondary" href="./procurement.html">Закуп</a>
 <a class="topReportButton" href="./Отчет_по_магазинам.html" target="_blank" rel="noopener noreferrer">Рейтинг магазинов</a>
-<div class="uiVersionToggle" id="uiVersionToggle" aria-label="Версия интерфейса">v2.008</div>
+<div class="uiVersionToggle" id="uiVersionToggle" aria-label="Версия интерфейса">v2.009</div>
 </div>
 </div>
 
 <div class="header">
 <button onclick="changeMonth(-1)">◀</button>
 <div class="monthHeader">
+<div class="monthMood" id="monthMood">
+<div class="monthMoodEvents" id="monthMoodEvents">
+<div class="monthMoodEventsHead">
+<div class="monthMoodEventsLabel" id="monthMoodEventsLabel">Даты месяца</div>
+</div>
+<div class="monthMoodEventList" id="monthMoodEventList"></div>
+</div>
+<span class="monthMoodToken token-a" id="monthMoodTokenA"></span>
+<span class="monthMoodToken token-b" id="monthMoodTokenB"></span>
+<span class="monthMoodToken token-c" id="monthMoodTokenC"></span>
+<span class="monthMoodToken token-d" id="monthMoodTokenD"></span>
+<span class="monthMoodToken token-e" id="monthMoodTokenE"></span>
+</div>
+<div class="monthHeaderContent">
 <h2 id="monthTitle"></h2>
 <div class="monthExpectation" id="monthExpectation"></div>
+</div>
 </div>
 <button onclick="changeMonth(1)">▶</button>
 </div>
 
 <section class="v2HeroSection v2Only" id="v2HeroSection" hidden>
+<div class="v2HeroMood" id="v2HeroMood" aria-hidden="true">
+<span class="v2HeroMoodRibbon"></span>
+<span class="v2HeroMoodDust"></span>
+<span class="v2HeroMoodToken token-a" id="v2HeroMoodTokenA"></span>
+<span class="v2HeroMoodToken token-b" id="v2HeroMoodTokenB"></span>
+<span class="v2HeroMoodToken token-c" id="v2HeroMoodTokenC"></span>
+</div>
+<div class="v2HeroContent">
 <div class="v2HeroNav">
 <button class="v2NavButton" type="button" onclick="changeMonth(-1)">◀</button>
 <button class="v2NavButton" type="button" onclick="changeMonth(1)">▶</button>
@@ -2482,6 +3026,7 @@ padding-top:14px;
 <div class="v2HeroCompareLabel">К прошлому году</div>
 <div class="v2HeroCompareValue" id="v2HeroYearCompare"></div>
 <div class="v2HeroCompareMeta" id="v2HeroYearCompareMeta"></div>
+</div>
 </div>
 </div>
 </section>
@@ -2688,6 +3233,7 @@ const officialHolidayMap = {
 "2024-01-08": "Новогодние каникулы",
 "2024-02-23": "23 февраля",
 "2024-03-08": "8 марта",
+"2024-04-28": "Вербное воскресенье",
 "2024-04-29": "Перенос выходного",
 "2024-04-30": "Перенос выходного",
 "2024-05-01": "1 мая",
@@ -2707,6 +3253,7 @@ const officialHolidayMap = {
 "2025-01-08": "Новогодние каникулы",
 "2025-02-23": "23 февраля",
 "2025-03-08": "8 марта",
+"2025-04-13": "Вербное воскресенье",
 "2025-05-01": "1 мая",
 "2025-05-02": "Перенос выходного",
 "2025-05-08": "Перенос выходного",
@@ -2729,6 +3276,7 @@ const officialHolidayMap = {
 "2026-01-11": "Новогодние каникулы",
 "2026-02-23": "23 февраля",
 "2026-03-09": "Перенос 8 марта",
+"2026-04-05": "Вербное воскресенье",
 "2026-05-01": "1 мая",
 "2026-05-02": "Майские выходные",
 "2026-05-03": "Майские выходные",
@@ -2779,9 +3327,9 @@ return "v2";
 function updateUiVersionButton(version){
 let toggleButton = document.getElementById("uiVersionToggle");
 if (!toggleButton) return;
-	toggleButton.innerText = "v2.008";
-	toggleButton.setAttribute("aria-label", "Версия интерфейса v2.008");
-	toggleButton.title = "Версия интерфейса v2.008";
+	toggleButton.innerText = "v2.009";
+	toggleButton.setAttribute("aria-label", "Версия интерфейса v2.009");
+	toggleButton.title = "Версия интерфейса v2.009";
 }
 
 function applyUiVersion(version){
@@ -4389,6 +4937,174 @@ if (current < previous) return "negative";
 return "neutral";
 }
 
+function escapeHtml(value){
+return String(value ?? "")
+  .replace(/&/g, "&amp;")
+  .replace(/</g, "&lt;")
+  .replace(/>/g, "&gt;")
+  .replace(/"/g, "&quot;")
+  .replace(/'/g, "&#39;");
+}
+
+function getMonthNameGenitive(monthIndex){
+return ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"][monthIndex] || "";
+}
+
+function getHolidayMood(todayKey){
+let directDateThemes = {
+  "2024-04-28": { title: "Вербное воскресенье", tokens: ["🌿", "🕊", "🌱", "✨", "🌿"] },
+  "2025-04-13": { title: "Вербное воскресенье", tokens: ["🌿", "🕊", "🌱", "✨", "🌿"] },
+  "2026-04-05": { title: "Вербное воскресенье", tokens: ["🌿", "🕊", "🌱", "✨", "🌿"] }
+};
+if (directDateThemes[todayKey]){
+  return directDateThemes[todayKey];
+}
+
+let shortKey = todayKey.slice(5);
+let directThemes = {
+  "01-01": { title: "Новый год", tokens: ["🎆", "✨", "🎇", "✨", "🎆"] },
+  "01-07": { title: "Рождество", tokens: ["⭐", "✨", "🕯", "❄", "✨"] },
+  "02-14": { title: "День святого Валентина", tokens: ["💖", "💘", "💕", "💗", "💞"] },
+  "02-23": { title: "23 февраля", tokens: ["⭐", "🎖", "✨", "🛡", "⭐"] },
+  "03-08": { title: "8 марта", tokens: ["🌷", "💐", "🌸", "🌷", "❀"] },
+  "04-12": { title: "День космонавтики", tokens: ["🚀", "✨", "🪐", "⭐", "🌌"] },
+  "05-01": { title: "Праздник весны и труда", tokens: ["🌞", "🌼", "🌿", "🛠", "🌸"] },
+  "05-09": { title: "День Победы", tokens: ["🎖", "⭐", "🎇", "🕊", "🎗"] },
+  "06-01": { title: "День защиты детей", tokens: ["🧒", "🎈", "🧸", "👧", "😊"] },
+  "06-12": { title: "День России", tokens: ["🇷🇺", "⭐", "✨", "🎉", "🇷🇺"] },
+  "09-01": { title: "День знаний", tokens: ["📚", "🍎", "✏️", "🍁", "🎒"] },
+  "11-04": { title: "4 ноября", tokens: ["🇷🇺", "✨", "⭐", "🎉", "🇷🇺"] },
+  "12-31": { title: "Предновогодний вечер", tokens: ["🎇", "✨", "🎆", "✨", "🎇"] }
+};
+if (directThemes[shortKey]){
+  return directThemes[shortKey];
+}
+if (!officialHolidayMap[todayKey]){
+  return null;
+}
+let title = officialHolidayMap[todayKey];
+if (/новогод/i.test(title)){
+  return { title, tokens: ["🎆", "✨", "🎇", "✨", "🎆"] };
+}
+if (/рождеств/i.test(title)){
+  return { title, tokens: ["⭐", "✨", "🕯", "❄", "✨"] };
+}
+if (/8 марта/i.test(title)){
+  return { title, tokens: ["🌷", "💐", "🌸", "🌷", "❀"] };
+}
+if (/дет/i.test(title)){
+  return { title, tokens: ["🧒", "🎈", "🧸", "👧", "😊"] };
+}
+return { title, tokens: ["🎉", "✨", "⭐", "🎊", "✨"] };
+}
+
+function getHolidayPreviewMeta(dateKey, title){
+let mood = getHolidayMood(dateKey) || { title, tokens: ["🎉", "✨", "⭐", "🎊", "✨"] };
+let themeClass = "holidayTheme-generic";
+let description = "Праздничный режим для этого дня с отдельным настроением и декоративной сценой.";
+
+if (/Новый год/i.test(title)){
+  themeClass = "holidayTheme-newyear";
+  description = "Холодный свет, салют и праздничная новогодняя сцена.";
+} else if (/Рождеств/i.test(title)){
+  themeClass = "holidayTheme-christmas";
+  description = "Спокойный зимний режим со звездой, свечой и снегом.";
+} else if (/святого Валентина/i.test(title)){
+  themeClass = "holidayTheme-valentine";
+  description = "Неформальная тема с сердечками и мягким розовым свечением.";
+} else if (/23 февраля/i.test(title)){
+  themeClass = "holidayTheme-defender";
+  description = "Собранный режим со звездой, наградой и более строгим характером.";
+} else if (/8 марта/i.test(title)){
+  themeClass = "holidayTheme-march8";
+  description = "Весенний цветочный режим с мягким праздничным светом.";
+} else if (/Вербное воскресенье/i.test(title)){
+  themeClass = "holidayTheme-palm";
+  description = "Тихая весенняя сцена с веточками, зеленью и светлым настроением.";
+} else if (/космонавтик/i.test(title)){
+  themeClass = "holidayTheme-cosmos";
+  description = "Космический режим с ракетой, звездами и холодным свечением.";
+} else if (/весны и труда/i.test(title) || /^1 мая$/i.test(title)){
+  themeClass = "holidayTheme-labor";
+  description = "Теплый майский режим с солнцем, цветами и ощущением длинных выходных.";
+} else if (/Побед/i.test(title)){
+  themeClass = "holidayTheme-victory";
+  description = "Торжественная золотистая тема со звездой, лентой и салютом.";
+} else if (/защиты детей/i.test(title)){
+  themeClass = "holidayTheme-children";
+  description = "Летний радостный режим с шариками, детскими смайликами и игрушками.";
+} else if (/День России/i.test(title)){
+  themeClass = "holidayTheme-russia";
+  description = "Спокойный торжественный режим с флагом и праздничным светом.";
+} else if (/знаний/i.test(title)){
+  themeClass = "holidayTheme-school";
+  description = "Школьный режим с книгами, яблоком и теплым осенним стартом.";
+} else if (/4 ноября/i.test(title)){
+  themeClass = "holidayTheme-unity";
+  description = "Благородный режим с мягким свечением и собранной праздничной палитрой.";
+} else if (/Предновогод/i.test(title)){
+  themeClass = "holidayTheme-nye";
+  description = "Переходный предновогодний режим с огнями и ожиданием полуночи.";
+}
+
+return {
+  title,
+  tokens: mood.tokens,
+  themeClass,
+  description
+};
+}
+
+function getMonthHolidayEntries(targetYear, targetMonth){
+let prefix = String(targetYear) + "-" + String(targetMonth + 1).padStart(2, "0") + "-";
+return Object.keys(officialHolidayMap)
+  .filter((dateKey) => dateKey.startsWith(prefix))
+  .sort()
+  .map((dateKey) => ({
+    dateKey,
+    day: Number(dateKey.slice(-2)),
+    title: officialHolidayMap[dateKey],
+    preview: getHolidayPreviewMeta(dateKey, officialHolidayMap[dateKey])
+  }));
+}
+
+function renderMonthMoodShowcase(targetYear, targetMonth){
+let labelNode = document.getElementById("monthMoodEventsLabel");
+let listNode = document.getElementById("monthMoodEventList");
+let todayKey = formatDate(today.getFullYear(), today.getMonth(), today.getDate());
+let isCurrentVisibleMonth = targetYear === today.getFullYear() && targetMonth === today.getMonth();
+let currentEntry = isCurrentVisibleMonth && officialHolidayMap[todayKey]
+  ? {
+      dateKey: todayKey,
+      day: Number(todayKey.slice(-2)),
+      title: officialHolidayMap[todayKey],
+      preview: getHolidayPreviewMeta(todayKey, officialHolidayMap[todayKey])
+    }
+  : null;
+
+if (!currentEntry){
+  labelNode.textContent = "";
+  listNode.innerHTML = "";
+  return;
+}
+
+let entry = currentEntry;
+labelNode.textContent = "Сегодня";
+listNode.innerHTML =
+  "<article class='monthMoodCard " + entry.preview.themeClass + "'>" +
+    "<div class='monthMoodDate'>" + entry.day + " " + getMonthNameGenitive(targetMonth) + "</div>" +
+    "<div class='monthMoodTitle'>" + escapeHtml(entry.title) + "</div>" +
+    "<div class='monthMoodDesc'>" + escapeHtml(entry.preview.description) + "</div>" +
+    "<div class='monthMoodMiniStage'>" +
+      "<span class='monthMoodMiniToken m1'>" + entry.preview.tokens[0] + "</span>" +
+      "<span class='monthMoodMiniToken m2'>" + entry.preview.tokens[1] + "</span>" +
+      "<span class='monthMoodMiniToken m3'>" + entry.preview.tokens[2] + "</span>" +
+      "<span class='monthMoodMiniToken m4'>" + entry.preview.tokens[3] + "</span>" +
+      "<span class='monthMoodMiniToken m5'>" + entry.preview.tokens[4] + "</span>" +
+    "</div>" +
+  "</article>";
+}
+
 function applyTrendCard(cardId, trend){
 let card = document.getElementById(cardId);
 if (!card) return;
@@ -4535,6 +5251,48 @@ const calendar = document.getElementById("calendar");
 calendar.innerHTML = "";
 const isV2Ui = document.body.getAttribute("data-ui-version") === "v2";
 updateIndexKaAccuracyBadge();
+
+const heroThemeByMonth = {
+0: { season: "winter", tokens: ["☃", "❄", "✨", "🧣", "❄"], glow: "rgba(189, 223, 255, 0.28)" },
+1: { season: "winter", tokens: ["❄", "🌙", "✦", "🧊", "❄"], glow: "rgba(173, 208, 255, 0.22)" },
+2: { season: "spring", tokens: ["🌷", "🌿", "❀", "🌷", "✦"] },
+3: { season: "spring", tokens: ["🌱", "🌸", "❀", "🌿", "✦"] },
+4: { season: "spring", tokens: ["🌿", "🪻", "❀", "🌱", "✦"] },
+5: { season: "summer", tokens: ["☀", "✺", "🌼", "☀", "✦"] },
+6: { season: "summer", tokens: ["☀", "🌼", "✺", "⛱", "✦"] },
+7: { season: "summer", tokens: ["⛱", "☀", "✺", "🌼", "✦"] },
+8: { season: "autumn", tokens: ["🍂", "✦", "🍁", "🍂", "✦"] },
+9: { season: "autumn", tokens: ["🍁", "✦", "🍂", "🍁", "✦"] },
+10: { season: "autumn", tokens: ["🍂", "☕", "✦", "🍁", "✦"] },
+11: { season: "winter", tokens: ["🎄", "❄", "✨", "🎁", "✦"], glow: "rgba(205, 232, 255, 0.26)" }
+};
+let heroTheme = heroThemeByMonth[month] || heroThemeByMonth[0];
+let v2HeroSection = document.getElementById("v2HeroSection");
+let todayKey = formatDate(today.getFullYear(), today.getMonth(), today.getDate());
+let isCurrentVisibleMonth = year === today.getFullYear() && month === today.getMonth();
+let holidayMood = isCurrentVisibleMonth ? getHolidayMood(todayKey) : null;
+let activeMoodTokens = holidayMood ? holidayMood.tokens : heroTheme.tokens;
+v2HeroSection.setAttribute("data-season", heroTheme.season);
+document.getElementById("v2HeroMoodTokenA").textContent = heroTheme.tokens[0];
+document.getElementById("v2HeroMoodTokenB").textContent = heroTheme.tokens[1];
+document.getElementById("v2HeroMoodTokenC").textContent = heroTheme.tokens[2];
+document.getElementById("monthMoodTokenA").textContent = activeMoodTokens[0];
+document.getElementById("monthMoodTokenB").textContent = activeMoodTokens[1];
+document.getElementById("monthMoodTokenC").textContent = activeMoodTokens[2];
+document.getElementById("monthMoodTokenD").textContent = activeMoodTokens[3];
+document.getElementById("monthMoodTokenE").textContent = activeMoodTokens[4];
+let monthMoodEventsNode = document.getElementById("monthMoodEvents");
+monthMoodEventsNode.classList.remove("hidden");
+renderMonthMoodShowcase(year, month);
+document.documentElement.style.setProperty("--month-mood-glow", ({
+  spring: "rgba(255, 198, 210, 0.22)",
+  summer: "rgba(255, 220, 138, 0.24)",
+  autumn: "rgba(230, 179, 119, 0.22)",
+  winter: "rgba(191, 221, 255, 0.24)"
+})[heroTheme.season] || "rgba(255, 214, 160, 0.16)");
+if (heroTheme.glow){
+document.documentElement.style.setProperty("--month-mood-glow", heroTheme.glow);
+}
 
 document.getElementById("monthTitle").innerText = monthNames[month] + " " + year;
 document.getElementById("v2HeroMonth").innerText = monthNames[month] + " " + year;
